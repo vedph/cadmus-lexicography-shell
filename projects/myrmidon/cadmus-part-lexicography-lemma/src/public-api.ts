@@ -3,4 +3,3 @@
  */
 
 export * from './lib/lex-lemma-part';
-export * from './lib/cadmus-part-lexicography-lemma';

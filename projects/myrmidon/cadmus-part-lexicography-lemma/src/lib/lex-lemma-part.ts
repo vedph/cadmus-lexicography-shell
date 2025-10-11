@@ -79,7 +79,53 @@ export const LEX_LEMMA_PART_SCHEMA = {
       type: ['string', 'null'],
       pattern: '^([a-z][-0-9a-z._]*)?$',
     },
-
-    // TODO: add properties and fill the "required" array as needed
+    lid: {
+      type: 'string',
+    },
+    homograph: {
+      type: ['integer', 'null'],
+    },
+    forms: {
+      type: 'array',
+      minItems: 1,
+      items: {
+        type: 'object',
+        required: ['type', 'value', 'pos'],
+        properties: {
+          type: {
+            type: 'string',
+          },
+          prefix: {
+            type: 'string',
+          },
+          value: {
+            type: 'string',
+          },
+          suffix: {
+            type: 'string',
+          },
+          pos: {
+            type: 'string',
+          },
+          features: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          tags: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          note: {
+            type: 'string',
+          },
+        },
+        additionalProperties: false,
+      },
+    },
   },
+  additionalProperties: false,
 };
