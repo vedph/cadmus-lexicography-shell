@@ -1,0 +1,65 @@
+services:
+  # MongoDB
+  cadmus-lexicography-mongo:
+    image: mongo
+    container_name: cadmus-lexicography-mongo
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    command: mongod --logpath=/dev/null
+    ports:
+      - 127.0.0.1:27017:27017
+    networks:
+      - cadmus-lexicography-network
+
+  # PostgreSQL
+  cadmus-lexicography-pgsql:
+    image: postgres
+    container_name: cadmus-lexicography-pgsql
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - 127.0.0.1:5432:5432
+    networks:
+      - cadmus-lexicography-network
+
+  # Cadmus lexicography API
+  cadmus-lexicography-api:
+    image: vedph2020/cadmus-lexicography-api:0.0.1
+    container_name: cadmus-lexicography-api
+    ports:
+      - 5248:8080
+    depends_on:
+      - cadmus-lexicography-mongo
+      - cadmus-lexicography-pgsql
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - CONNECTIONSTRINGS__DEFAULT=mongodb://cadmus-lexicography-mongo:27017/{0}
+      - CONNECTIONSTRINGS__AUTH=Server=cadmus-lexicography-pgsql;port=5432;Database={0};User Id=postgres;Password=postgres;Include Error Detail=True
+      - CONNECTIONSTRINGS__INDEX=Server=cadmus-lexicography-pgsql;port=5432;Database={0};User Id=postgres;Password=postgres;Include Error Detail=True
+      - SERILOG__CONNECTIONSTRING=mongodb://cadmus-lexicography-mongo:27017/{0}-log
+      - STOCKUSERS__0__PASSWORD=P4ss-W0rd!
+      - SEED__DELAY=20
+      - MESSAGING__APIROOTURL=http://cadmusapi.azurewebsites.net
+      - MESSAGING__APPROOTURL=http://cadmusapi.com/
+      - MESSAGING__SUPPORTEMAIL=support@cadmus.com
+    networks:
+      - cadmus-lexicography-network
+
+  # Cadmus lexicography App
+  cadmus-app:
+    image: vedph2020/cadmus-lexicography-app:0.0.1
+    container_name: cadmus-lexicography-app
+    ports:
+      - 4200:80
+    depends_on:
+      - cadmus-lexicography-api
+      - cadmus-biblio-api
+    networks:
+      - cadmus-lexicography-network
+
+networks:
+  cadmus-lexicography-network:
+    driver: bridge

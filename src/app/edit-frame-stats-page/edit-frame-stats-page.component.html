@@ -1,0 +1,16 @@
+<mat-card>
+  <mat-card-header>
+    <mat-icon mat-card-avatar>area_chart</mat-icon>
+    <mat-card-title>
+      <strong>Edited Items Stats</strong>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div>
+      <cadmus-edit-frame-stats
+        [initialStart]="startDate()"
+        [initialEnd]="endDate()"
+      />
+    </div>
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,25 @@
+<div id="container">
+  <h1>Cadmus NDP</h1>
+  <div>
+    <div>
+      <img
+        style="display: block; margin: auto"
+        src="./img/cadmus-300.png"
+        alt="Cadmus"
+      />
+    </div>
+    <div
+      style="
+        text-align: center;
+        max-width: 800px;
+        display: block;
+        margin: 32px auto 32px auto;
+      "
+    >
+      <p>Welcome to the Cadmus Naples Dante Project editor.</p>
+      @if (!logged()) {
+      <p>Please <a routerLink="/login">login</a> to start.</p>
+      }
+    </div>
+  </div>
+</div>
