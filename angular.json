@@ -85,6 +85,36 @@
           }
         }
       }
+    },
+    "@myrmidon/cadmus-part-lexicography-lemma": {
+      "projectType": "library",
+      "root": "projects/myrmidon/cadmus-part-lexicography-lemma",
+      "sourceRoot": "projects/myrmidon/cadmus-part-lexicography-lemma/src",
+      "prefix": "cadmus",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/myrmidon/cadmus-part-lexicography-lemma/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/myrmidon/cadmus-part-lexicography-lemma/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/myrmidon/cadmus-part-lexicography-lemma/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
     }
   }
 }

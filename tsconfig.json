@@ -3,6 +3,11 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "paths": {
+      "@myrmidon/cadmus-part-lexicography-lemma": [
+        "./dist/myrmidon/cadmus-part-lexicography-lemma"
+      ]
+    },
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -29,6 +34,12 @@
     },
     {
       "path": "./tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/myrmidon/cadmus-part-lexicography-lemma/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/myrmidon/cadmus-part-lexicography-lemma/tsconfig.spec.json"
     }
   ]
 }
