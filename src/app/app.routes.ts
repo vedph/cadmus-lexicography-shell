@@ -82,15 +82,14 @@ export const routes: Routes = [
       ),
     canActivate: [jwtGuard],
   },
-  // lexicography TODO: uncomment
-  // {
-  //   path: 'items/:iid/lexicography',
-  //   loadChildren: () =>
-  //     import('@myrmidon/cadmus-part-lexicography-pg').then(
-  //       (module) => module.CADMUS_PART_LEXICOGRAPHY_PG_ROUTES
-  //     ),
-  //   canActivate: [jwtGuard],
-  // },
+  {
+    path: 'items/:iid/lexicography',
+    loadChildren: () =>
+      import('@myrmidon/cadmus-part-lexicography-pg').then(
+        (module) => module.CADMUS_PART_LEXICOGRAPHY_PG_ROUTES
+      ),
+    canActivate: [jwtGuard],
+  },
   // cadmus - graph
   {
     path: 'graph',

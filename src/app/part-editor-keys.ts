@@ -15,7 +15,7 @@ import {
 } from '@myrmidon/cadmus-part-general-ui';
 
 // lexicography
-// TODO: import part type IDs
+import { LEX_LEMMA_PART_TYPEID } from '@myrmidon/cadmus-part-lexicography-lemma';
 
 // route constants
 const GENERAL = 'general';
@@ -60,5 +60,7 @@ export const PART_EDITOR_KEYS: PartEditorKeys = {
     part: GENERAL,
   },
   // lexicography
-  // TODO: parts
+  [LEX_LEMMA_PART_TYPEID]: {
+    part: LEXICOGRAPHY,
+  },
 };
