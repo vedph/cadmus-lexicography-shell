@@ -3,7 +3,7 @@
     <mat-icon>add_circle</mat-icon> form
   </button>
 </div>
-@if (entries.value.length) {
+@if (forms().length) {
 <table>
   <thead>
     <tr>
@@ -16,7 +16,7 @@
     </tr>
   </thead>
   <tbody>
-    @for (entry of entries.value; track entry; let i = $index; let first = $first; let last = $last)
+    @for (entry of forms(); track entry; let i = $index; let first = $first; let last = $last)
     {
     <tr [class.selected]="i === editedIndex()">
       <td class="fit-width">

@@ -1,5 +1,4 @@
-import { Component, input, signal } from '@angular/core';
-import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { Component, input, model, signal } from '@angular/core';
 
 import {
   MatExpansionPanel,
@@ -12,15 +11,17 @@ import { MatTooltip } from '@angular/material/tooltip';
 
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
-import { FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
+import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 
 import { WordForm } from '../../lex-lemma-part';
 import { WordFormEditor } from '../word-form-editor/word-form-editor';
 
+/**
+ * Editor for a set of word forms.
+ */
 @Component({
   selector: 'cadmus-word-form-set-editor',
   imports: [
-    ReactiveFormsModule,
     MatExpansionPanel,
     MatExpansionPanelHeader,
     MatExpansionPanelTitle,
@@ -34,10 +35,18 @@ import { WordFormEditor } from '../word-form-editor/word-form-editor';
   styleUrl: './word-form-set-editor.css',
 })
 export class WordFormSetEditor {
+  /**
+   * The forms to edit.
+   */
+  public readonly forms = model<WordForm[]>([]);
+  /**
+   * The form being edited.
+   */
   public readonly edited = signal<WordForm | undefined>(undefined);
+  /**
+   * The index of the form being edited, -1 if a new one.
+   */
   public readonly editedIndex = signal<number>(-1);
-
-  public entries: FormControl<WordForm[]>;
 
   // lex-word-form-types
   public readonly typeEntries = input<ThesaurusEntry[] | undefined>();
@@ -52,12 +61,7 @@ export class WordFormSetEditor {
   // lex-word-form-tags
   public readonly tagEntries = input<ThesaurusEntry[] | undefined>();
 
-  constructor(formBuilder: FormBuilder, private _dialogService: DialogService) {
-    this.entries = formBuilder.control([], {
-      nonNullable: true,
-      validators: [NgxToolsValidators.strictMinLengthValidator(1)],
-    });
-  }
+  constructor(private _dialogService: DialogService) {}
 
   public addForm(): void {
     const entry: WordForm = {
@@ -65,7 +69,8 @@ export class WordFormSetEditor {
       pos: this.posEntries()?.[0]?.id ?? '',
       value: '',
     };
-    this.editForm(entry, -1);
+    this.editedIndex.set(-1);
+    this.edited.set(entry);
   }
 
   public editForm(entry: WordForm, index: number): void {
@@ -79,15 +84,13 @@ export class WordFormSetEditor {
   }
 
   public saveForm(entry: WordForm): void {
-    const entries = [...this.entries.value];
+    const forms = [...this.forms()];
     if (this.editedIndex() === -1) {
-      entries.push(entry);
+      forms.push(entry);
     } else {
-      entries.splice(this.editedIndex(), 1, entry);
+      forms.splice(this.editedIndex(), 1, entry);
     }
-    this.entries.setValue(entries);
-    this.entries.markAsDirty();
-    this.entries.updateValueAndValidity();
+    this.forms.set(forms);
     this.closeForm();
   }
 
@@ -99,11 +102,9 @@ export class WordFormSetEditor {
           if (this.editedIndex() === index) {
             this.closeForm();
           }
-          const entries = [...this.entries.value];
-          entries.splice(index, 1);
-          this.entries.setValue(entries);
-          this.entries.markAsDirty();
-          this.entries.updateValueAndValidity();
+          const forms = [...this.forms()];
+          forms.splice(index, 1);
+          this.forms.set(forms);
         }
       });
   }
@@ -112,25 +113,21 @@ export class WordFormSetEditor {
     if (index < 1) {
       return;
     }
-    const entry = this.entries.value[index];
-    const entries = [...this.entries.value];
-    entries.splice(index, 1);
-    entries.splice(index - 1, 0, entry);
-    this.entries.setValue(entries);
-    this.entries.markAsDirty();
-    this.entries.updateValueAndValidity();
+    const form = this.forms()[index];
+    const forms = [...this.forms()];
+    forms.splice(index, 1);
+    forms.splice(index - 1, 0, form);
+    this.forms.set(forms);
   }
 
   public moveFormDown(index: number): void {
-    if (index + 1 >= this.entries.value.length) {
+    if (index + 1 >= this.forms().length) {
       return;
     }
-    const entry = this.entries.value[index];
-    const entries = [...this.entries.value];
-    entries.splice(index, 1);
-    entries.splice(index + 1, 0, entry);
-    this.entries.setValue(entries);
-    this.entries.markAsDirty();
-    this.entries.updateValueAndValidity();
+    const form = this.forms()[index];
+    const forms = [...this.forms()];
+    forms.splice(index, 1);
+    forms.splice(index + 1, 0, form);
+    this.forms.set(forms);
   }
 }

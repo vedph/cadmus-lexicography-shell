@@ -6,6 +6,9 @@
     "paths": {
       "@myrmidon/cadmus-part-lexicography-lemma": [
         "./dist/myrmidon/cadmus-part-lexicography-lemma"
+      ],
+      "@myrmidon/cadmus-part-lexicography-pg": [
+        "./dist/myrmidon/cadmus-part-lexicography-pg"
       ]
     },
     "strict": true,
@@ -40,6 +43,12 @@
     },
     {
       "path": "./projects/myrmidon/cadmus-part-lexicography-lemma/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/myrmidon/cadmus-part-lexicography-pg/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/myrmidon/cadmus-part-lexicography-pg/tsconfig.spec.json"
     }
   ]
 }

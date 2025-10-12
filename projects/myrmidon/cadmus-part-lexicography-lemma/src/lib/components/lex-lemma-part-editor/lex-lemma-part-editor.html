@@ -1,0 +1,60 @@
+<form [formGroup]="form" (submit)="save()">
+  <mat-card>
+    <mat-card-header>
+      <div mat-card-avatar>
+        <mat-icon>picture_in_picture</mat-icon>
+      </div>
+      <mat-card-title>
+        {{ (modelName() | titlecase) || 'Lemma Part' }}
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="form-row">
+        <!-- lid -->
+        <mat-form-field>
+          <mat-label>LID</mat-label>
+          <input matInput [formControl]="lid" />
+          @if ($any(lid).errors?.required && (lid.dirty || lid.touched)) {
+          <mat-error>LID required</mat-error>
+          } @if ($any(lid).errors?.maxLength && (lid.dirty || lid.touched)) {
+          <mat-error>LID too long</mat-error>
+          }
+        </mat-form-field>
+        <!-- button -->
+        <button type="button" mat-icon-button matTooltip="Generate LID">
+          <mat-icon class="mat-primary">arrow_circle_left</mat-icon>
+        </button>
+        <!-- homograph -->
+        <mat-form-field class="nr">
+          <mat-label>hom.</mat-label>
+          <input matInput [formControl]="homograph" type="number" min="0" max="50" />
+        </mat-form-field>
+      </div>
+      <!-- forms -->
+      <div>
+        <fieldset>
+          <legend>
+            forms @if (!this.forms.value.length) {
+            <span id="forms-error" matTooltip="Form(s) required"
+              ><mat-icon class="mat-warn">error</mat-icon></span
+            >
+            }
+          </legend>
+          <cadmus-word-form-set-editor
+            [typeEntries]="typeEntries()"
+            [prefixEntries]="prefixEntries()"
+            [suffixEntries]="suffixEntries()"
+            [posEntries]="posEntries()"
+            [featureEntries]="featureEntries()"
+            [tagEntries]="tagEntries()"
+            [forms]="forms.value"
+            (formsChange)="onFormsChange($event)"
+          />
+        </fieldset>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <cadmus-close-save-buttons [form]="form" [noSave]="userLevel < 2" (closeRequest)="close()" />
+    </mat-card-actions>
+  </mat-card>
+</form>

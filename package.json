@@ -6,7 +6,10 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "build-lem": "ng build @myrmidon/cadmus-part-lexicography-lemma",
+    "build-pg": "ng build @myrmidon/cadmus-part-lexicography-pg",
+    "build-lib": "npm run build-lem && npm run build-pg"
   },
   "prettier": {
     "printWidth": 100,
@@ -92,7 +95,7 @@
     "@angular/localize": "^20.3.4",
     "@types/jasmine": "~5.1.9",
     "jasmine-core": "~5.12.0",
-    "karma": "~6.4.0",
+    "karma": "~6.4.4",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.1",
     "karma-jasmine": "~5.1.0",
