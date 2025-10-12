@@ -24,7 +24,7 @@
   <!-- text-->
   <div id="txt-container">
     <div id="txt">
-      <nge-monaco-editor id="editor" (ready)="onCreateTextEditor($event)" />
+      <nge-monaco-editor id="txt-editor" (ready)="onCreateTextEditor($event)" />
       @if (text.hasError('required') && (text.touched || text.dirty)) {
       <mat-error>text required</mat-error>
       } @if (text.hasError('maxLength') && (text.touched || text.dirty)) {

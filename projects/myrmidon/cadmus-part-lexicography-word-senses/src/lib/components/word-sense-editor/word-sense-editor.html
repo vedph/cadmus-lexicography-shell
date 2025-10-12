@@ -1,0 +1,82 @@
+<form [formGroup]="form" (submit)="save()">
+  <mat-tab-group>
+    <mat-tab label="definition">
+      <!-- eid -->
+      <div>
+        <mat-form-field>
+          <mat-label>EID</mat-label>
+          <input matInput [formControl]="eid" />
+          @if ($any(eid).errors?.maxLength && (eid.dirty || eid.touched)) {
+          <mat-error>EID too long</mat-error>
+          }
+        </mat-form-field>
+      </div>
+      <div>
+        <!-- tags -->
+        @if (tagEntries()?.length) {
+        <div>
+          <cadmus-thes-entries-picker
+            [availableEntries]="tagEntries()!"
+            [entries]="tags.value"
+            [hierarchicLabels]="true"
+          />
+        </div>
+        }
+      </div>
+
+      <!-- definition -->
+      <div id="def-container">
+        <div id="def">
+          <nge-monaco-editor id="editor" (ready)="onCreateTextEditor($event)" />
+          @if (definition.hasError('required') && (definition.touched || definition.dirty)) {
+          <mat-error>text required</mat-error>
+          } @if (definition.hasError('maxLength') && (definition.touched || definition.dirty)) {
+          <mat-error>text too long</mat-error>
+          }
+        </div>
+        <!-- preview -->
+        <div id="def-preview">
+          <mat-expansion-panel expanded="true">
+            <div>
+              <nge-markdown [data]="definition.value || undefined" />
+            </div>
+          </mat-expansion-panel>
+        </div>
+      </div>
+
+      <!-- note -->
+      <div>
+        <mat-form-field class="long-text">
+          <mat-label>note</mat-label>
+          <textarea matInput rows="3" [formControl]="note"></textarea>
+          @if ($any(note).errors?.maxLength && (note.dirty || note.touched)) {
+          <mat-error>note too long</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="examples">
+      <div></div>
+    </mat-tab>
+
+    <mat-tab label="related">
+      <div></div>
+    </mat-tab>
+
+    <!-- buttons -->
+    <div>
+      <button type="button" mat-icon-button matTooltip="Discard changes" (click)="cancel()">
+        <mat-icon class="mat-warn">clear</mat-icon>
+      </button>
+      <button
+        type="submit"
+        mat-icon-button
+        matTooltip="Accept changes"
+        [disabled]="form.invalid || form.pristine"
+      >
+        <mat-icon class="mat-primary">check_circle</mat-icon>
+      </button>
+    </div>
+  </mat-tab-group>
+</form>

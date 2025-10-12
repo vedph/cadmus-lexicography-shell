@@ -1,0 +1,27 @@
+#editor {
+  height: 300px;
+}
+/* Layout */
+#def-container {
+  display: grid;
+  grid-template-rows: auto;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: 'def preview';
+  gap: 8px;
+}
+#def {
+  grid-area: def;
+}
+#def-preview {
+  grid-area: preview;
+}
+/* lt-md */
+@media only screen and (max-width: 959px) {
+  #def-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      'def'
+      'preview';
+  }
+}

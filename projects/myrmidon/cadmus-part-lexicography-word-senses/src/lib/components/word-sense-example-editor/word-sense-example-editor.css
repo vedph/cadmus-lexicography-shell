@@ -19,13 +19,17 @@ fieldset {
 legend {
   color: silver;
 }
+#txt-editor,
+#exp-editor {
+  height: 300px;
+}
 
 /* Layout */
 #txt-container {
   display: grid;
   grid-template-rows: auto;
   grid-template-columns: 1fr 1fr;
-  grid-template-areas: "txt preview";
+  grid-template-areas: 'txt preview';
   gap: 8px;
 }
 #txt {
@@ -40,8 +44,8 @@ legend {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
     grid-template-areas:
-      "txt"
-      "preview";
+      'txt'
+      'preview';
   }
 }
 
@@ -49,7 +53,7 @@ legend {
   display: grid;
   grid-template-rows: auto;
   grid-template-columns: 1fr 1fr;
-  grid-template-areas: "exp exp-preview";
+  grid-template-areas: 'exp exp-preview';
   gap: 8px;
 }
 #exp {
@@ -64,7 +68,7 @@ legend {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
     grid-template-areas:
-      "exp"
-      "exp-preview";
+      'exp'
+      'exp-preview';
   }
 }
