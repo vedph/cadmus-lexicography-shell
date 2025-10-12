@@ -3,3 +3,4 @@
  */
 
 export * from './lib/lex-word-senses-part';
+export * from './lib/components/word-sense-example-editor/word-sense-example-editor';

@@ -1,0 +1,87 @@
+<form [formGroup]="form" (submit)="save()">
+  <div class="form-row">
+    <!-- tags -->
+    @if (tagEntries()?.length) {
+    <div>
+      <cadmus-thes-entries-picker
+        [availableEntries]="tagEntries()!"
+        [entries]="tags.value"
+        [hierarchicLabels]="true"
+      />
+    </div>
+
+    <!-- citation -->
+    <mat-form-field>
+      <mat-label>citation</mat-label>
+      <input matInput [formControl]="citation" />
+      @if ($any(citation).errors?.maxLength && (citation.dirty || citation.touched)) {
+      <mat-error>citation too long</mat-error>
+      }
+    </mat-form-field>
+    }
+  </div>
+
+  <!-- text-->
+  <div id="txt-container">
+    <div id="txt">
+      <nge-monaco-editor id="editor" (ready)="onCreateTextEditor($event)" />
+      @if (text.hasError('required') && (text.touched || text.dirty)) {
+      <mat-error>text required</mat-error>
+      } @if (text.hasError('maxLength') && (text.touched || text.dirty)) {
+      <mat-error>text too long</mat-error>
+      }
+    </div>
+    <!-- preview -->
+    <div id="txt-preview">
+      <mat-expansion-panel expanded="true">
+        <div>
+          <nge-markdown [data]="text.value || undefined" />
+        </div>
+      </mat-expansion-panel>
+    </div>
+  </div>
+
+  <!-- explanation -->
+  <div id="exp-container">
+    <div id="exp">
+      <nge-monaco-editor id="exp-editor" (ready)="onCreateExplanationEditor($event)" />
+      @if ($any(explanation).errors?.maxLength && (explanation.dirty || explanation.touched)) {
+      <mat-error>explanation too long</mat-error>
+      }
+    </div>
+    <!-- preview -->
+    <div id="exp-preview">
+      <mat-expansion-panel expanded="true">
+        <div>
+          <nge-markdown [data]="explanation.value || undefined" />
+        </div>
+      </mat-expansion-panel>
+    </div>
+  </div>
+
+  <!-- note -->
+  <div>
+    <mat-form-field class="long-text">
+      <mat-label>note</mat-label>
+      <textarea matInput rows="3" [formControl]="note"></textarea>
+      @if ($any(note).errors?.maxLength && (note.dirty || note.touched)) {
+      <mat-error>note too long</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <!-- buttons -->
+  <div>
+    <button type="button" mat-icon-button matTooltip="Discard changes" (click)="cancel()">
+      <mat-icon class="mat-warn">clear</mat-icon>
+    </button>
+    <button
+      type="submit"
+      mat-icon-button
+      matTooltip="Accept changes"
+      [disabled]="form.invalid || form.pristine"
+    >
+      <mat-icon class="mat-primary">check_circle</mat-icon>
+    </button>
+  </div>
+</form>
