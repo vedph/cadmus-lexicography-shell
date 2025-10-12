@@ -175,6 +175,36 @@
           }
         }
       }
+    },
+    "@myrmidon/cadmus-part-lexicography-word-senses": {
+      "projectType": "library",
+      "root": "projects/myrmidon/cadmus-part-lexicography-word-senses",
+      "sourceRoot": "projects/myrmidon/cadmus-part-lexicography-word-senses/src",
+      "prefix": "cadmus",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/myrmidon/cadmus-part-lexicography-word-senses/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/myrmidon/cadmus-part-lexicography-word-senses/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/myrmidon/cadmus-part-lexicography-word-senses/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
     }
   }
 }
