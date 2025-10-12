@@ -1,0 +1,24 @@
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+tbody tr:nth-child(odd) {
+  background-color: #e2e2e2;
+}
+th {
+  text-align: left;
+  font-weight: normal;
+  color: silver;
+}
+td.fit-width {
+  width: 1px;
+  white-space: nowrap;
+}
+tr.selected {
+  background-color: #d0d0d0 !important;
+}
+fieldset {
+  border: 1px solid silver;
+  border-radius: 6px;
+  padding: 6px;
+}

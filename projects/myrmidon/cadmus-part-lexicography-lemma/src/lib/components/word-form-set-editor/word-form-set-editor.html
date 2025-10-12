@@ -1,0 +1,88 @@
+<div>
+  <button type="button" mat-flat-button color="primary" (click)="addForm()">
+    <mat-icon>add_circle</mat-icon> form
+  </button>
+</div>
+@if (entries.value.length) {
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>type</th>
+      <th>prefix</th>
+      <th>value</th>
+      <th>suffix</th>
+      <th>POS</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (entry of entries.value; track entry; let i = $index; let first = $first; let last = $last)
+    {
+    <tr [class.selected]="i === editedIndex()">
+      <td class="fit-width">
+        <button
+          type="button"
+          mat-icon-button
+          color="primary"
+          matTooltip="Edit this form"
+          (click)="editForm(entry, i)"
+        >
+          <mat-icon class="mat-primary">edit</mat-icon>
+        </button>
+        <button
+          type="button"
+          mat-icon-button
+          matTooltip="Move this form up"
+          [disabled]="first"
+          (click)="moveFormUp(i)"
+        >
+          <mat-icon>arrow_upward</mat-icon>
+        </button>
+        <button
+          type="button"
+          mat-icon-button
+          matTooltip="Move this form down"
+          [disabled]="last"
+          (click)="moveFormDown(i)"
+        >
+          <mat-icon>arrow_downward</mat-icon>
+        </button>
+        <button
+          type="button"
+          mat-icon-button
+          color="warn"
+          matTooltip="Delete this form"
+          (click)="deleteForm(i)"
+        >
+          <mat-icon class="mat-warn">remove_circle</mat-icon>
+        </button>
+      </td>
+      <td>{{ entry.type | flatLookup : typeEntries() : 'id' : 'value' }}</td>
+      <td>{{ entry.prefix | flatLookup : prefixEntries() : 'id' : 'value' }}</td>
+      <td>{{ entry.value }}</td>
+      <td>{{ entry.suffix | flatLookup : suffixEntries() : 'id' : 'value' }}</td>
+      <td>{{ entry.pos | flatLookup : posEntries() : 'id' : 'value' }}</td>
+    </tr>
+    }
+  </tbody>
+</table>
+} @if (edited()) {
+<fieldset>
+  <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
+    <mat-expansion-panel-header>
+      <mat-panel-title>form #</mat-panel-title>
+    </mat-expansion-panel-header>
+    <cadmus-word-form-editor
+      [typeEntries]="typeEntries()"
+      [prefixEntries]="prefixEntries()"
+      [suffixEntries]="suffixEntries()"
+      [posEntries]="posEntries()"
+      [featureEntries]="featureEntries()"
+      [tagEntries]="tagEntries()"
+      [form]="edited()!"
+      (formChange)="saveForm($event!)"
+      (editorClose)="closeForm()"
+    />
+  </mat-expansion-panel>
+</fieldset>
+}
