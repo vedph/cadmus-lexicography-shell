@@ -16,6 +16,7 @@ import {
 
 // lexicography
 import { LEX_LEMMA_PART_TYPEID } from '@myrmidon/cadmus-part-lexicography-lemma';
+import { LEX_WORD_FORMS_PART_TYPEID } from '@myrmidon/cadmus-part-lexicography-word-forms';
 
 // route constants
 const GENERAL = 'general';
@@ -61,6 +62,9 @@ export const PART_EDITOR_KEYS: PartEditorKeys = {
   },
   // lexicography
   [LEX_LEMMA_PART_TYPEID]: {
+    part: LEXICOGRAPHY,
+  },
+  [LEX_WORD_FORMS_PART_TYPEID]: {
     part: LEXICOGRAPHY,
   },
 };

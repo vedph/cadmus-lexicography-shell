@@ -9,6 +9,9 @@
       ],
       "@myrmidon/cadmus-part-lexicography-pg": [
         "./dist/myrmidon/cadmus-part-lexicography-pg"
+      ],
+      "@myrmidon/cadmus-part-lexicography-word-forms": [
+        "./dist/myrmidon/cadmus-part-lexicography-word-forms"
       ]
     },
     "strict": true,
@@ -49,6 +52,12 @@
     },
     {
       "path": "./projects/myrmidon/cadmus-part-lexicography-pg/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/myrmidon/cadmus-part-lexicography-word-forms/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/myrmidon/cadmus-part-lexicography-word-forms/tsconfig.spec.json"
     }
   ]
 }

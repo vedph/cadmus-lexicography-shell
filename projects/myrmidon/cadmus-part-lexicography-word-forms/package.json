@@ -1,0 +1,27 @@
+{
+  "name": "@myrmidon/cadmus-part-lexicography-word-forms",
+  "version": "0.0.1",
+  "description": "Cadmus - Lexicography word forms part.",
+  "keywords": [
+    "Cadmus",
+    "lexicography"
+  ],
+  "homepage": "https://github.com/vedph/cadmus-lexicography-shell",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vedph/cadmus-lexicography-shell"
+  },
+  "author": {
+    "name": "Daniele Fusi"
+  },
+  "peerDependencies": {
+    "@angular/common": "^20.0.0",
+    "@angular/core": "^20.0.0",
+    "@angular/material": "^20.0.0",
+    "@myrmidon/cadmus-part-lexicography-lemma": "^0.0.1"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false
+}

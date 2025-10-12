@@ -7,6 +7,10 @@ import {
   LEX_LEMMA_PART_TYPEID,
   LexLemmaPartFeature,
 } from '@myrmidon/cadmus-part-lexicography-lemma';
+import {
+  LEX_WORD_FORMS_PART_TYPEID,
+  LexWordFormsPartFeature,
+} from '@myrmidon/cadmus-part-lexicography-word-forms';
 
 export const CADMUS_PART_LEXICOGRAPHY_PG_ROUTES: Routes = [
   {
@@ -15,5 +19,10 @@ export const CADMUS_PART_LEXICOGRAPHY_PG_ROUTES: Routes = [
     component: LexLemmaPartFeature,
     canDeactivate: [pendingChangesGuard],
   },
-  // ... etc.
+  {
+    path: `${LEX_WORD_FORMS_PART_TYPEID}/:pid`,
+    pathMatch: 'full',
+    component: LexWordFormsPartFeature,
+    canDeactivate: [pendingChangesGuard],
+  },
 ];

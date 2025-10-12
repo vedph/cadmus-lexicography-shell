@@ -8,8 +8,9 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "build-lem": "ng build @myrmidon/cadmus-part-lexicography-lemma",
+    "build-wf": "ng build @myrmidon/cadmus-part-lexicography-word-forms",
     "build-pg": "ng build @myrmidon/cadmus-part-lexicography-pg",
-    "build-lib": "npm run build-lem && npm run build-pg"
+    "build-lib": "npm run build-lem && npm run build-wf && npm run build-pg"
   },
   "prettier": {
     "printWidth": 100,

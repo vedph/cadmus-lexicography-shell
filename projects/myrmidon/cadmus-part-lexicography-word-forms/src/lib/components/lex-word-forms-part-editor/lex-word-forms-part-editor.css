@@ -1,0 +1,16 @@
+.form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.form-row * {
+  flex: 0 0 auto;
+}
+.nr {
+  width: 5em;
+}
+#forms-error {
+  color: darkred;
+  margin-left: 8px;
+}

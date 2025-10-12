@@ -1,0 +1,39 @@
+<form [formGroup]="form" (submit)="save()">
+  <mat-card>
+    <mat-card-header>
+      <div mat-card-avatar>
+        <mat-icon>picture_in_picture</mat-icon>
+      </div>
+      <mat-card-title>
+        {{ (modelName() | titlecase) || 'Word Forms Part' }}
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- forms -->
+      <div>
+        <fieldset>
+          <legend>
+            forms @if (!this.forms.value.length) {
+            <span id="forms-error" matTooltip="Form(s) required"
+              ><mat-icon class="mat-warn">error</mat-icon></span
+            >
+            }
+          </legend>
+          <cadmus-word-form-set-editor
+            [typeEntries]="typeEntries()"
+            [prefixEntries]="prefixEntries()"
+            [suffixEntries]="suffixEntries()"
+            [posEntries]="posEntries()"
+            [featureEntries]="featureEntries()"
+            [tagEntries]="tagEntries()"
+            [forms]="forms.value"
+            (formsChange)="onFormsChange($event)"
+          />
+        </fieldset>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <cadmus-close-save-buttons [form]="form" [noSave]="userLevel < 2" (closeRequest)="close()" />
+    </mat-card-actions>
+  </mat-card>
+</form>
