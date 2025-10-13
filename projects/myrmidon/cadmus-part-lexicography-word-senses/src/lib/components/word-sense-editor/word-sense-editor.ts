@@ -1,13 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  Inject,
-  Optional,
-  effect,
-  input,
-  model,
-  output,
-} from '@angular/core';
+import { Component, Inject, Optional, effect, input, model, output, signal } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -29,8 +21,14 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { NgeMonacoModule } from '@cisstech/nge/monaco';
 import { NgeMarkdownModule } from '@cisstech/nge/markdown';
 
+import { DialogService } from '@myrmidon/ngx-mat-tools';
+import { EllipsisPipe, FlatLookupPipe } from '@myrmidon/ngx-tools';
+
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
-import { AssertedCompositeId } from '@myrmidon/cadmus-refs-asserted-ids';
+import {
+  AssertedCompositeId,
+  AssertedCompositeIdsComponent,
+} from '@myrmidon/cadmus-refs-asserted-ids';
 import { ThesEntriesPickerComponent } from '@myrmidon/cadmus-ui';
 import {
   CadmusTextEdService,
@@ -39,6 +37,7 @@ import {
 } from '@myrmidon/cadmus-text-ed';
 
 import { WordSense, WordSenseExample } from '../../lex-word-senses-part';
+import { WordSenseExampleEditor } from '../word-sense-example-editor/word-sense-example-editor';
 
 @Component({
   selector: 'cadmus-word-sense-editor',
@@ -56,7 +55,11 @@ import { WordSense, WordSenseExample } from '../../lex-word-senses-part';
     MatTooltipModule,
     NgeMonacoModule,
     NgeMarkdownModule,
+    AssertedCompositeIdsComponent,
     ThesEntriesPickerComponent,
+    WordSenseExampleEditor,
+    EllipsisPipe,
+    FlatLookupPipe
   ],
   templateUrl: './word-sense-editor.html',
   styleUrl: './word-sense-editor.css',
@@ -70,8 +73,21 @@ export class WordSenseEditor {
   public readonly sense = model<WordSense | undefined>();
   public readonly cancelEdit = output();
 
+  public readonly editedEx = signal<WordSenseExample | undefined>(undefined);
+  public readonly editedExIndex = signal<number>(-1);
+
   // lex-word-sense-tags
   public readonly tagEntries = input<ThesaurusEntry[] | undefined>();
+  // asserted-id-scopes
+  public readonly assIdScopeEntries = input<ThesaurusEntry[] | undefined>();
+  // asserted-id-tags
+  public readonly assIdTagEntries = input<ThesaurusEntry[] | undefined>();
+  // assertion-tags
+  public readonly assTagEntries = input<ThesaurusEntry[] | undefined>();
+  // doc-reference-types
+  public readonly refTypeEntries = input<ThesaurusEntry[] | undefined>();
+  // doc-reference-tags
+  public readonly refTagEntries = input<ThesaurusEntry[] | undefined>();
 
   public eid: FormControl<string | null>;
   public tags: FormControl<ThesaurusEntry[]>;
@@ -83,6 +99,7 @@ export class WordSenseEditor {
 
   constructor(
     formBuilder: FormBuilder,
+    private _dialogService: DialogService,
     private _editService: CadmusTextEdService,
     @Inject(CADMUS_TEXT_ED_BINDINGS_TOKEN)
     @Optional()
@@ -211,6 +228,12 @@ export class WordSenseEditor {
     }
   }
 
+  public onRelatedIdsChange(ids: AssertedCompositeId[]): void {
+    this.relatedIds.setValue(ids);
+    this.relatedIds.markAsDirty();
+    this.relatedIds.updateValueAndValidity();
+  }
+
   private getSense(): WordSense {
     return {
       eid: this.eid.value || undefined,
@@ -220,6 +243,80 @@ export class WordSenseEditor {
       examples: this.examples.value?.length ? this.examples.value : undefined,
       relatedIds: this.relatedIds.value?.length ? this.relatedIds.value : undefined,
     };
+  }
+
+  public addExample(): void {
+    const entry: WordSenseExample = {
+      text: '',
+    };
+    this.editedExIndex.set(-1);
+    this.editedEx.set(entry);
+  }
+
+  public editExample(entry: WordSenseExample, index: number): void {
+    this.editedExIndex.set(index);
+    this.editedEx.set(structuredClone(entry));
+  }
+
+  public closeExample(): void {
+    this.editedExIndex.set(-1);
+    this.editedEx.set(undefined);
+  }
+
+  public saveExample(entry: WordSenseExample): void {
+    const entries = [...this.examples.value];
+    if (this.editedExIndex() === -1) {
+      entries.push(entry);
+    } else {
+      entries.splice(this.editedExIndex(), 1, entry);
+    }
+    this.examples.setValue(entries);
+    this.examples.markAsDirty();
+    this.examples.updateValueAndValidity();
+    this.closeExample();
+  }
+
+  public deleteExample(index: number): void {
+    this._dialogService
+      .confirm('Confirmation', `Delete example #${index + 1}?`)
+      .subscribe((yes: boolean | undefined) => {
+        if (yes) {
+          if (this.editedExIndex() === index) {
+            this.closeExample();
+          }
+          const entries = [...this.examples.value];
+          entries.splice(index, 1);
+          this.examples.setValue(entries);
+          this.examples.markAsDirty();
+          this.examples.updateValueAndValidity();
+        }
+      });
+  }
+
+  public moveExampleUp(index: number): void {
+    if (index < 1) {
+      return;
+    }
+    const entry = this.examples.value[index];
+    const entries = [...this.examples.value];
+    entries.splice(index, 1);
+    entries.splice(index - 1, 0, entry);
+    this.examples.setValue(entries);
+    this.examples.markAsDirty();
+    this.examples.updateValueAndValidity();
+  }
+
+  public moveExampleDown(index: number): void {
+    if (index + 1 >= this.examples.value.length) {
+      return;
+    }
+    const entry = this.examples.value[index];
+    const entries = [...this.examples.value];
+    entries.splice(index, 1);
+    entries.splice(index + 1, 0, entry);
+    this.examples.setValue(entries);
+    this.examples.markAsDirty();
+    this.examples.updateValueAndValidity();
   }
 
   public cancel(): void {

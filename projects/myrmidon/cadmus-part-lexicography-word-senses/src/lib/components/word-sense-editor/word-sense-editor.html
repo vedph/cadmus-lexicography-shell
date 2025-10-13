@@ -1,5 +1,6 @@
 <form [formGroup]="form" (submit)="save()">
   <mat-tab-group>
+    <!-- DEFINITION -->
     <mat-tab label="definition">
       <!-- eid -->
       <div>
@@ -56,12 +57,104 @@
       </div>
     </mat-tab>
 
+    <!-- EXAMPLES -->
     <mat-tab label="examples">
-      <div></div>
+      <div>
+        <button type="button" mat-flat-button color="primary" (click)="addExample()">
+          <mat-icon>add_circle</mat-icon> example
+        </button>
+      </div>
+      @if (examples.value.length) {
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>tags</th>
+            <th>text</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of examples.value; track entry; let i = $index; let first = $first; let last =
+          $last) {
+          <tr [class.selected]="i === editedExIndex()">
+            <td class="fit-width">
+              <button
+                type="button"
+                mat-icon-button
+                color="primary"
+                matTooltip="Edit this example"
+                (click)="editExample(entry, i)"
+              >
+                <mat-icon class="mat-primary">edit</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Move this example up"
+                [disabled]="first"
+                (click)="moveExampleUp(i)"
+              >
+                <mat-icon>arrow_upward</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Move this example down"
+                [disabled]="last"
+                (click)="moveExampleDown(i)"
+              >
+                <mat-icon>arrow_downward</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                color="warn"
+                matTooltip="Delete this example"
+                (click)="deleteExample(i)"
+              >
+                <mat-icon class="mat-warn">remove_circle</mat-icon>
+              </button>
+            </td>
+            <td>
+              @for (tag of entry.tags; track tag; let last = $last) {
+              {{ tag | flatLookup : tagEntries() : 'id' : 'value' }}
+              @if (!last) {
+              <span>, </span>
+              } }
+            </td>
+            <td>{{ entry.text | ellipsis }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+      } @if (editedEx()) {
+      <fieldset>
+        <mat-expansion-panel [expanded]="editedEx()" [disabled]="!editedEx()">
+          <mat-expansion-panel-header>
+            <mat-panel-title>Example #</mat-panel-title>
+          </mat-expansion-panel-header>
+          <cadmus-word-sense-example-editor
+            [tagEntries]="tagEntries()"
+            [example]="editedEx()"
+            (exampleChange)="saveExample($event!)"
+            (cancelEdit)="closeExample()"
+          />
+        </mat-expansion-panel>
+      </fieldset>
+      }
     </mat-tab>
 
+    <!-- RELATED IDS -->
     <mat-tab label="related">
-      <div></div>
+      <cadmus-refs-asserted-composite-ids
+        [idScopeEntries]="assIdScopeEntries()"
+        [idTagEntries]="assIdTagEntries()"
+        [assTagEntries]="assTagEntries()"
+        [refTypeEntries]="refTypeEntries()"
+        [refTagEntries]="refTagEntries()"
+        [ids]="relatedIds.value"
+        (idsChange)="onRelatedIdsChange($event)"
+      />
     </mat-tab>
 
     <!-- buttons -->

@@ -32,7 +32,8 @@ import { WordSenseEditor } from '../word-sense-editor/word-sense-editor';
 
 /**
  * Word senses part editor component.
- * Thesauri: lex-word-sense-tags.
+ * Thesauri: lex-word-sense-tags, asserted-id-scopes, asserted-id-tags,
+ * doc-reference-types, doc-reference-tags.
  */
 @Component({
   selector: 'cadmus-lex-word-senses-part-editor',

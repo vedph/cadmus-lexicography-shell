@@ -96,7 +96,7 @@ export class WordFormSetEditor {
 
   public deleteForm(index: number): void {
     this._dialogService
-      .confirm('Confirmation', 'Delete form?')
+      .confirm('Confirmation', `Delete form #${index + 1}?`)
       .subscribe((yes: boolean | undefined) => {
         if (yes) {
           if (this.editedIndex() === index) {
