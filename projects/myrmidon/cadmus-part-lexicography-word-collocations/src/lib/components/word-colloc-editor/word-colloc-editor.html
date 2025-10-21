@@ -78,7 +78,7 @@
         <mat-panel-title>Example #{{ editedExampleIndex() + 1 }}</mat-panel-title>
       </mat-expansion-panel-header>
       <cadmus-word-colloc-example-editor
-        [tagEntries]="tokLiteralTagEntries()"
+        [tagEntries]="litTagEntries()"
         [example]="editedExample()!"
         (exampleChange)="saveExample($event!)"
         (cancelEdit)="closeExample()"
@@ -173,7 +173,7 @@
       <cadmus-word-colloc-token-editor
         [posEntries]="tokPosEntries()"
         [featureEntries]="tokFeatureEntries()"
-        [literalTagEntries]="tokLiteralTagEntries()"
+        [literalTagEntries]="litTagEntries()"
         [token]="editedToken()"
         (tokenChange)="saveToken($event!)"
         (cancelEdit)="closeToken()"

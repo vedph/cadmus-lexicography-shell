@@ -58,7 +58,7 @@ export class WordCollocEditor {
   // lex-word-ctoken-features
   public readonly tokFeatureEntries = input<ThesaurusEntry[] | undefined>();
   // lex-word-cliteral-tags
-  public readonly tokLiteralTagEntries = input<ThesaurusEntry[] | undefined>();
+  public readonly litTagEntries = input<ThesaurusEntry[] | undefined>();
 
   public readonly editedToken = signal<WordCollocationToken | undefined>(undefined);
   public readonly editedTokenIndex = signal<number>(-1);

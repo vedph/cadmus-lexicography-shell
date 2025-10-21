@@ -1,0 +1,119 @@
+<form [formGroup]="form" (submit)="save()">
+  <mat-card>
+    <mat-card-header>
+      <div mat-card-avatar>
+        <mat-icon>picture_in_picture</mat-icon>
+      </div>
+      <mat-card-title>
+        {{ (modelName() | titlecase) || 'Word Collocations Part' }}
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- batch add collocations -->
+      <div>
+        <fieldset>
+          <legend>batch</legend>
+          <form [formGroup]="dslForm" (submit)="parseDsl()">
+            <mat-form-field appearance="outline" class="full-width">
+              <textarea
+                matInput
+                [formControl]="dslText"
+                placeholder="collocation(s), one per line"
+                rows="5"
+              ></textarea>
+              <mat-hint>(RANK) POS+...: &lt;a&gt; [b, c] d</mat-hint>
+            </mat-form-field>
+            <div>
+              <button type="button" mat-icon-button color="primary" (click)="parseDsl()">
+                <mat-icon>library_add</mat-icon>
+              </button>
+            </div>
+          </form>
+        </fieldset>
+      </div>
+      <!-- add collocation -->
+      <div>
+        <button type="button" mat-flat-button color="primary" (click)="addCollocation()">
+          <mat-icon>add_circle</mat-icon> collocation
+        </button>
+      </div>
+      @if (collocations.value.length) {
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>nr.</th>
+            <th>collocation</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of collocations.value; track entry; let i = $index; let first = $first; let
+          last = $last) {
+          <tr [class.selected]="entry === edited()">
+            <td class="fit-width">
+              <button
+                type="button"
+                mat-icon-button
+                color="primary"
+                matTooltip="Edit this collocation"
+                (click)="editCollocation(entry, i)"
+              >
+                <mat-icon class="mat-primary">edit</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Move this collocation up"
+                [disabled]="first"
+                (click)="moveCollocationUp(i)"
+              >
+                <mat-icon>arrow_upward</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Move this collocation down"
+                [disabled]="last"
+                (click)="moveCollocationDown(i)"
+              >
+                <mat-icon>arrow_downward</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                color="warn"
+                matTooltip="Delete this collocation"
+                (click)="deleteCollocation(i)"
+              >
+                <mat-icon class="mat-warn">remove_circle</mat-icon>
+              </button>
+            </td>
+            <td>{{ i + 1 }}</td>
+            <td>{{ entry | wordCollocation : labelToIdMap() }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+      } @if (edited()) {
+      <fieldset>
+        <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
+          <mat-expansion-panel-header>
+            <mat-panel-title>Collocation #</mat-panel-title>
+          </mat-expansion-panel-header>
+          <cadmus-word-colloc-editor
+            [tokPosEntries]="tokPosEntries()"
+            [tokFeatureEntries]="tokFeatureEntries()"
+            [litTagEntries]="litTagEntries()"
+            [collocation]="edited()"
+            (collocationChange)="saveCollocation($event!)"
+            (editorClose)="closeCollocation()"
+          />
+        </mat-expansion-panel>
+      </fieldset>
+      }
+    </mat-card-content>
+    <mat-card-actions>
+      <cadmus-close-save-buttons [form]="form" [noSave]="userLevel < 2" (closeRequest)="close()" />
+    </mat-card-actions>
+  </mat-card>
+</form>
