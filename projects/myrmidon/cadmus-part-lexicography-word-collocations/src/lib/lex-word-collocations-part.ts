@@ -24,7 +24,7 @@ export interface WordCollocationLiteral {
  * An example of a word collocation pattern.
  */
 export interface WordCollocationExample {
-  tokenNr: number;
+  tokenNr: number;  // 0 for connective text, 1..n for tokens
   literals: WordCollocationLiteral[];
 }
 
