@@ -7,9 +7,9 @@ fdescribe('WordCollocationParser', () => {
       const result = WordCollocationParser.parse(input);
 
       expect(result.error).toBeUndefined();
-      expect(result.result.length).toBe(1);
+      expect(result.value.length).toBe(1);
 
-      const collocation = result.result[0];
+      const collocation = result.value[0];
       expect(collocation.rank).toBe(1);
       expect(collocation.tokens.length).toBe(2);
       expect(collocation.tokens[0].pos).toBe('NOUN');
@@ -36,9 +36,9 @@ fdescribe('WordCollocationParser', () => {
       const result = WordCollocationParser.parse(input);
 
       expect(result.error).toBeUndefined();
-      expect(result.result.length).toBe(1);
-      expect(result.result[0].rank).toBeUndefined();
-      expect(result.result[0].tokens.length).toBe(2);
+      expect(result.value.length).toBe(1);
+      expect(result.value[0].rank).toBeUndefined();
+      expect(result.value[0].tokens.length).toBe(2);
     });
 
     it('should parse collocation with token notes', () => {
@@ -46,8 +46,8 @@ fdescribe('WordCollocationParser', () => {
       const result = WordCollocationParser.parse(input);
 
       expect(result.error).toBeUndefined();
-      expect(result.result[0].tokens[0].note).toBe('substantive');
-      expect(result.result[0].tokens[1].note).toBe('action');
+      expect(result.value[0].tokens[0].note).toBe('substantive');
+      expect(result.value[0].tokens[1].note).toBe('action');
     });
 
     it('should parse collocation with head literal note', () => {
@@ -55,8 +55,8 @@ fdescribe('WordCollocationParser', () => {
       const result = WordCollocationParser.parse(input);
 
       expect(result.error).toBeUndefined();
-      expect(result.result[0].examples![0].literals[0].value).toBe('Prefettura');
-      expect(result.result[0].examples![0].literals[0].note).toBe('government');
+      expect(result.value[0].examples![0].literals[0].value).toBe('Prefettura');
+      expect(result.value[0].examples![0].literals[0].note).toBe('government');
     });
 
     it('should parse multiple simple literals', () => {
@@ -64,7 +64,7 @@ fdescribe('WordCollocationParser', () => {
       const result = WordCollocationParser.parse(input);
 
       expect(result.error).toBeUndefined();
-      const examples = result.result[0].examples!;
+      const examples = result.value[0].examples!;
       expect(examples[0].tokenNr).toBe(0);
       expect(examples[0].literals[0].value).toBe('the');
       expect(examples[1].tokenNr).toBe(0);
@@ -78,7 +78,7 @@ fdescribe('WordCollocationParser', () => {
       const result = WordCollocationParser.parse(input);
 
       expect(result.error).toBeUndefined();
-      expect(result.result[0].examples).toBeUndefined();
+      expect(result.value[0].examples).toBeUndefined();
     });
 
     it('should parse multiple collocations', () => {
@@ -87,15 +87,15 @@ fdescribe('WordCollocationParser', () => {
       const result = WordCollocationParser.parse(input);
 
       expect(result.error).toBeUndefined();
-      expect(result.result.length).toBe(2);
-      expect(result.result[0].rank).toBe(1);
-      expect(result.result[1].rank).toBe(2);
+      expect(result.value.length).toBe(2);
+      expect(result.value[0].rank).toBe(1);
+      expect(result.value[1].rank).toBe(2);
     });
 
     it('should handle empty input', () => {
       const result = WordCollocationParser.parse('');
       expect(result.error).toBe('Input text is empty');
-      expect(result.result.length).toBe(0);
+      expect(result.value.length).toBe(0);
     });
 
     it('should report error for missing colon', () => {
@@ -131,8 +131,8 @@ fdescribe('WordCollocationParser', () => {
       const result = WordCollocationParser.parse(input);
 
       expect(result.error).toBeUndefined();
-      expect(result.result[0].tokens.length).toBe(3);
-      expect(result.result[0].examples?.length).toBe(3);
+      expect(result.value[0].tokens.length).toBe(3);
+      expect(result.value[0].examples?.length).toBe(3);
     });
 
     it('should handle whitespace variations', () => {
@@ -140,7 +140,7 @@ fdescribe('WordCollocationParser', () => {
       const result = WordCollocationParser.parse(input);
 
       expect(result.error).toBeUndefined();
-      expect(result.result[0].rank).toBe(1);
+      expect(result.value[0].rank).toBe(1);
     });
 
     it('should parse single alternative literal', () => {
@@ -148,8 +148,8 @@ fdescribe('WordCollocationParser', () => {
       const result = WordCollocationParser.parse(input);
 
       expect(result.error).toBeUndefined();
-      expect(result.result[0].examples![1].literals.length).toBe(1);
-      expect(result.result[0].examples![1].literals[0].value).toBe('is');
+      expect(result.value[0].examples![1].literals.length).toBe(1);
+      expect(result.value[0].examples![1].literals[0].value).toBe('is');
     });
 
     it('should report line number in multi-line errors', () => {
@@ -159,7 +159,7 @@ NOUN+VERB: invalid
       const result = WordCollocationParser.parse(input);
 
       expect(result.error).toContain('Line 2');
-      expect(result.result.length).toBe(2); // Two valid entries
+      expect(result.value.length).toBe(2); // Two valid entries
     });
 
     // Tests with label-to-ID mapping
@@ -172,8 +172,8 @@ NOUN+VERB: invalid
       const result = WordCollocationParser.parse(input, labelToIdMap);
 
       expect(result.error).toBeUndefined();
-      expect(result.result[0].tokens[0].pos).toBe('n');
-      expect(result.result[0].tokens[1].pos).toBe('v');
+      expect(result.value[0].tokens[0].pos).toBe('n');
+      expect(result.value[0].tokens[1].pos).toBe('v');
     });
 
     it('should use label as-is when not in mapping', () => {
@@ -184,8 +184,8 @@ NOUN+VERB: invalid
       const result = WordCollocationParser.parse(input, labelToIdMap);
 
       expect(result.error).toBeUndefined();
-      expect(result.result[0].tokens[0].pos).toBe('n');
-      expect(result.result[0].tokens[1].pos).toBe('ADJECTIVE');
+      expect(result.value[0].tokens[0].pos).toBe('n');
+      expect(result.value[0].tokens[1].pos).toBe('ADJECTIVE');
     });
 
     it('should map labels with notes', () => {
@@ -197,10 +197,10 @@ NOUN+VERB: invalid
       const result = WordCollocationParser.parse(input, labelToIdMap);
 
       expect(result.error).toBeUndefined();
-      expect(result.result[0].tokens[0].pos).toBe('n');
-      expect(result.result[0].tokens[0].note).toBe('substantive');
-      expect(result.result[0].tokens[1].pos).toBe('v');
-      expect(result.result[0].tokens[1].note).toBe('action');
+      expect(result.value[0].tokens[0].pos).toBe('n');
+      expect(result.value[0].tokens[0].note).toBe('substantive');
+      expect(result.value[0].tokens[1].pos).toBe('v');
+      expect(result.value[0].tokens[1].note).toBe('action');
     });
 
     it('should map labels in complex collocation', () => {
@@ -212,8 +212,8 @@ NOUN+VERB: invalid
       const result = WordCollocationParser.parse(input, labelToIdMap);
 
       expect(result.error).toBeUndefined();
-      expect(result.result[0].tokens[0].pos).toBe('n');
-      expect(result.result[0].tokens[1].pos).toBe('v');
+      expect(result.value[0].tokens[0].pos).toBe('n');
+      expect(result.value[0].tokens[1].pos).toBe('v');
     });
 
     it('should map multiple collocations with different POS', () => {
@@ -227,10 +227,10 @@ NOUN+VERB: invalid
       const result = WordCollocationParser.parse(input, labelToIdMap);
 
       expect(result.error).toBeUndefined();
-      expect(result.result[0].tokens[0].pos).toBe('n');
-      expect(result.result[0].tokens[1].pos).toBe('v');
-      expect(result.result[1].tokens[0].pos).toBe('a');
-      expect(result.result[1].tokens[1].pos).toBe('n');
+      expect(result.value[0].tokens[0].pos).toBe('n');
+      expect(result.value[0].tokens[1].pos).toBe('v');
+      expect(result.value[1].tokens[0].pos).toBe('a');
+      expect(result.value[1].tokens[1].pos).toBe('n');
     });
   });
 
@@ -298,7 +298,7 @@ NOUN+VERB: invalid
     it('should handle round-trip conversion', () => {
       const original = '(1) <NOUN>+VERB: la <Prefettura> [applica, decide, emette (provvedimenti)]';
       const parsed = WordCollocationParser.parse(original);
-      const converted = WordCollocationParser.toString(parsed.result[0]);
+      const converted = WordCollocationParser.toString(parsed.value[0]);
 
       expect(converted).toBe(original);
     });
@@ -367,11 +367,11 @@ NOUN+VERB: invalid
         VERB: 'v',
       };
       const parsed = WordCollocationParser.parse(original, labelToIdMap);
-      const converted = WordCollocationParser.toString(parsed.result[0], labelToIdMap);
+      const converted = WordCollocationParser.toString(parsed.value[0], labelToIdMap);
 
       expect(converted).toBe(original);
-      expect(parsed.result[0].tokens[0].pos).toBe('n');
-      expect(parsed.result[0].tokens[1].pos).toBe('v');
+      expect(parsed.value[0].tokens[0].pos).toBe('n');
+      expect(parsed.value[0].tokens[1].pos).toBe('v');
     });
 
     it('should convert multiple tokens with mixed mapping', () => {

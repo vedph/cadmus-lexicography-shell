@@ -7,3 +7,4 @@ export * from './lib/components/word-colloc-example-editor/word-colloc-example-e
 export * from './lib/components/word-colloc-literal-editor/word-colloc-literal-editor';
 export * from './lib/components/word-colloc-token-editor/word-colloc-token-editor';
 export * from './lib/components/word-colloc-editor/word-colloc-editor';
+export * from './lib/services/word-collocation-parser';

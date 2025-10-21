@@ -6,7 +6,7 @@ import {
 } from '../lex-word-collocations-part';
 
 export interface ResultWrapper<T> {
-  result: T;
+  value: T;
   error?: string;
 }
 
@@ -24,7 +24,7 @@ export class WordCollocationParser {
     labelToIdMap?: { [key: string]: string }
   ): ResultWrapper<WordCollocation[]> {
     if (!text?.trim()) {
-      return { result: [], error: 'Input text is empty' };
+      return { value: [], error: 'Input text is empty' };
     }
 
     const lines = text
@@ -44,7 +44,7 @@ export class WordCollocationParser {
     }
 
     return {
-      result: collocations,
+      value: collocations,
       error: errors.length > 0 ? errors.join('\n') : undefined,
     };
   }
