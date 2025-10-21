@@ -26,26 +26,15 @@
     </mat-form-field>
     }
 
-    <!-- pos -->
-    @if (posEntries()?.length) {
+    <!-- pos (always bound) -->
     <cadmus-thes-entries-picker
       [availableEntries]="posEntries()!"
-      [entries]="posEntry() ? [posEntry()!] : []"
+      [entries]="[this.pos.value]"
       [hierarchicLabels]="true"
       [minEntries]="1"
       [maxEntries]="1"
+      (entriesChange)="onPosEntriesChange($event!)"
     />
-    } @else {
-    <mat-form-field>
-      <mat-label>POS</mat-label>
-      <input matInput [formControl]="pos" />
-      @if ($any(pos).errors?.required && (pos.dirty || pos.touched)) {
-      <mat-error>POS required</mat-error>
-      } @if ($any(pos).errors?.maxLength && (pos.dirty || pos.touched)) {
-      <mat-error>POS too long</mat-error>
-      }
-    </mat-form-field>
-    }
   </div>
   <div class="form-row">
     <!-- prefix (bound) -->
@@ -126,6 +115,7 @@
   </div>
   }
   <!-- tags -->
+  @if (tagEntries()?.length) {
   <div>
     <fieldset>
       <legend>tags</legend>
@@ -136,6 +126,7 @@
       />
     </fieldset>
   </div>
+  }
   <!-- note -->
   <div>
     <mat-form-field class="long-text">

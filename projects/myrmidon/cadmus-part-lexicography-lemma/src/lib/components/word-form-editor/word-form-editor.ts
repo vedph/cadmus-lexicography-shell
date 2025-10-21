@@ -44,10 +44,6 @@ export class WordFormEditor {
   public readonly form = model<WordForm | undefined>();
   public readonly cancelEdit = output();
 
-  // the current POS entry as a ThesaurusEntry, used when posEntries is set
-  // instead of a string
-  public readonly posEntry = signal<ThesaurusEntry | undefined>(undefined);
-
   // lex-word-form-types
   public readonly typeEntries = input<ThesaurusEntry[] | undefined>();
   // lex-word-form-prefixes
@@ -55,7 +51,7 @@ export class WordFormEditor {
   // lex-word-form-suffixes
   public readonly suffixEntries = input<ThesaurusEntry[] | undefined>();
   // lex-pos-tags
-  public readonly posEntries = input<ThesaurusEntry[] | undefined>();
+  public readonly posEntries = input.required<ThesaurusEntry[]>();
   // lex-word-form-features
   public readonly featureEntries = input<ThesaurusEntry[] | undefined>();
   // lex-word-form-tags
@@ -65,7 +61,7 @@ export class WordFormEditor {
   public prefix: FormControl<string | null>;
   public value: FormControl<string>;
   public suffix: FormControl<string | null>;
-  public pos: FormControl<string>;
+  public pos: FormControl<ThesaurusEntry>;
   public features: FormControl<ThesaurusEntry[]>;
   public tags: FormControl<ThesaurusEntry[]>;
   public note: FormControl<string | null>;
@@ -83,17 +79,13 @@ export class WordFormEditor {
       validators: [Validators.required, Validators.maxLength(500)],
     });
     this.suffix = formBuilder.control(null, { validators: [Validators.maxLength(50)] });
-    this.pos = formBuilder.control('', {
-      nonNullable: true,
-      validators: [
-        // required only if no posEntries are provided (i.e. pos is a free text string)
-        NgxToolsValidators.conditionalValidator(
-          () => !this.posEntries()?.length,
-          Validators.required
-        ),
-        Validators.maxLength(100),
-      ],
-    });
+    this.pos = formBuilder.control(
+      { id: '', value: '' },
+      {
+        nonNullable: true,
+        validators: Validators.required,
+      }
+    );
     this.features = formBuilder.control([], { nonNullable: true });
     this.tags = formBuilder.control([], { nonNullable: true });
     this.note = formBuilder.control(null);
@@ -124,29 +116,31 @@ export class WordFormEditor {
     return entries.find((e) => e.id === id) || { id, value: id };
   }
 
-  private mapIdToEntries(ids: string[], entries: ThesaurusEntry[] | undefined): ThesaurusEntry[] {
+  private mapIdsToEntries(ids: string[], entries: ThesaurusEntry[] | undefined): ThesaurusEntry[] {
     if (!entries) return ids.map((id) => ({ id, value: id }));
     return ids.map((id) => entries.find((e) => e.id === id) || { id, value: id });
   }
 
   private updateForm(data: WordForm | undefined | null): void {
     if (!data) {
-      this.posEntry.set(undefined);
       this.formCtl.reset();
     } else {
-      if (this.posEntries()?.length) {
-        this.posEntry.set(this.mapIdToEntry(data.pos, this.posEntries())!);
-      }
       this.type.setValue(data.type || '');
       this.prefix.setValue(data.prefix || null);
       this.value.setValue(data.value || '');
       this.suffix.setValue(data.suffix || null);
-      this.pos.setValue(data.pos || '');
-      this.features.setValue(this.mapIdToEntries(data.features || [], this.featureEntries()));
-      this.tags.setValue(this.mapIdToEntries(data.tags || [], this.tagEntries()));
+      this.pos.setValue(this.mapIdToEntry(data.pos, this.posEntries()) || this.posEntries()?.[0]!);
+      this.features.setValue(this.mapIdsToEntries(data.features || [], this.featureEntries()));
+      this.tags.setValue(this.mapIdsToEntries(data.tags || [], this.tagEntries()));
       this.note.setValue(data.note || null);
       this.formCtl.markAsPristine();
     }
+  }
+
+  public onPosEntriesChange(entries: ThesaurusEntry[]): void {
+    this.pos.setValue(entries[0]);
+    this.pos.markAsDirty();
+    this.pos.updateValueAndValidity();
   }
 
   public onFeatureEntriesChange(entries: ThesaurusEntry[]): void {
@@ -167,7 +161,7 @@ export class WordFormEditor {
       prefix: this.prefix.value || undefined,
       value: this.value.value,
       suffix: this.suffix.value || undefined,
-      pos: (this.posEntries()?.length ? this.posEntry()?.id : this.pos.value) || '',
+      pos: this.pos.value.id,
       features: this.features.value.map((e) => e.id),
       tags: this.tags.value.map((e) => e.id),
       note: this.note.value?.trim() || undefined,

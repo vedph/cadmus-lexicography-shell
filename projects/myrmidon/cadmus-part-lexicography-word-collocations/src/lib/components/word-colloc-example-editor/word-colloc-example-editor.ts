@@ -11,6 +11,7 @@ import {
 import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
+import { MatInput } from '@angular/material/input';
 
 import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
@@ -32,6 +33,7 @@ import { WordCollocLiteralEditor } from '../word-colloc-literal-editor/word-coll
     MatFormField,
     MatIcon,
     MatIconButton,
+    MatInput,
     MatLabel,
     MatTooltip,
     MatError,

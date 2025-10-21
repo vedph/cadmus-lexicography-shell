@@ -1,0 +1,56 @@
+<form [formGroup]="form" (submit)="save()">
+  <div class="form-row">
+    <!-- pos (always bound) -->
+    <cadmus-thes-entries-picker
+      [availableEntries]="posEntries()!"
+      [entries]="[this.pos.value]"
+      [hierarchicLabels]="true"
+      [minEntries]="1"
+      [maxEntries]="1"
+      (entriesChange)="onPosEntriesChange($event!)"
+    />
+    <!-- isHead -->
+    <mat-checkbox [formControl]="isHead">head</mat-checkbox>
+    <!-- isOptional -->
+    <mat-checkbox [formControl]="isOptional">optional</mat-checkbox>
+  </div>
+  <!-- features -->
+  <div>
+    @if (featureEntries()?.length) {
+    <div>
+      <fieldset>
+        <legend>features</legend>
+        <cadmus-thes-entries-picker
+          [availableEntries]="featureEntries()!"
+          [entries]="features.value"
+          (entriesChange)="onFeaturesChange($event!)"
+        />
+      </fieldset>
+    </div>
+    }
+  </div>
+  <!-- note -->
+  <div>
+    <mat-form-field class="long-text">
+      <mat-label>note</mat-label>
+      <textarea matInput [formControl]="note" rows="3"></textarea>
+      @if ($any(note).errors?.maxLength && (note.dirty || note.touched)) {
+      <mat-error>note too long</mat-error>
+      }
+    </mat-form-field>
+  </div>
+  <!-- buttons -->
+  <div>
+    <button type="button" mat-icon-button matTooltip="Discard changes" (click)="cancel()">
+      <mat-icon class="mat-warn">clear</mat-icon>
+    </button>
+    <button
+      type="submit"
+      mat-icon-button
+      matTooltip="Accept changes"
+      [disabled]="form.invalid || form.pristine"
+    >
+      <mat-icon class="mat-primary">check_circle</mat-icon>
+    </button>
+  </div>
+</form>
