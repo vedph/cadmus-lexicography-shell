@@ -37,7 +37,7 @@ export class WordCollocTokenEditor {
   public readonly token = model<WordCollocationToken | undefined>();
   public readonly cancelEdit = output();
 
-  // ex-word-ctoken-pos-tags (required)
+  // lex-word-ctoken-pos-tags (required)
   public readonly posEntries = input.required<ThesaurusEntry[] | undefined>();
   // lex-word-ctoken-features
   public readonly featureEntries = input<ThesaurusEntry[] | undefined>();
