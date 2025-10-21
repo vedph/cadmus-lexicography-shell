@@ -1,0 +1,61 @@
+<form [formGroup]="form" (submit)="save()">
+  <!-- value -->
+  <div>
+    <mat-form-field>
+      <mat-label>value</mat-label>
+      <input matInput [formControl]="value" />
+      @if ($any(value).errors?.required && (value.dirty || value.touched)) {
+      <mat-error>value required</mat-error>
+      } @if ($any(value).errors?.maxLength && (value.dirty || value.touched)) {
+      <mat-error>value too long</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <!-- tag -->
+  <div>
+    @if (tagEntries()?.length) {
+    <cadmus-thes-entries-picker
+      [availableEntries]="tagEntries()!"
+      [entries]="tag.value ? [tag.value!] : []"
+      [hierarchicLabels]="true"
+      [minEntries]="1"
+      [maxEntries]="1"
+    />
+    } @else {
+    <mat-form-field>
+      <mat-label>tag</mat-label>
+      <input matInput [formControl]="tag" />
+      @if ($any(tag).errors?.maxLength && (tag.dirty || tag.touched)) {
+      <mat-error>tag too long</mat-error>
+      }
+    </mat-form-field>
+    }
+  </div>
+
+  <!-- note -->
+  <div>
+    <mat-form-field class="long-text">
+      <mat-label>note</mat-label>
+      <textarea matInput [formControl]="note" rows="3"></textarea>
+      @if ($any(note).errors?.maxLength && (note.dirty || note.touched)) {
+      <mat-error>note too long</mat-error>
+      }
+    </mat-form-field>
+  </div>
+
+  <!-- buttons -->
+  <div>
+    <button type="button" mat-icon-button matTooltip="Discard changes" (click)="cancel()">
+      <mat-icon class="mat-warn">clear</mat-icon>
+    </button>
+    <button
+      type="submit"
+      mat-icon-button
+      matTooltip="Accept changes"
+      [disabled]="form.invalid || form.pristine"
+    >
+      <mat-icon class="mat-primary">check_circle</mat-icon>
+    </button>
+  </div>
+</form>

@@ -10,6 +10,9 @@
       "@myrmidon/cadmus-part-lexicography-pg": [
         "./dist/myrmidon/cadmus-part-lexicography-pg"
       ],
+      "@myrmidon/cadmus-part-lexicography-word-collocations": [
+        "./dist/myrmidon/cadmus-part-lexicography-word-collocations"
+      ],
       "@myrmidon/cadmus-part-lexicography-word-forms": [
         "./dist/myrmidon/cadmus-part-lexicography-word-forms"
       ],
@@ -67,6 +70,12 @@
     },
     {
       "path": "./projects/myrmidon/cadmus-part-lexicography-word-senses/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/myrmidon/cadmus-part-lexicography-word-collocations/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/myrmidon/cadmus-part-lexicography-word-collocations/tsconfig.spec.json"
     }
   ]
 }

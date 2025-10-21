@@ -10,8 +10,9 @@
     "build-lem": "ng build @myrmidon/cadmus-part-lexicography-lemma",
     "build-wf": "ng build @myrmidon/cadmus-part-lexicography-word-forms",
     "build-sns": "ng build @myrmidon/cadmus-part-lexicography-word-senses",
+    "build-col": "ng build @myrmidon/cadmus-part-lexicography-word-collocations",
     "build-pg": "ng build @myrmidon/cadmus-part-lexicography-pg",
-    "build-lib": "npm run build-lem && npm run build-wf && npm run build-sns && npm run build-pg"
+    "build-lib": "npm run build-lem && npm run build-wf && npm run build-sns && npm run build-col && npm run build-pg"
   },
   "prettier": {
     "printWidth": 100,

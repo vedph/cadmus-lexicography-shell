@@ -205,6 +205,36 @@
           }
         }
       }
+    },
+    "@myrmidon/cadmus-part-lexicography-word-collocations": {
+      "projectType": "library",
+      "root": "projects/myrmidon/cadmus-part-lexicography-word-collocations",
+      "sourceRoot": "projects/myrmidon/cadmus-part-lexicography-word-collocations/src",
+      "prefix": "cadmus",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/myrmidon/cadmus-part-lexicography-word-collocations/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/myrmidon/cadmus-part-lexicography-word-collocations/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/myrmidon/cadmus-part-lexicography-word-collocations/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
     }
   }
 }
