@@ -21,6 +21,9 @@ import { ThesEntriesPickerComponent } from '@myrmidon/cadmus-ui';
 
 import { WordCollocationLiteral } from '../../lex-word-collocations-part';
 
+/**
+ * Word collocation literal editor.
+ */
 @Component({
   selector: 'cadmus-word-colloc-literal-editor',
   imports: [
@@ -39,7 +42,7 @@ import { WordCollocationLiteral } from '../../lex-word-collocations-part';
   styleUrl: './word-colloc-literal-editor.css',
 })
 export class WordCollocLiteralEditor {
-  public readonly data = model<WordCollocationLiteral | undefined>();
+  public readonly literal = model<WordCollocationLiteral | undefined>();
   // lex-word-cliteral-tags
   public readonly tagEntries = input<ThesaurusEntry[] | undefined>();
 
@@ -49,9 +52,6 @@ export class WordCollocLiteralEditor {
   public tag: FormControl<ThesaurusEntry | null>;
   public note: FormControl<string | null>;
   public form: FormGroup;
-
-  // track if the form is currently being updated programmatically
-  private _updatingForm = false;
 
   constructor(formBuilder: FormBuilder) {
     // form
@@ -71,7 +71,7 @@ export class WordCollocLiteralEditor {
 
     // when model changes, update form
     effect(() => {
-      const data = this.data();
+      const data = this.literal();
       this.updateForm(data);
     });
   }
@@ -86,8 +86,6 @@ export class WordCollocLiteralEditor {
   }
 
   private updateForm(data: WordCollocationLiteral | undefined | null): void {
-    this._updatingForm = true;
-
     if (!data) {
       this.form.reset();
     } else {
@@ -96,9 +94,6 @@ export class WordCollocLiteralEditor {
       this.note.setValue(data.note || null);
       this.form.markAsPristine();
     }
-
-    // reset guard only after marking controls
-    this._updatingForm = false;
   }
 
   private getData(): WordCollocationLiteral {
@@ -129,7 +124,7 @@ export class WordCollocLiteralEditor {
     }
 
     const data = this.getData();
-    this.data.set(data);
+    this.literal.set(data);
 
     if (pristine) {
       this.form.markAsPristine();
