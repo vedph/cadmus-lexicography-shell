@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { WordCollocation } from '../../lex-word-collocations-part';
-import { WordCollocationParser } from '../../../public-api';
+import { WordCollocation } from '../lex-word-collocations-part';
+import { WordCollocationParser } from '../services/word-collocation-parser';
 
 /**
  * A pipe to format a word collocation as string.

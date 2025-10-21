@@ -62,7 +62,6 @@ import { WordCollocationParser } from '../../../public-api';
     MatIcon,
     MatIconButton,
     MatInput,
-    MatLabel,
     MatTooltip,
     TitleCasePipe,
     CloseSaveButtonsComponent,
