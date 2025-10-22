@@ -54,8 +54,8 @@ export class WordFormSetEditor {
   public readonly prefixEntries = input<ThesaurusEntry[] | undefined>();
   // lex-word-form-suffixes
   public readonly suffixEntries = input<ThesaurusEntry[] | undefined>();
-  // lex-pos-tags
-  public readonly posEntries = input<ThesaurusEntry[] | undefined>();
+  // lex-pos-tags (required)
+  public readonly posEntries = input.required<ThesaurusEntry[]>();
   // lex-word-form-features
   public readonly featureEntries = input<ThesaurusEntry[] | undefined>();
   // lex-word-form-tags

@@ -1,39 +1,67 @@
-
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
+@import 'preview-styles.css';
+
+@include mat.elevation-classes();
+@include mat.app-background();
+
+$light-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: mat.$blue-palette,
+    ),
+  )
+);
+
+$accent-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: mat.$violet-palette,
+    ),
+  )
+);
+
+$error-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: mat.$red-palette,
+    ),
+  )
+);
 
 html {
-  @include mat.theme((
-    color: (
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
-    ),
-    typography: Roboto,
-    density: 0,
-  ));
+  @include mat.all-component-themes($light-theme);
+  & {
+    color-scheme: light;
+  }
 }
 
+html,
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
-  color-scheme: light;
-
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
-  margin: 0;
+  height: 100%;
 }
-/* You can add global styles to this file, and also import other style files */
+body {
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+.mat-primary,
+.mat-accent {
+  @include mat.all-component-colors($accent-theme);
+}
+
+.mat-error,
+.mat-warn {
+  @include mat.all-component-colors($error-theme);
+}
+
+mat-icon.mat-accent,
+mat-icon.mat-primary {
+  color: var(--mat-form-field-filled-focus-label-text-color) !important;
+}
+mat-icon.mat-error,
+mat-icon.mat-warn {
+  color: var(--mat-form-field-error-focus-trailing-icon-color) !important;
+}

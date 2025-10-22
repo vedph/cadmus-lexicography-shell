@@ -5,6 +5,7 @@ import {
   provideZoneChangeDetection,
 } from '@angular/core';
 import { provideHttpClient, withInterceptors, withJsonpSupport } from '@angular/common/http';
+import { provideNativeDateAdapter } from '@angular/material/core';
 import { provideRouter, withViewTransitions } from '@angular/router';
 
 import { AUTH_JWT_EXCLUDED_URLS, jwtInterceptor } from '@myrmidon/auth-jwt-login';
@@ -34,6 +35,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withViewTransitions()),
     provideHttpClient(withInterceptors([jwtInterceptor]), withJsonpSupport()),
+    provideNativeDateAdapter(),
     importProvidersFrom(
       NgxEchartsModule.forRoot({
         echarts: () => import('echarts'),

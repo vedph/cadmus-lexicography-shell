@@ -41,12 +41,7 @@ import { LEX_WORD_FORMS_PART_TYPEID, LexWordFormsPart } from '../../lex-word-for
     MatCardContent,
     MatCardHeader,
     MatCardTitle,
-    MatError,
-    MatFormField,
     MatIcon,
-    MatIconButton,
-    MatInput,
-    MatLabel,
     MatTooltip,
     TitleCasePipe,
     CloseSaveButtonsComponent,
@@ -67,8 +62,8 @@ export class LexWordFormsPartEditor
   public readonly prefixEntries = signal<ThesaurusEntry[] | undefined>(undefined);
   // lex-word-form-suffixes
   public readonly suffixEntries = signal<ThesaurusEntry[] | undefined>(undefined);
-  // lex-pos-tags
-  public readonly posEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  // lex-pos-tags (required)
+  public readonly posEntries = signal<ThesaurusEntry[]>([]);
   // lex-word-form-features
   public readonly featureEntries = signal<ThesaurusEntry[] | undefined>(undefined);
   // lex-word-form-tags
@@ -111,9 +106,9 @@ export class LexWordFormsPartEditor
     }
     key = 'lex-pos-tags';
     if (this.hasThesaurus(key)) {
-      this.posEntries.set(thesauri[key].entries);
+      this.posEntries.set(thesauri[key].entries!);
     } else {
-      this.posEntries.set(undefined);
+      this.posEntries.set([]);
     }
     key = 'lex-word-form-features';
     if (this.hasThesaurus(key)) {
