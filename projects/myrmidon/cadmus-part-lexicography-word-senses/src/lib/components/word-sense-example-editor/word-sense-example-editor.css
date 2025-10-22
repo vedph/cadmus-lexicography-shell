@@ -23,6 +23,9 @@ legend {
 #exp-editor {
   height: 300px;
 }
+.mt {
+  margin-top: 16px;
+}
 
 /* Layout */
 #txt-container {

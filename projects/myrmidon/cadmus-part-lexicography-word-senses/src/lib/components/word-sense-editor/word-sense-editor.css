@@ -5,6 +5,9 @@
   width: 100%;
   max-width: 800px;
 }
+.mt {
+  margin-top: 16px;
+}
 
 /* Layout */
 #def-container {

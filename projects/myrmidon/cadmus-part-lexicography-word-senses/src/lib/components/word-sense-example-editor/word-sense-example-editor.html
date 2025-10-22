@@ -22,7 +22,7 @@
   </div>
 
   <!-- text-->
-  <div id="txt-container">
+  <div id="txt-container" class="mt">
     <div id="txt">
       <nge-monaco-editor id="txt-editor" (ready)="onCreateTextEditor($event)" />
       @if (text.hasError('required') && (text.touched || text.dirty)) {
@@ -42,7 +42,7 @@
   </div>
 
   <!-- explanation -->
-  <div id="exp-container">
+  <div id="exp-container" class="mt">
     <div id="exp">
       <nge-monaco-editor id="exp-editor" (ready)="onCreateExplanationEditor($event)" />
       @if ($any(explanation).errors?.maxLength && (explanation.dirty || explanation.touched)) {
@@ -60,7 +60,7 @@
   </div>
 
   <!-- note -->
-  <div>
+  <div class="mt">
     <mat-form-field class="long-text">
       <mat-label>note</mat-label>
       <textarea matInput rows="3" [formControl]="note"></textarea>
