@@ -17,7 +17,7 @@ import {
   MatCardTitle,
 } from '@angular/material/card';
 import { MatIcon } from '@angular/material/icon';
-import { MatIconButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
 import {
   MatExpansionPanel,
@@ -50,6 +50,7 @@ import { WordCollocationParser } from '../../../public-api';
   selector: 'cadmus-lex-word-collocations-part-editor',
   imports: [
     ReactiveFormsModule,
+    MatButton,
     MatCard,
     MatCardActions,
     MatCardContent,

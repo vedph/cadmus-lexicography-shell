@@ -10,7 +10,7 @@
     </mat-form-field>
 
     <!-- add button -->
-    <button type="button" mat-flat-button color="primary" (click)="addLiteral()">
+    <button type="button" mat-flat-button class="mat-primary" (click)="addLiteral()">
       <mat-icon>add_circle</mat-icon> literal
     </button>
   </div>
@@ -34,7 +34,6 @@
           <button
             type="button"
             mat-icon-button
-            color="primary"
             matTooltip="Edit this literal"
             (click)="editLiteral(literal, i)"
           >
@@ -61,7 +60,6 @@
           <button
             type="button"
             mat-icon-button
-            color="warn"
             matTooltip="Delete this literal"
             (click)="deleteLiteral(i)"
           >

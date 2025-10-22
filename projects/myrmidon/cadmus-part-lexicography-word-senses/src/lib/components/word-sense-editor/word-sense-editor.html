@@ -60,7 +60,7 @@
     <!-- EXAMPLES -->
     <mat-tab label="examples">
       <div>
-        <button type="button" mat-flat-button color="primary" (click)="addExample()">
+        <button type="button" mat-flat-button class="mat-primary" (click)="addExample()">
           <mat-icon>add_circle</mat-icon> example
         </button>
       </div>
@@ -81,7 +81,6 @@
               <button
                 type="button"
                 mat-icon-button
-                color="primary"
                 matTooltip="Edit this example"
                 (click)="editExample(entry, i)"
               >
@@ -108,7 +107,6 @@
               <button
                 type="button"
                 mat-icon-button
-                color="warn"
                 matTooltip="Delete this example"
                 (click)="deleteExample(i)"
               >

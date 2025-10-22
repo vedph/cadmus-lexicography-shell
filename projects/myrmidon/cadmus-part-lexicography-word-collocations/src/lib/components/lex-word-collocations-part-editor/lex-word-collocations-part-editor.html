@@ -14,17 +14,23 @@
         <fieldset>
           <legend>batch</legend>
           <form [formGroup]="dslForm" (submit)="parseDsl()">
-            <mat-form-field appearance="outline" class="full-width">
+            <mat-form-field class="long-text">
               <textarea
                 matInput
                 [formControl]="dslText"
                 placeholder="collocation(s), one per line"
-                rows="5"
+                rows="3"
               ></textarea>
               <mat-hint>(RANK) POS+...: &lt;a&gt; [b, c] d</mat-hint>
             </mat-form-field>
             <div>
-              <button type="button" mat-icon-button color="primary" (click)="parseDsl()">
+              <button
+                type="button"
+                mat-icon-button
+                class="mat-primary"
+                (click)="parseDsl()"
+                matTooltip="Parse collocations and add them"
+              >
                 <mat-icon>library_add</mat-icon>
               </button>
             </div>
@@ -32,8 +38,8 @@
         </fieldset>
       </div>
       <!-- add collocation -->
-      <div>
-        <button type="button" mat-flat-button color="primary" (click)="addCollocation()">
+      <div class="mt">
+        <button type="button" mat-flat-button class="mat-primary" (click)="addCollocation()">
           <mat-icon>add_circle</mat-icon> collocation
         </button>
       </div>
@@ -54,7 +60,6 @@
               <button
                 type="button"
                 mat-icon-button
-                color="primary"
                 matTooltip="Edit this collocation"
                 (click)="editCollocation(entry, i)"
               >
@@ -81,7 +86,6 @@
               <button
                 type="button"
                 mat-icon-button
-                color="warn"
                 matTooltip="Delete this collocation"
                 (click)="deleteCollocation(i)"
               >

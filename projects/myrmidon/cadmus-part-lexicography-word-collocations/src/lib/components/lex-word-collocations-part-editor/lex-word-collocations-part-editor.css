@@ -22,3 +22,10 @@ fieldset {
   border-radius: 6px;
   padding: 6px;
 }
+.long-text {
+  width: 100%;
+  max-width: 800px;
+}
+.mt {
+  margin-top: 16px;
+}

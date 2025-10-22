@@ -6,11 +6,11 @@
   </mat-form-field>
 
   <!-- text -->
-   TODO add text with DSL to parse
+  TODO add text with DSL to parse
 
   <!-- examples -->
   <div>
-    <button type="button" mat-flat-button color="primary" (click)="addExample()">
+    <button type="button" mat-flat-button class="mat-primary" (click)="addExample()">
       <mat-icon>add_circle</mat-icon> example
     </button>
   </div>
@@ -31,7 +31,6 @@
           <button
             type="button"
             mat-icon-button
-            color="primary"
             matTooltip="Edit this example"
             (click)="editExample(entry, i)"
           >
@@ -58,7 +57,6 @@
           <button
             type="button"
             mat-icon-button
-            color="warn"
             matTooltip="Delete this example"
             (click)="deleteExample(i)"
           >
@@ -89,7 +87,7 @@
 
   <!-- tokens -->
   <div>
-    <button type="button" mat-flat-button color="primary" (click)="addToken()">
+    <button type="button" mat-flat-button class="mat-primary" (click)="addToken()">
       <mat-icon>add_circle</mat-icon> token
     </button>
   </div>
@@ -112,7 +110,6 @@
           <button
             type="button"
             mat-icon-button
-            color="primary"
             matTooltip="Edit this token"
             (click)="editToken(entry, i)"
           >
@@ -139,7 +136,6 @@
           <button
             type="button"
             mat-icon-button
-            color="warn"
             matTooltip="Delete this token"
             (click)="deleteToken(i)"
           >

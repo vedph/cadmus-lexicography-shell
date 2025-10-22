@@ -1,5 +1,5 @@
 <div>
-  <button type="button" mat-flat-button color="primary" (click)="addForm()">
+  <button type="button" mat-flat-button class="mat-primary" (click)="addForm()">
     <mat-icon>add_circle</mat-icon> form
   </button>
 </div>
@@ -23,7 +23,6 @@
         <button
           type="button"
           mat-icon-button
-          color="primary"
           matTooltip="Edit this form"
           (click)="editForm(entry, i)"
         >
@@ -50,7 +49,6 @@
         <button
           type="button"
           mat-icon-button
-          color="warn"
           matTooltip="Delete this form"
           (click)="deleteForm(i)"
         >
