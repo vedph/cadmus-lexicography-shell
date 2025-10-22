@@ -21,6 +21,7 @@ import { TxtEmojiCtePlugin } from '@myrmidon/cadmus-text-ed-txt';
 import {
   CADMUS_TEXT_ED_BINDINGS_TOKEN,
   CADMUS_TEXT_ED_SERVICE_OPTIONS_TOKEN,
+  CadmusTextEdService,
 } from '@myrmidon/cadmus-text-ed';
 
 // locals
@@ -86,6 +87,7 @@ export const appConfig: ApplicationConfig = {
       },
       deps: [MdBoldCtePlugin, MdItalicCtePlugin, TxtEmojiCtePlugin, MdLinkCtePlugin],
     },
+    CadmusTextEdService,
     // monaco bindings for plugins
     // 2080 = monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyB;
     // 2087 = monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyI;

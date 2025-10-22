@@ -1,6 +1,11 @@
 #editor {
   height: 300px;
 }
+.long-text {
+  width: 100%;
+  max-width: 800px;
+}
+
 /* Layout */
 #def-container {
   display: grid;
