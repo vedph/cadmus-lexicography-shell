@@ -15,12 +15,12 @@ call npm publish --access=public
 cd ..\..\..
 pause
 
-cd .\dist\myrmidon\cadmus-part-word-forms
+cd .\dist\myrmidon\cadmus-part-lexicography-word-forms
 call npm publish --access=public
 cd ..\..\..
 pause
 
-cd .\dist\myrmidon\cadmus-part-word-senses
+cd .\dist\myrmidon\cadmus-part-lexicography-word-senses
 call npm publish --access=public
 cd ..\..\..
 pause
