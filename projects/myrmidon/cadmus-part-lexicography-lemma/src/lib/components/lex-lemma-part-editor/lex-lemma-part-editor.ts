@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, InjectionToken, OnInit, signal } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -30,7 +30,21 @@ import { LEX_LEMMA_PART_TYPEID, LexLemmaPart, WordForm } from '../../lex-lemma-p
 import { WordFormSetEditor } from '../word-form-set-editor/word-form-set-editor';
 
 /**
+ * ID generator for lexicography lemma parts.
+ */
+export interface LidGenerator {
+  getLid(part: LexLemmaPart): string;
+}
+
+/**
+ * Injection token for lexicography lemma part LID generator.
+ */
+export const LEX_LEMMA_PART_LID_GENERATOR_TOKEN = new InjectionToken<LidGenerator>('LidGenerator');
+
+/**
  * Lexicography lemma part editor component.
+ * Note that this component requires a SidGenerator service to be provided via
+ * the LEX_LEMMA_PART_SID_GENERATOR_TOKEN injection token.
  * Thesauri: lex-word-form-types, lex-word-form-prefixes, lex-word-form-suffixes,
  * lex-pos-tags, lex-word-form-features, lex-word-form-tags.
  */
@@ -58,6 +72,8 @@ import { WordFormSetEditor } from '../word-form-set-editor/word-form-set-editor'
   styleUrl: './lex-lemma-part-editor.css',
 })
 export class LexLemmaPartEditor extends ModelEditorComponentBase<LexLemmaPart> implements OnInit {
+  private readonly _sidGenerator: LidGenerator;
+
   public lid: FormControl<string | null>;
   public homograph: FormControl<number>;
   public forms: FormControl<WordForm[]>;
@@ -84,6 +100,8 @@ export class LexLemmaPartEditor extends ModelEditorComponentBase<LexLemmaPart> i
     });
     this.homograph = formBuilder.control(0, { nonNullable: true });
     this.forms = formBuilder.control([], { nonNullable: true });
+
+    this._sidGenerator = inject(LEX_LEMMA_PART_LID_GENERATOR_TOKEN);
   }
 
   public override ngOnInit(): void {
@@ -172,5 +190,11 @@ export class LexLemmaPartEditor extends ModelEditorComponentBase<LexLemmaPart> i
     return part;
   }
 
-  // TODO: generate LID
+  public generateLid(): void {
+    const part = this.getValue();
+    const lid = this._sidGenerator.getLid(part);
+    this.lid.setValue(lid);
+    this.lid.markAsDirty();
+    this.lid.updateValueAndValidity();
+  }
 }

@@ -3,6 +3,8 @@
  */
 
 export * from './lib/lex-lemma-part';
+
+export * from './lib/components/lex-lemma-part-editor/lex-lemma-part-editor';
+export * from './lib/components/lex-lemma-part-feature/lex-lemma-part-feature';
 export * from './lib/components/word-form-editor/word-form-editor';
 export * from './lib/components/word-form-set-editor/word-form-set-editor';
-export * from './lib/components/lex-lemma-part-feature/lex-lemma-part-feature';
