@@ -9,7 +9,7 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 🐋 Quick Docker image build:
 
-1. `npm run build-lib`
+1. `pnpm run build-lib`
 2. update version in `env.js` and `ng build`
 3. `docker build . -t vedph2020/cadmus-lexicography-app:0.0.1 -t vedph2020/cadmus-lexicography-app:latest` (replace with the current version).
 

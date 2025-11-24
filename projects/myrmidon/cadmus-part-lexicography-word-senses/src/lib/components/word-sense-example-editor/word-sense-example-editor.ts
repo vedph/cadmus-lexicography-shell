@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import {
   Component,
   Inject,
@@ -42,7 +41,6 @@ import { WordSenseExample } from '../../lex-word-senses-part';
 @Component({
   selector: 'cadmus-word-sense-example-editor',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCheckboxModule,

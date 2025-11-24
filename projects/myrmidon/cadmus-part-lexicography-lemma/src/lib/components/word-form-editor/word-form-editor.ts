@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, effect, input, model, output, signal } from '@angular/core';
 import {
   FormBuilder,
@@ -26,7 +25,6 @@ import { WordForm } from '../../lex-lemma-part';
 @Component({
   selector: 'cadmus-word-form-editor',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCheckboxModule,

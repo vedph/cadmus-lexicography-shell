@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, Inject, Optional, effect, input, model, output, signal } from '@angular/core';
 import {
   FormBuilder,
@@ -42,7 +41,6 @@ import { WordSenseExampleEditor } from '../word-sense-example-editor/word-sense-
 @Component({
   selector: 'cadmus-word-sense-editor',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCheckboxModule,
@@ -59,7 +57,7 @@ import { WordSenseExampleEditor } from '../word-sense-example-editor/word-sense-
     ThesEntriesPickerComponent,
     WordSenseExampleEditor,
     EllipsisPipe,
-    FlatLookupPipe
+    FlatLookupPipe,
   ],
   templateUrl: './word-sense-editor.html',
   styleUrl: './word-sense-editor.css',

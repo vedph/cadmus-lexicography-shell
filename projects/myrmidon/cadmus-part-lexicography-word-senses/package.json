@@ -1,6 +1,6 @@
 {
   "name": "@myrmidon/cadmus-part-lexicography-word-senses",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Cadmus - Lexicography word senses part.",
   "keywords": [
     "Cadmus",
@@ -15,10 +15,10 @@
     "name": "Daniele Fusi"
   },
   "peerDependencies": {
-    "@angular/common": "^20.0.0",
-    "@angular/core": "^20.0.0",
-    "@angular/material": "^20.0.0",
-    "@myrmidon/cadmus-refs-asserted-ids": "^10.0.10"
+    "@angular/common": "^20.0.0 || ^21.0.0",
+    "@angular/core": "^20.0.0 || ^21.0.0",
+    "@angular/material": "^20.0.0 || ^21.0.0",
+    "@myrmidon/cadmus-refs-asserted-ids": "^10.0.12"
   },
   "dependencies": {
     "tslib": "^2.3.0"

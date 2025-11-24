@@ -1,5 +1,4 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, effect, input, model, output } from '@angular/core';
+import { Component, effect, input, model, output } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -27,7 +26,6 @@ import { WordCollocationLiteral } from '../../lex-word-collocations-part';
 @Component({
   selector: 'cadmus-word-colloc-literal-editor',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCheckboxModule,
