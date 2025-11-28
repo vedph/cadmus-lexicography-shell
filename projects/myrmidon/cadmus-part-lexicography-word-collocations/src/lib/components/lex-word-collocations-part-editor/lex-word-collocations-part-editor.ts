@@ -24,7 +24,7 @@ import {
   MatExpansionPanelHeader,
   MatExpansionPanelTitle,
 } from '@angular/material/expansion';
-import { MatFormField, MatLabel, MatHint } from '@angular/material/form-field';
+import { MatFormField, MatHint } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 
 import { NgxToolsValidators } from '@myrmidon/ngx-tools';
@@ -44,7 +44,8 @@ import { WordCollocationParser } from '../../../public-api';
 
 /**
  * WordCollocationsPart editor component.
- * Thesauri: lex-word-ctoken-pos-tags, lex-word-ctoken-features, lex-word-cliteral-tags.
+ * Thesauri: lex-word-ctoken-pos-tags, lex-word-ctoken-features, lex-word-cliteral-tags,
+ * lex-word-collocation-tags.
  */
 @Component({
   selector: 'cadmus-lex-word-collocations-part-editor',
@@ -68,8 +69,8 @@ import { WordCollocationParser } from '../../../public-api';
     CloseSaveButtonsComponent,
     WordCollocEditor,
     WordCollocationPipe,
-    MatHint
-],
+    MatHint,
+  ],
   templateUrl: './lex-word-collocations-part-editor.html',
   styleUrl: './lex-word-collocations-part-editor.css',
 })
@@ -80,6 +81,8 @@ export class LexWordCollocationPartEditor
   public readonly editedIndex = signal<number>(-1);
   public readonly edited = signal<WordCollocation | undefined>(undefined);
 
+  // lex-word-collocation-tags
+  public readonly collTagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
   // lex-word-ctoken-pos-tags
   public readonly tokPosEntries = signal<ThesaurusEntry[] | undefined>(undefined);
   // lex-word-ctoken-features
@@ -135,7 +138,13 @@ export class LexWordCollocationPartEditor
   }
 
   private updateThesauri(thesauri: ThesauriSet): void {
-    let key = 'lex-word-ctoken-pos-tags';
+    let key = 'lex-word-collocation-tags';
+    if (this.hasThesaurus(key)) {
+      this.collTagEntries.set(thesauri[key].entries);
+    } else {
+      this.collTagEntries.set(undefined);
+    }
+    key = 'lex-word-ctoken-pos-tags';
     if (this.hasThesaurus(key)) {
       this.tokPosEntries.set(thesauri[key].entries);
     } else {

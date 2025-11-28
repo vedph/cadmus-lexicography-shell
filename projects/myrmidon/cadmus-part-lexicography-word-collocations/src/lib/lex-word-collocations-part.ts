@@ -42,6 +42,7 @@ export interface WordCollocationExample {
  * connective text represented by literals whose token number is 0.
  */
 export interface WordCollocation {
+  tag?: string;
   rank?: number;
   tokens: WordCollocationToken[];
   examples?: WordCollocationExample[];
@@ -117,6 +118,9 @@ export const LEX_WORD_COLLOCATIONS_PART_SCHEMA = {
         type: 'object',
         required: ['tokens'],
         properties: {
+          tag: {
+            type: 'string',
+          },
           rank: {
             type: 'integer',
           },

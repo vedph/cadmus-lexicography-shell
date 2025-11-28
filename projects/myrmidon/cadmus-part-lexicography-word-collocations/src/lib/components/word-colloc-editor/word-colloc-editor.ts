@@ -13,9 +13,10 @@ import {
   MatExpansionPanelTitle,
 } from '@angular/material/expansion';
 import { MatIconButton } from '@angular/material/button';
-import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
+import { MatOption, MatSelect } from '@angular/material/select';
 
 import { EllipsisPipe, FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
@@ -33,6 +34,7 @@ import { WordCollocExampleEditor } from '../word-colloc-example-editor/word-coll
   selector: 'cadmus-word-colloc-editor',
   imports: [
     ReactiveFormsModule,
+    MatError,
     MatExpansionPanel,
     MatExpansionPanelHeader,
     MatExpansionPanelTitle,
@@ -40,7 +42,9 @@ import { WordCollocExampleEditor } from '../word-colloc-example-editor/word-coll
     MatIcon,
     MatIconButton,
     MatInput,
+    MatOption,
     MatLabel,
+    MatSelect,
     WordCollocTokenEditor,
     WordCollocExampleEditor,
     FlatLookupPipe,
@@ -55,6 +59,8 @@ export class WordCollocEditor {
 
   // lex-word-ctoken-pos-tags (required)
   public readonly tokPosEntries = input.required<ThesaurusEntry[] | undefined>();
+  // lex-word-collocation-tags
+  public readonly collTagEntries = input<ThesaurusEntry[] | undefined>();
   // lex-word-ctoken-features
   public readonly tokFeatureEntries = input<ThesaurusEntry[] | undefined>();
   // lex-word-cliteral-tags
@@ -66,6 +72,7 @@ export class WordCollocEditor {
   public readonly editedExample = signal<WordCollocationExample | undefined>(undefined);
   public readonly editedExampleIndex = signal<number>(-1);
 
+  public tag: FormControl<string | null>;
   public rank: FormControl<number>;
   public tokens: FormControl<WordCollocationToken[]>;
   public examples: FormControl<WordCollocationExample[]>;
@@ -73,6 +80,7 @@ export class WordCollocEditor {
   public form: FormGroup;
 
   constructor(formBuilder: FormBuilder, private _dialogService: DialogService) {
+    this.tag = formBuilder.control(null, Validators.maxLength(100));
     this.rank = formBuilder.control(0, { nonNullable: true });
     this.tokens = formBuilder.control([], {
       nonNullable: true,
@@ -81,6 +89,7 @@ export class WordCollocEditor {
     this.examples = formBuilder.control([], { nonNullable: true });
     this.note = formBuilder.control(null, Validators.maxLength(1000));
     this.form = formBuilder.group({
+      tag: this.tag,
       rank: this.rank,
       tokens: this.tokens,
       examples: this.examples,
@@ -98,6 +107,7 @@ export class WordCollocEditor {
     if (!data) {
       this.form.reset();
     } else {
+      this.tag.setValue(data.tag || null);
       this.rank.setValue(data.rank || 0);
       this.tokens.setValue(data.tokens || []);
       this.examples.setValue(data.examples || []);
@@ -108,6 +118,7 @@ export class WordCollocEditor {
 
   private getCollocation(): WordCollocation {
     return {
+      tag: this.tag.value || undefined,
       rank: this.rank.value || undefined,
       tokens: this.tokens.value,
       examples: this.examples.value.length ? this.examples.value : undefined,

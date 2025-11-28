@@ -1,9 +1,31 @@
 <form [formGroup]="form" (submit)="save()">
-  <!-- rank -->
-  <mat-form-field>
-    <mat-label>rank</mat-label>
-    <input matInput type="number" min="0" [formControl]="rank" />
-  </mat-form-field>
+  <div class="form-row">
+    <!-- tag (bound) -->
+    @if (collTagEntries()?.length) {
+    <mat-form-field>
+      <mat-label>tag</mat-label>
+      <mat-select [formControl]="tag">
+        @for (e of collTagEntries(); track e.id) {
+        <mat-option [value]="e.id">{{ e.value }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    } @else {
+    <!-- tag (free) -->
+    <mat-form-field>
+      <mat-label>tag</mat-label>
+      <input matInput [formControl]="tag" />
+      @if ($any(tag).errors?.maxLength && (tag.dirty || tag.touched)) {
+      <mat-error>tag too long</mat-error>
+      }
+    </mat-form-field>
+    }
+    <!-- rank -->
+    <mat-form-field>
+      <mat-label>rank</mat-label>
+      <input matInput type="number" min="0" [formControl]="rank" />
+    </mat-form-field>
+  </div>
 
   <!-- text -->
   TODO add text with DSL to parse

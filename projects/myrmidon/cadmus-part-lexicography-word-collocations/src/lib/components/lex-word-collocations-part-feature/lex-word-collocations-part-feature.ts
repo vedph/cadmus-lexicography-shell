@@ -27,6 +27,11 @@ export class LexWordCollocationsPartFeature extends EditPartFeatureBase implemen
   }
 
   protected override getReqThesauriIds(): string[] {
-    return ['lex-word-ctoken-pos-tags', 'lex-word-ctoken-features', 'lex-word-cliteral-tags'];
+    return [
+      'lex-word-collocation-tags',
+      'lex-word-ctoken-pos-tags',
+      'lex-word-ctoken-features',
+      'lex-word-cliteral-tags',
+    ];
   }
 }

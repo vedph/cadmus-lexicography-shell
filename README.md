@@ -15,6 +15,7 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## History
 
+- 2025-11-28: added tag to word collocation.
 - 2025-11-24:
   - ⚠️ upgraded to Angular 21.
   - migrated to `pnpm`.
