@@ -16,7 +16,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
-import { ThesEntriesPickerComponent } from '@myrmidon/cadmus-ui';
+import { ThesaurusEntriesPickerComponent } from '@myrmidon/cadmus-thesaurus-store';
 
 import { WordCollocationLiteral } from '../../lex-word-collocations-part';
 
@@ -34,7 +34,7 @@ import { WordCollocationLiteral } from '../../lex-word-collocations-part';
     MatInputModule,
     MatSelectModule,
     MatTooltipModule,
-    ThesEntriesPickerComponent,
+    ThesaurusEntriesPickerComponent,
   ],
   templateUrl: './word-colloc-literal-editor.html',
   styleUrl: './word-colloc-literal-editor.css',

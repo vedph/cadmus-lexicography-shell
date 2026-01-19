@@ -13,7 +13,8 @@ import { MatCheckbox } from '@angular/material/checkbox';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 
-import { ThesaurusEntry, ThesEntriesPickerComponent } from '@myrmidon/cadmus-ui';
+import { ThesaurusEntry } from '@myrmidon/cadmus-core';
+import { ThesaurusEntriesPickerComponent } from '@myrmidon/cadmus-thesaurus-store';
 
 import { WordCollocationToken } from '../../lex-word-collocations-part';
 
@@ -28,7 +29,7 @@ import { WordCollocationToken } from '../../lex-word-collocations-part';
     MatIcon,
     MatInput,
     MatLabel,
-    ThesEntriesPickerComponent,
+    ThesaurusEntriesPickerComponent,
   ],
   templateUrl: './word-colloc-token-editor.html',
   styleUrl: './word-colloc-token-editor.css',

@@ -27,7 +27,7 @@
     }
 
     <!-- pos (always bound) -->
-    <cadmus-thes-entries-picker
+    <cadmus-thesaurus-entries-picker
       [availableEntries]="posEntries()!"
       [entries]="[this.pos.value]"
       [hierarchicLabels]="true"
@@ -105,7 +105,7 @@
   <div>
     <fieldset>
       <legend>features</legend>
-      <cadmus-thes-entries-picker
+      <cadmus-thesaurus-entries-picker
         [availableEntries]="featureEntries()!"
         [entries]="features.value"
         [hierarchicLabels]="true"
@@ -119,7 +119,7 @@
   <div>
     <fieldset>
       <legend>tags</legend>
-      <cadmus-thes-entries-picker
+      <cadmus-thesaurus-entries-picker
         [availableEntries]="tagEntries()!"
         [entries]="tags.value"
         (entriesChange)="onTagEntriesChange($event!)"

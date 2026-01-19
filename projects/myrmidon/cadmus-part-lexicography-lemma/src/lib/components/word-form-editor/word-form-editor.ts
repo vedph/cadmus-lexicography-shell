@@ -18,7 +18,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { NgxToolsValidators } from '@myrmidon/ngx-tools';
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
-import { ThesEntriesPickerComponent } from '@myrmidon/cadmus-ui';
+import { ThesaurusEntriesPickerComponent } from '@myrmidon/cadmus-thesaurus-store';
 
 import { WordForm } from '../../lex-lemma-part';
 
@@ -33,7 +33,7 @@ import { WordForm } from '../../lex-lemma-part';
     MatInputModule,
     MatSelectModule,
     MatTooltipModule,
-    ThesEntriesPickerComponent,
+    ThesaurusEntriesPickerComponent,
   ],
   templateUrl: './word-form-editor.html',
   styleUrl: './word-form-editor.css',

@@ -15,7 +15,7 @@
   <!-- tag -->
   <div>
     @if (tagEntries()?.length) {
-    <cadmus-thes-entries-picker
+    <cadmus-thesaurus-entries-picker
       [availableEntries]="tagEntries()!"
       [entries]="tag.value ? [tag.value!] : []"
       [hierarchicLabels]="true"

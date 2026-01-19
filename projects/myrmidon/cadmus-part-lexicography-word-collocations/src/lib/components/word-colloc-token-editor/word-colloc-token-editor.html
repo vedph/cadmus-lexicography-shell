@@ -1,7 +1,7 @@
 <form [formGroup]="form" (submit)="save()">
   <div class="form-row">
     <!-- pos (always bound) -->
-    <cadmus-thes-entries-picker
+    <cadmus-thesaurus-entries-picker
       [availableEntries]="posEntries()!"
       [entries]="[this.pos.value]"
       [hierarchicLabels]="true"
@@ -20,7 +20,7 @@
     <div>
       <fieldset>
         <legend>features</legend>
-        <cadmus-thes-entries-picker
+        <cadmus-thesaurus-entries-picker
           [availableEntries]="featureEntries()!"
           [entries]="features.value"
           (entriesChange)="onFeaturesChange($event!)"

@@ -28,7 +28,7 @@ import {
   AssertedCompositeId,
   AssertedCompositeIdsComponent,
 } from '@myrmidon/cadmus-refs-asserted-ids';
-import { ThesEntriesPickerComponent } from '@myrmidon/cadmus-ui';
+import { ThesaurusEntriesPickerComponent } from '@myrmidon/cadmus-thesaurus-store';
 import {
   CadmusTextEdService,
   CADMUS_TEXT_ED_BINDINGS_TOKEN,
@@ -54,7 +54,7 @@ import { WordSenseExampleEditor } from '../word-sense-example-editor/word-sense-
     NgeMonacoModule,
     NgeMarkdownModule,
     AssertedCompositeIdsComponent,
-    ThesEntriesPickerComponent,
+    ThesaurusEntriesPickerComponent,
     WordSenseExampleEditor,
     EllipsisPipe,
     FlatLookupPipe,

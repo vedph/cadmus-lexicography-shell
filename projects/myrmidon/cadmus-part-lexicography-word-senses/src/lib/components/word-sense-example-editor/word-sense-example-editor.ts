@@ -29,7 +29,7 @@ import { NgeMonacoModule } from '@cisstech/nge/monaco';
 import { NgeMarkdownModule } from '@cisstech/nge/markdown';
 
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
-import { ThesEntriesPickerComponent } from '@myrmidon/cadmus-ui';
+import { ThesaurusEntriesPickerComponent } from '@myrmidon/cadmus-thesaurus-store';
 import {
   CadmusTextEdService,
   CADMUS_TEXT_ED_BINDINGS_TOKEN,
@@ -52,7 +52,7 @@ import { WordSenseExample } from '../../lex-word-senses-part';
     MatTooltipModule,
     NgeMonacoModule,
     NgeMarkdownModule,
-    ThesEntriesPickerComponent,
+    ThesaurusEntriesPickerComponent,
   ],
   templateUrl: './word-sense-example-editor.html',
   styleUrl: './word-sense-example-editor.css',
