@@ -87,6 +87,7 @@
           </mat-expansion-panel-header>
           <cadmus-word-sense-editor
             [tagEntries]="tagEntries()"
+            [idFeatureEntries]="idFeatureEntries()"
             [sense]="edited()"
             (senseChange)="saveSense($event!)"
             (cancelEdit)="closeSense()"

@@ -33,7 +33,7 @@ import { WordSenseEditor } from '../word-sense-editor/word-sense-editor';
 /**
  * Word senses part editor component.
  * Thesauri: lex-word-sense-tags, asserted-id-scopes, asserted-id-tags,
- * doc-reference-types, doc-reference-tags.
+ * doc-reference-types, doc-reference-tags, asserted-id-features.
  */
 @Component({
   selector: 'cadmus-lex-word-senses-part-editor',
@@ -66,13 +66,15 @@ export class LexWordSensesPartEditor
 
   // lex-word-sense-tags
   public readonly tagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  // asserted-id-features
+  public readonly idFeatureEntries = signal<ThesaurusEntry[] | undefined>(undefined);
 
   public entries: FormControl<WordSense[]>;
 
   constructor(
     authService: AuthJwtService,
     formBuilder: FormBuilder,
-    private _dialogService: DialogService
+    private _dialogService: DialogService,
   ) {
     super(authService, formBuilder);
     // form
@@ -94,11 +96,17 @@ export class LexWordSensesPartEditor
   }
 
   private updateThesauri(thesauri: ThesauriSet): void {
-    const key = 'lex-word-sense-tags';
+    let key = 'lex-word-sense-tags';
     if (this.hasThesaurus(key)) {
       this.tagEntries.set(thesauri[key].entries);
     } else {
       this.tagEntries.set(undefined);
+    }
+    key = 'asserted-id-features';
+    if (this.hasThesaurus(key)) {
+      this.idFeatureEntries.set(thesauri[key].entries);
+    } else {
+      this.idFeatureEntries.set(undefined);
     }
   }
 

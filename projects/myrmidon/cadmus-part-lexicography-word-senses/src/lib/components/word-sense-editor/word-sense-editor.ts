@@ -86,6 +86,8 @@ export class WordSenseEditor {
   public readonly refTypeEntries = input<ThesaurusEntry[] | undefined>();
   // doc-reference-tags
   public readonly refTagEntries = input<ThesaurusEntry[] | undefined>();
+  // asserted-id-features
+  public readonly idFeatureEntries = input<ThesaurusEntry[]>();
 
   public eid: FormControl<string | null>;
   public tags: FormControl<ThesaurusEntry[]>;
@@ -101,7 +103,7 @@ export class WordSenseEditor {
     private _editService: CadmusTextEdService,
     @Inject(CADMUS_TEXT_ED_BINDINGS_TOKEN)
     @Optional()
-    private _editorBindings?: CadmusTextEdBindings
+    private _editorBindings?: CadmusTextEdBindings,
   ) {
     // form
     this.eid = formBuilder.control(null, {
@@ -183,7 +185,7 @@ export class WordSenseEditor {
         this.definition.setValue(this._definitionModel!.getValue());
         this.definition.markAsDirty();
         this.definition.updateValueAndValidity();
-      })
+      }),
     );
 
     // plugins
@@ -200,7 +202,7 @@ export class WordSenseEditor {
 
   public mapIdToEntry(
     id: string | null,
-    entries: ThesaurusEntry[] | undefined
+    entries: ThesaurusEntry[] | undefined,
   ): ThesaurusEntry | null {
     if (!id) return null;
     if (!entries) return { id, value: id };

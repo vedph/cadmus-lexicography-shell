@@ -34,6 +34,7 @@ export class LexWordSensesPartFeature extends EditPartFeatureBase implements OnI
       'asserted-id-tags',
       'doc-reference-types',
       'doc-reference-tags',
+      'asserted-id-features',
     ];
   }
 }
