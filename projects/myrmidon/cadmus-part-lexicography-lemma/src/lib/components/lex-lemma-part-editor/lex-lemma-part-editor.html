@@ -15,9 +15,10 @@
           <mat-label>LID</mat-label>
           <input matInput [formControl]="lid" />
           @if ($any(lid).errors?.required && (lid.dirty || lid.touched)) {
-          <mat-error>LID required</mat-error>
-          } @if ($any(lid).errors?.maxLength && (lid.dirty || lid.touched)) {
-          <mat-error>LID too long</mat-error>
+            <mat-error>LID required</mat-error>
+          }
+          @if ($any(lid).errors?.maxLength && (lid.dirty || lid.touched)) {
+            <mat-error>LID too long</mat-error>
           }
         </mat-form-field>
         <!-- button -->
@@ -34,10 +35,11 @@
       <div>
         <fieldset>
           <legend>
-            forms @if (!this.forms.value.length) {
-            <span id="forms-error" matTooltip="Form(s) required"
-              ><mat-icon class="mat-warn">error</mat-icon></span
-            >
+            forms
+            @if (!this.forms.value.length) {
+              <span id="forms-error" matTooltip="Form(s) required"
+                ><mat-icon class="mat-warn">error</mat-icon></span
+              >
             }
           </legend>
           <cadmus-word-form-set-editor

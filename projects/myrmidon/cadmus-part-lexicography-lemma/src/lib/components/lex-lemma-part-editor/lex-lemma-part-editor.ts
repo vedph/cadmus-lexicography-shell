@@ -168,7 +168,7 @@ export class LexLemmaPartEditor extends ModelEditorComponentBase<LexLemmaPart> i
 
   public onFormsChange(forms: WordForm[]): void {
     this.forms.setValue(forms || []);
-    this.form.markAsDirty();
+    this.forms.markAsDirty();
     this.forms.updateValueAndValidity();
   }
 

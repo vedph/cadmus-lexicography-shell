@@ -35,6 +35,7 @@ import {
   CADMUS_TEXT_ED_BINDINGS_TOKEN,
   CadmusTextEdBindings,
 } from '@myrmidon/cadmus-text-ed';
+import { MonacoEditorHelper } from '@myrmidon/cadmus-part-general-ui';
 
 import { WordSenseExample } from '../../lex-word-senses-part';
 
@@ -59,11 +60,8 @@ import { WordSenseExample } from '../../lex-word-senses-part';
 })
 export class WordSenseExampleEditor implements OnDestroy {
   // Monaco
-  private readonly _disposables: monaco.IDisposable[] = [];
-  private _textModel?: monaco.editor.ITextModel;
-  private _textEditor?: monaco.editor.IStandaloneCodeEditor;
-  private _explanationModel?: monaco.editor.ITextModel;
-  private _explanationEditor?: monaco.editor.IStandaloneCodeEditor;
+  private _textHelper!: MonacoEditorHelper;
+  private _explanationHelper!: MonacoEditorHelper;
 
   public readonly example = model<WordSenseExample | undefined>();
   public readonly cancelEdit = output();
@@ -83,7 +81,7 @@ export class WordSenseExampleEditor implements OnDestroy {
     private _editService: CadmusTextEdService,
     @Inject(CADMUS_TEXT_ED_BINDINGS_TOKEN)
     @Optional()
-    private _editorBindings?: CadmusTextEdBindings
+    private _editorBindings?: CadmusTextEdBindings,
   ) {
     // form
     this.tags = formBuilder.control([], { nonNullable: true });
@@ -112,6 +110,10 @@ export class WordSenseExampleEditor implements OnDestroy {
       note: this.note,
     });
 
+    // init Monaco helpers
+    this._textHelper = new MonacoEditorHelper(this.text);
+    this._explanationHelper = new MonacoEditorHelper(this.explanation);
+
     // when model changes, update form
     effect(() => {
       const data = this.example();
@@ -120,7 +122,8 @@ export class WordSenseExampleEditor implements OnDestroy {
   }
 
   public ngOnDestroy() {
-    this._disposables.forEach((d) => d.dispose());
+    this._textHelper.dispose();
+    this._explanationHelper.dispose();
   }
 
   private async applyEdit(selector: string, editor: monaco.editor.IStandaloneCodeEditor) {
@@ -145,75 +148,32 @@ export class WordSenseExampleEditor implements OnDestroy {
   }
 
   public onCreateTextEditor(editor: monaco.editor.IEditor) {
-    editor.updateOptions({
-      minimap: {
-        side: 'right',
-      },
-      wordWrap: 'on',
-      automaticLayout: true,
-    });
-    this._textModel =
-      this._textModel || monaco.editor.createModel(this.text?.value || '', 'markdown');
-    editor.setModel(this._textModel);
-    this._textEditor = editor as monaco.editor.IStandaloneCodeEditor;
-
-    this._disposables.push(
-      this._textModel.onDidChangeContent((e) => {
-        this.text.setValue(this._textModel!.getValue());
-        this.text.markAsDirty();
-        this.text.updateValueAndValidity();
-      })
-    );
+    this._textHelper.initEditor(editor);
 
     // plugins
     if (this._editorBindings) {
-      Object.keys(this._editorBindings).forEach((key) => {
-        const n = parseInt(key, 10);
-        console.log('Binding ' + n + ' to ' + this._editorBindings![key as any]);
-        this._textEditor!.addCommand(n, () => {
-          this.applyEdit(this._editorBindings![key as any], this._textEditor!);
-        });
-      });
+      this._textHelper.addBindings(
+        this._editorBindings as Record<string, string>,
+        this.applyEdit.bind(this),
+      );
     }
   }
 
   public onCreateExplanationEditor(editor: monaco.editor.IEditor) {
-    editor.updateOptions({
-      minimap: {
-        enabled: false,
-      },
-      wordWrap: 'on',
-      automaticLayout: true,
-    });
-    this._explanationModel =
-      this._explanationModel ||
-      monaco.editor.createModel(this.explanation?.value || '', 'markdown');
-    editor.setModel(this._explanationModel);
-    this._explanationEditor = editor as monaco.editor.IStandaloneCodeEditor;
-
-    this._disposables.push(
-      this._explanationModel.onDidChangeContent((e) => {
-        this.explanation.setValue(this._explanationModel!.getValue());
-        this.explanation.markAsDirty();
-        this.explanation.updateValueAndValidity();
-      })
-    );
+    this._explanationHelper.initEditor(editor, { minimap: { enabled: false } });
 
     // plugins
     if (this._editorBindings) {
-      Object.keys(this._editorBindings).forEach((key) => {
-        const n = parseInt(key, 10);
-        console.log('Binding ' + n + ' to ' + this._editorBindings![key as any]);
-        this._explanationEditor!.addCommand(n, () => {
-          this.applyEdit(this._editorBindings![key as any], this._explanationEditor!);
-        });
-      });
+      this._explanationHelper.addBindings(
+        this._editorBindings as Record<string, string>,
+        this.applyEdit.bind(this),
+      );
     }
   }
 
   public mapIdToEntry(
     id: string | null,
-    entries: ThesaurusEntry[] | undefined
+    entries: ThesaurusEntry[] | undefined,
   ): ThesaurusEntry | null {
     if (!id) return null;
     if (!entries) return { id, value: id };
@@ -228,11 +188,13 @@ export class WordSenseExampleEditor implements OnDestroy {
   private updateForm(example: WordSenseExample | undefined | null): void {
     if (!example) {
       this.form.reset();
+      this._textHelper.setValue('');
+      this._explanationHelper.setValue('');
     } else {
       this.tags.setValue(this.mapIdToEntries(example.tags || [], this.tagEntries()));
       this.citation.setValue(example.citation || null);
-      this._textModel?.setValue(example.text || '');
-      this._explanationModel?.setValue(example.explanation || '');
+      this._textHelper.setValue(example.text || '');
+      this._explanationHelper.setValue(example.explanation || '');
       this.note.setValue(example.note || null);
       this.form.markAsPristine();
     }

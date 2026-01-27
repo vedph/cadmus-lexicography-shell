@@ -1,4 +1,14 @@
-import { Component, Inject, Optional, effect, input, model, output, signal } from '@angular/core';
+import {
+  Component,
+  Inject,
+  OnDestroy,
+  Optional,
+  effect,
+  input,
+  model,
+  output,
+  signal,
+} from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -34,6 +44,7 @@ import {
   CADMUS_TEXT_ED_BINDINGS_TOKEN,
   CadmusTextEdBindings,
 } from '@myrmidon/cadmus-text-ed';
+import { MonacoEditorHelper } from '@myrmidon/cadmus-part-general-ui';
 
 import { WordSense, WordSenseExample } from '../../lex-word-senses-part';
 import { WordSenseExampleEditor } from '../word-sense-example-editor/word-sense-example-editor';
@@ -62,11 +73,9 @@ import { WordSenseExampleEditor } from '../word-sense-example-editor/word-sense-
   templateUrl: './word-sense-editor.html',
   styleUrl: './word-sense-editor.css',
 })
-export class WordSenseEditor {
+export class WordSenseEditor implements OnDestroy {
   // Monaco
-  private readonly _disposables: monaco.IDisposable[] = [];
-  private _definitionModel?: monaco.editor.ITextModel;
-  private _definitionEditor?: monaco.editor.IStandaloneCodeEditor;
+  private _definitionHelper!: MonacoEditorHelper;
 
   public readonly sense = model<WordSense | undefined>();
   public readonly cancelEdit = output();
@@ -135,6 +144,9 @@ export class WordSenseEditor {
       relatedIds: this.relatedIds,
     });
 
+    // init Monaco helper
+    this._definitionHelper = new MonacoEditorHelper(this.definition);
+
     // when model changes, update form
     effect(() => {
       const data = this.sense();
@@ -143,7 +155,7 @@ export class WordSenseEditor {
   }
 
   public ngOnDestroy() {
-    this._disposables.forEach((d) => d.dispose());
+    this._definitionHelper.dispose();
   }
 
   private async applyEdit(selector: string, editor: monaco.editor.IStandaloneCodeEditor) {
@@ -168,35 +180,14 @@ export class WordSenseEditor {
   }
 
   public onCreateTextEditor(editor: monaco.editor.IEditor) {
-    editor.updateOptions({
-      minimap: {
-        side: 'right',
-      },
-      wordWrap: 'on',
-      automaticLayout: true,
-    });
-    this._definitionModel =
-      this._definitionModel || monaco.editor.createModel(this.definition?.value || '', 'markdown');
-    editor.setModel(this._definitionModel);
-    this._definitionEditor = editor as monaco.editor.IStandaloneCodeEditor;
-
-    this._disposables.push(
-      this._definitionModel.onDidChangeContent((e) => {
-        this.definition.setValue(this._definitionModel!.getValue());
-        this.definition.markAsDirty();
-        this.definition.updateValueAndValidity();
-      }),
-    );
+    this._definitionHelper.initEditor(editor);
 
     // plugins
     if (this._editorBindings) {
-      Object.keys(this._editorBindings).forEach((key) => {
-        const n = parseInt(key, 10);
-        console.log('Binding ' + n + ' to ' + this._editorBindings![key as any]);
-        this._definitionEditor!.addCommand(n, () => {
-          this.applyEdit(this._editorBindings![key as any], this._definitionEditor!);
-        });
-      });
+      this._definitionHelper.addBindings(
+        this._editorBindings as Record<string, string>,
+        this.applyEdit.bind(this),
+      );
     }
   }
 
@@ -217,10 +208,11 @@ export class WordSenseEditor {
   private updateForm(sense: WordSense | undefined | null): void {
     if (!sense) {
       this.form.reset();
+      this._definitionHelper.setValue('');
     } else {
       this.eid.setValue(sense.eid || null);
       this.tags.setValue(this.mapIdToEntries(sense.tags || [], this.tagEntries()));
-      this._definitionModel?.setValue(sense.definition || '');
+      this._definitionHelper.setValue(sense.definition || '');
       this.note.setValue(sense.note || null);
       this.examples.setValue(sense.examples || []);
       this.relatedIds.setValue(sense.relatedIds || []);

@@ -15,85 +15,92 @@
         </button>
       </div>
       @if (entries.value.length) {
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th>EID</th>
-            <th>tags</th>
-            <th>definition</th>
-            <th>examples</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (entry of entries.value; track entry; let i = $index; let first = $first; let last =
-          $last) {
-          <tr [class.selected]="entry === edited()">
-            <td class="fit-width">
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Edit this Sense"
-                (click)="editSense(entry, i)"
-              >
-                <mat-icon class="mat-primary">edit</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Move this Sense up"
-                [disabled]="first"
-                (click)="moveSenseUp(i)"
-              >
-                <mat-icon>arrow_upward</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Move this Sense down"
-                [disabled]="last"
-                (click)="moveSenseDown(i)"
-              >
-                <mat-icon>arrow_downward</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Delete this Sense"
-                (click)="deleteSense(i)"
-              >
-                <mat-icon class="mat-warn">remove_circle</mat-icon>
-              </button>
-            </td>
-            <td>{{ entry.eid }}</td>
-            <td>
-              @for (tag of entry.tags; track tag; let last = $last) {
-              {{ tag | flatLookup : tagEntries() : 'id' : 'value' }}
-              @if (!last) {
-              <span>, </span>
-              } }
-            </td>
-            <td>{{ entry.definition | ellipsis }}</td>
-            <td>{{ entry.examples?.length || 0 }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-      } @if (edited()) {
-      <fieldset>
-        <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
-          <mat-expansion-panel-header>
-            <mat-panel-title>Sense #</mat-panel-title>
-          </mat-expansion-panel-header>
-          <cadmus-word-sense-editor
-            [tagEntries]="tagEntries()"
-            [idFeatureEntries]="idFeatureEntries()"
-            [sense]="edited()"
-            (senseChange)="saveSense($event!)"
-            (cancelEdit)="closeSense()"
-          />
-        </mat-expansion-panel>
-      </fieldset>
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>EID</th>
+              <th>tags</th>
+              <th>definition</th>
+              <th>examples</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (
+              entry of entries.value;
+              track entry;
+              let i = $index;
+              let first = $first;
+              let last = $last
+            ) {
+              <tr [class.selected]="entry === edited()">
+                <td class="fit-width">
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Edit this Sense"
+                    (click)="editSense(entry, i)"
+                  >
+                    <mat-icon class="mat-primary">edit</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Move this Sense up"
+                    [disabled]="first"
+                    (click)="moveSenseUp(i)"
+                  >
+                    <mat-icon>arrow_upward</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Move this Sense down"
+                    [disabled]="last"
+                    (click)="moveSenseDown(i)"
+                  >
+                    <mat-icon>arrow_downward</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Delete this Sense"
+                    (click)="deleteSense(i)"
+                  >
+                    <mat-icon class="mat-warn">remove_circle</mat-icon>
+                  </button>
+                </td>
+                <td>{{ entry.eid }}</td>
+                <td>
+                  @for (tag of entry.tags; track tag; let last = $last) {
+                    {{ tag | flatLookup: tagEntries() : 'id' : 'value' }}
+                    @if (!last) {
+                      <span>, </span>
+                    }
+                  }
+                </td>
+                <td>{{ entry.definition | ellipsis }}</td>
+                <td>{{ entry.examples?.length || 0 }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+      @if (edited()) {
+        <fieldset>
+          <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
+            <mat-expansion-panel-header>
+              <mat-panel-title>Sense #</mat-panel-title>
+            </mat-expansion-panel-header>
+            <cadmus-word-sense-editor
+              [tagEntries]="tagEntries()"
+              [idFeatureEntries]="idFeatureEntries()"
+              [sense]="edited()"
+              (senseChange)="saveSense($event!)"
+              (cancelEdit)="closeSense()"
+            />
+          </mat-expansion-panel>
+        </fieldset>
       }
     </mat-card-content>
     <mat-card-actions>

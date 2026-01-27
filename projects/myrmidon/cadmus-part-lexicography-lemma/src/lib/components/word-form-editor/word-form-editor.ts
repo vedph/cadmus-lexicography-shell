@@ -16,7 +16,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { NgxToolsValidators } from '@myrmidon/ngx-tools';
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
 import { ThesaurusEntriesPickerComponent } from '@myrmidon/cadmus-thesaurus-store';
 
@@ -82,7 +81,7 @@ export class WordFormEditor {
       {
         nonNullable: true,
         validators: Validators.required,
-      }
+      },
     );
     this.features = formBuilder.control([], { nonNullable: true });
     this.tags = formBuilder.control([], { nonNullable: true });
@@ -107,7 +106,7 @@ export class WordFormEditor {
 
   public mapIdToEntry(
     id: string | null,
-    entries: ThesaurusEntry[] | undefined
+    entries: ThesaurusEntry[] | undefined,
   ): ThesaurusEntry | null {
     if (!id) return null;
     if (!entries) return { id, value: id };

@@ -17,7 +17,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { deepCopy, EllipsisPipe, FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
+import { EllipsisPipe, FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import { AuthJwtService } from '@myrmidon/auth-jwt-login';
 import { CloseSaveButtonsComponent, ModelEditorComponentBase } from '@myrmidon/cadmus-ui';
@@ -144,7 +144,7 @@ export class LexWordSensesPartEditor
 
   public editSense(entry: WordSense, index: number): void {
     this.editedIndex.set(index);
-    this.edited.set(deepCopy(entry));
+    this.edited.set(structuredClone(entry));
   }
 
   public closeSense(): void {

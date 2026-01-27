@@ -12,13 +12,14 @@ import {
   MatExpansionPanelHeader,
   MatExpansionPanelTitle,
 } from '@angular/material/expansion';
-import { MatIconButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
 import { MatOption, MatSelect } from '@angular/material/select';
+import { MatTooltip } from '@angular/material/tooltip';
 
-import { EllipsisPipe, FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
+import { FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
 
@@ -26,6 +27,7 @@ import { WordCollocTokenEditor } from '../word-colloc-token-editor/word-colloc-t
 import {
   WordCollocation,
   WordCollocationExample,
+  WordCollocationLiteral,
   WordCollocationToken,
 } from '../../lex-word-collocations-part';
 import { WordCollocExampleEditor } from '../word-colloc-example-editor/word-colloc-example-editor';
@@ -34,6 +36,7 @@ import { WordCollocExampleEditor } from '../word-colloc-example-editor/word-coll
   selector: 'cadmus-word-colloc-editor',
   imports: [
     ReactiveFormsModule,
+    MatButton,
     MatError,
     MatExpansionPanel,
     MatExpansionPanelHeader,
@@ -45,10 +48,10 @@ import { WordCollocExampleEditor } from '../word-colloc-example-editor/word-coll
     MatOption,
     MatLabel,
     MatSelect,
+    MatTooltip,
     WordCollocTokenEditor,
     WordCollocExampleEditor,
     FlatLookupPipe,
-    EllipsisPipe,
   ],
   templateUrl: './word-colloc-editor.html',
   styleUrl: './word-colloc-editor.css',
@@ -79,7 +82,10 @@ export class WordCollocEditor {
   public note: FormControl<string | null>;
   public form: FormGroup;
 
-  constructor(formBuilder: FormBuilder, private _dialogService: DialogService) {
+  constructor(
+    formBuilder: FormBuilder,
+    private _dialogService: DialogService,
+  ) {
     this.tag = formBuilder.control(null, Validators.maxLength(100));
     this.rank = formBuilder.control(0, { nonNullable: true });
     this.tokens = formBuilder.control([], {
@@ -277,6 +283,10 @@ export class WordCollocEditor {
     this.examples.updateValueAndValidity();
   }
   //#endregion
+
+  getLiteralValues(literals: WordCollocationLiteral[]) {
+    return literals?.map((l) => l.value).join('; ') ?? '';
+  }
 
   public cancel(): void {
     this.cancelEdit.emit();

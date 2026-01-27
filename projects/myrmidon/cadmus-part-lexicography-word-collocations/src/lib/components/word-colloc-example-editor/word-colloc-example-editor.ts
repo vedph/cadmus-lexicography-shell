@@ -2,7 +2,7 @@ import { Component, computed, input, linkedSignal, model, output, signal } from 
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { MatIconButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import {
   MatExpansionPanel,
   MatExpansionPanelHeader,
@@ -27,6 +27,8 @@ import { WordCollocLiteralEditor } from '../word-colloc-literal-editor/word-coll
   selector: 'cadmus-word-colloc-example-editor',
   imports: [
     ReactiveFormsModule,
+    MatButton,
+    MatError,
     MatExpansionPanel,
     MatExpansionPanelHeader,
     MatExpansionPanelTitle,
@@ -36,7 +38,6 @@ import { WordCollocLiteralEditor } from '../word-colloc-literal-editor/word-coll
     MatInput,
     MatLabel,
     MatTooltip,
-    MatError,
     FlatLookupPipe,
     WordCollocLiteralEditor,
   ],

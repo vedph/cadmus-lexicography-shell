@@ -8,20 +8,20 @@
           <mat-label>EID</mat-label>
           <input matInput [formControl]="eid" />
           @if ($any(eid).errors?.maxLength && (eid.dirty || eid.touched)) {
-          <mat-error>EID too long</mat-error>
+            <mat-error>EID too long</mat-error>
           }
         </mat-form-field>
       </div>
       <div>
         <!-- tags -->
         @if (tagEntries()?.length) {
-        <div>
-          <cadmus-thesaurus-entries-picker
-            [availableEntries]="tagEntries()!"
-            [entries]="tags.value"
-            [hierarchicLabels]="true"
-          />
-        </div>
+          <div>
+            <cadmus-thesaurus-entries-picker
+              [availableEntries]="tagEntries()!"
+              [entries]="tags.value"
+              [hierarchicLabels]="true"
+            />
+          </div>
         }
       </div>
 
@@ -30,9 +30,10 @@
         <div id="def">
           <nge-monaco-editor id="editor" (ready)="onCreateTextEditor($event)" />
           @if (definition.hasError('required') && (definition.touched || definition.dirty)) {
-          <mat-error>text required</mat-error>
-          } @if (definition.hasError('maxLength') && (definition.touched || definition.dirty)) {
-          <mat-error>text too long</mat-error>
+            <mat-error>text required</mat-error>
+          }
+          @if (definition.hasError('maxLength') && (definition.touched || definition.dirty)) {
+            <mat-error>text too long</mat-error>
           }
         </div>
         <!-- preview -->
@@ -51,7 +52,7 @@
           <mat-label>note</mat-label>
           <textarea matInput rows="3" [formControl]="note"></textarea>
           @if ($any(note).errors?.maxLength && (note.dirty || note.touched)) {
-          <mat-error>note too long</mat-error>
+            <mat-error>note too long</mat-error>
           }
         </mat-form-field>
       </div>
@@ -65,80 +66,87 @@
         </button>
       </div>
       @if (examples.value.length) {
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th>tags</th>
-            <th>text</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (entry of examples.value; track entry; let i = $index; let first = $first; let last =
-          $last) {
-          <tr [class.selected]="i === editedExIndex()">
-            <td class="fit-width">
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Edit this example"
-                (click)="editExample(entry, i)"
-              >
-                <mat-icon class="mat-primary">edit</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Move this example up"
-                [disabled]="first"
-                (click)="moveExampleUp(i)"
-              >
-                <mat-icon>arrow_upward</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Move this example down"
-                [disabled]="last"
-                (click)="moveExampleDown(i)"
-              >
-                <mat-icon>arrow_downward</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Delete this example"
-                (click)="deleteExample(i)"
-              >
-                <mat-icon class="mat-warn">remove_circle</mat-icon>
-              </button>
-            </td>
-            <td>
-              @for (tag of entry.tags; track tag; let last = $last) {
-              {{ tag | flatLookup : tagEntries() : 'id' : 'value' }}
-              @if (!last) {
-              <span>, </span>
-              } }
-            </td>
-            <td>{{ entry.text | ellipsis }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-      } @if (editedEx()) {
-      <fieldset>
-        <mat-expansion-panel [expanded]="editedEx()" [disabled]="!editedEx()">
-          <mat-expansion-panel-header>
-            <mat-panel-title>Example #</mat-panel-title>
-          </mat-expansion-panel-header>
-          <cadmus-word-sense-example-editor
-            [tagEntries]="tagEntries()"
-            [example]="editedEx()"
-            (exampleChange)="saveExample($event!)"
-            (cancelEdit)="closeExample()"
-          />
-        </mat-expansion-panel>
-      </fieldset>
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>tags</th>
+              <th>text</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (
+              entry of examples.value;
+              track entry;
+              let i = $index;
+              let first = $first;
+              let last = $last
+            ) {
+              <tr [class.selected]="i === editedExIndex()">
+                <td class="fit-width">
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Edit this example"
+                    (click)="editExample(entry, i)"
+                  >
+                    <mat-icon class="mat-primary">edit</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Move this example up"
+                    [disabled]="first"
+                    (click)="moveExampleUp(i)"
+                  >
+                    <mat-icon>arrow_upward</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Move this example down"
+                    [disabled]="last"
+                    (click)="moveExampleDown(i)"
+                  >
+                    <mat-icon>arrow_downward</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Delete this example"
+                    (click)="deleteExample(i)"
+                  >
+                    <mat-icon class="mat-warn">remove_circle</mat-icon>
+                  </button>
+                </td>
+                <td>
+                  @for (tag of entry.tags; track tag; let last = $last) {
+                    {{ tag | flatLookup: tagEntries() : 'id' : 'value' }}
+                    @if (!last) {
+                      <span>, </span>
+                    }
+                  }
+                </td>
+                <td>{{ entry.text | ellipsis }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+      @if (editedEx()) {
+        <fieldset>
+          <mat-expansion-panel [expanded]="editedEx()" [disabled]="!editedEx()">
+            <mat-expansion-panel-header>
+              <mat-panel-title>Example #</mat-panel-title>
+            </mat-expansion-panel-header>
+            <cadmus-word-sense-example-editor
+              [tagEntries]="tagEntries()"
+              [example]="editedEx()"
+              (exampleChange)="saveExample($event!)"
+              (cancelEdit)="closeExample()"
+            />
+          </mat-expansion-panel>
+        </fieldset>
       }
     </mat-tab>
 
@@ -155,20 +163,20 @@
         (idsChange)="onRelatedIdsChange($event)"
       />
     </mat-tab>
-
-    <!-- buttons -->
-    <div>
-      <button type="button" mat-icon-button matTooltip="Discard changes" (click)="cancel()">
-        <mat-icon class="mat-warn">clear</mat-icon>
-      </button>
-      <button
-        type="submit"
-        mat-icon-button
-        matTooltip="Accept changes"
-        [disabled]="form.invalid || form.pristine"
-      >
-        <mat-icon class="mat-primary">check_circle</mat-icon>
-      </button>
-    </div>
   </mat-tab-group>
+
+  <!-- buttons -->
+  <div>
+    <button type="button" mat-icon-button matTooltip="Discard changes" (click)="cancel()">
+      <mat-icon class="mat-warn">clear</mat-icon>
+    </button>
+    <button
+      type="submit"
+      mat-icon-button
+      matTooltip="Accept changes"
+      [disabled]="form.invalid || form.pristine"
+    >
+      <mat-icon class="mat-primary">check_circle</mat-icon>
+    </button>
+  </div>
 </form>
