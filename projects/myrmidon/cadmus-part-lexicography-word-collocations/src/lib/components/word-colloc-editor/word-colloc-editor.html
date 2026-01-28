@@ -27,193 +27,196 @@
     </mat-form-field>
   </div>
 
-  <!-- text -->
-  <!-- TODO add text with DSL to parse -->
-
-  <!-- examples -->
-  <div>
-    <button type="button" mat-button class="mat-primary" (click)="addExample()">
-      <mat-icon>add_circle</mat-icon> example
-    </button>
-  </div>
-  @if (examples.value.length) {
-    <table>
-      <thead>
-        <tr>
-          <th></th>
-          <th>nr.</th>
-          <th>value</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (
-          entry of examples.value;
-          track entry;
-          let i = $index;
-          let first = $first;
-          let last = $last
-        ) {
-          <tr [class.selected]="entry === editedExample()">
-            <td class="fit-width">
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Edit this example"
-                (click)="editExample(entry, i)"
-              >
-                <mat-icon class="mat-primary">edit</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Move this example up"
-                [disabled]="first"
-                (click)="moveExampleUp(i)"
-              >
-                <mat-icon>arrow_upward</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Move this example down"
-                [disabled]="last"
-                (click)="moveExampleDown(i)"
-              >
-                <mat-icon>arrow_downward</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Delete this example"
-                (click)="deleteExample(i)"
-              >
-                <mat-icon class="mat-warn">remove_circle</mat-icon>
-              </button>
-            </td>
-            <td class="fit-width">{{ entry.tokenNr }}.</td>
-            <td>{{ getLiteralValues(entry.literals) }}</td>
+  <!-- pattern tokens -->
+  <fieldset>
+    <legend>pattern tokens</legend>
+    <div>
+      <button type="button" mat-button class="mat-primary" (click)="addToken()">
+        <mat-icon>add_circle</mat-icon> token
+      </button>
+    </div>
+    @if (tokens.value.length) {
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>nr.</th>
+            <th>POS</th>
+            <th>features</th>
+            <th>opt.</th>
           </tr>
-        }
-      </tbody>
-    </table>
-  }
-  @if (editedExample()) {
-    <fieldset>
-      <mat-expansion-panel [expanded]="editedExample()" [disabled]="!editedExample()">
-        <mat-expansion-panel-header>
-          <mat-panel-title>Example #{{ editedExampleIndex() + 1 }}</mat-panel-title>
-        </mat-expansion-panel-header>
-        <cadmus-word-colloc-example-editor
-          [tagEntries]="litTagEntries()"
-          [example]="editedExample()!"
-          (exampleChange)="saveExample($event!)"
-          (cancelEdit)="closeExample()"
-        />
-      </mat-expansion-panel>
-    </fieldset>
-  }
-
-  <!-- tokens -->
-  <div>
-    <button type="button" mat-button class="mat-primary" (click)="addToken()">
-      <mat-icon>add_circle</mat-icon> token
-    </button>
-  </div>
-  @if (tokens.value.length) {
-    <table>
-      <thead>
-        <tr>
-          <th></th>
-          <th>nr.</th>
-          <th>POS</th>
-          <th>features</th>
-          <th>opt.</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (
-          entry of tokens.value;
-          track entry;
-          let i = $index;
-          let first = $first;
-          let last = $last
-        ) {
-          <tr [class.selected]="entry === editedToken()" [class.head]="entry.isHead">
-            <td class="fit-width">
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Edit this token"
-                (click)="editToken(entry, i)"
-              >
-                <mat-icon class="mat-primary">edit</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Move this token up"
-                [disabled]="first"
-                (click)="moveTokenUp(i)"
-              >
-                <mat-icon>arrow_upward</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Move this token down"
-                [disabled]="last"
-                (click)="moveTokenDown(i)"
-              >
-                <mat-icon>arrow_downward</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Delete this token"
-                (click)="deleteToken(i)"
-              >
-                <mat-icon class="mat-warn">remove_circle</mat-icon>
-              </button>
-            </td>
-            <td class="fit-width">{{ i + 1 }}.</td>
-            <td>{{ entry.pos | flatLookup: tokPosEntries() : 'id' : 'value' }}</td>
-            <td>
-              @for (f of entry.features; track f; let first = $first) {
-                @if (!first) {
-                  ,
+        </thead>
+        <tbody>
+          @for (
+            entry of tokens.value;
+            track entry;
+            let i = $index;
+            let first = $first;
+            let last = $last
+          ) {
+            <tr [class.selected]="entry === editedToken()" [class.head]="entry.isHead">
+              <td class="fit-width">
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Edit this token"
+                  (click)="editToken(entry, i)"
+                >
+                  <mat-icon class="mat-primary">edit</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Move this token up"
+                  [disabled]="first"
+                  (click)="moveTokenUp(i)"
+                >
+                  <mat-icon>arrow_upward</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Move this token down"
+                  [disabled]="last"
+                  (click)="moveTokenDown(i)"
+                >
+                  <mat-icon>arrow_downward</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Delete this token"
+                  (click)="deleteToken(i)"
+                >
+                  <mat-icon class="mat-warn">remove_circle</mat-icon>
+                </button>
+              </td>
+              <td class="fit-width">{{ i + 1 }}.</td>
+              <td>{{ entry.pos | flatLookup: tokPosEntries() : 'id' : 'value' }}</td>
+              <td>
+                @for (f of entry.features; track f; let first = $first) {
+                  @if (!first) {
+                    ,
+                  }
+                  {{ f | flatLookup: tokFeatureEntries() : 'id' : 'value' }}
                 }
-                {{ f | flatLookup: tokFeatureEntries() : 'id' : 'value' }}
-              }
-            </td>
-            <td>
-              @if (entry.isOptional) {
-                <mat-icon>check_box</mat-icon>
-              } @else {
-                <mat-icon>check_box_outline_blank</mat-icon>
-              }
-            </td>
+              </td>
+              <td>
+                @if (entry.isOptional) {
+                  <mat-icon>check_box</mat-icon>
+                } @else {
+                  <mat-icon>check_box_outline_blank</mat-icon>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+    @if (editedToken()) {
+      <fieldset>
+        <mat-expansion-panel [expanded]="editedToken()" [disabled]="!editedToken()">
+          <mat-expansion-panel-header>
+            <mat-panel-title>Token #{{ editedTokenIndex() + 1 }}</mat-panel-title>
+          </mat-expansion-panel-header>
+          <cadmus-word-colloc-token-editor
+            [posEntries]="tokPosEntries()"
+            [featureEntries]="tokFeatureEntries()"
+            [literalTagEntries]="litTagEntries()"
+            [token]="editedToken()"
+            (tokenChange)="saveToken($event!)"
+            (cancelEdit)="closeToken()"
+          />
+        </mat-expansion-panel>
+      </fieldset>
+    }
+  </fieldset>
+
+  <!-- example tokens -->
+  <fieldset>
+    <legend>example tokens</legend>
+    <div>
+      <button type="button" mat-button class="mat-primary" (click)="addExample()">
+        <mat-icon>add_circle</mat-icon> example
+      </button>
+    </div>
+    @if (examples.value.length) {
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>nr.</th>
+            <th>value</th>
           </tr>
-        }
-      </tbody>
-    </table>
-  }
-  @if (editedToken()) {
-    <fieldset>
-      <mat-expansion-panel [expanded]="editedToken()" [disabled]="!editedToken()">
-        <mat-expansion-panel-header>
-          <mat-panel-title>Token #{{ editedTokenIndex() + 1 }}</mat-panel-title>
-        </mat-expansion-panel-header>
-        <cadmus-word-colloc-token-editor
-          [posEntries]="tokPosEntries()"
-          [featureEntries]="tokFeatureEntries()"
-          [literalTagEntries]="litTagEntries()"
-          [token]="editedToken()"
-          (tokenChange)="saveToken($event!)"
-          (cancelEdit)="closeToken()"
-        />
-      </mat-expansion-panel>
-    </fieldset>
-  }
+        </thead>
+        <tbody>
+          @for (
+            entry of examples.value;
+            track entry;
+            let i = $index;
+            let first = $first;
+            let last = $last
+          ) {
+            <tr [class.selected]="entry === editedExample()">
+              <td class="fit-width">
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Edit this example"
+                  (click)="editExample(entry, i)"
+                >
+                  <mat-icon class="mat-primary">edit</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Move this example up"
+                  [disabled]="first"
+                  (click)="moveExampleUp(i)"
+                >
+                  <mat-icon>arrow_upward</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Move this example down"
+                  [disabled]="last"
+                  (click)="moveExampleDown(i)"
+                >
+                  <mat-icon>arrow_downward</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Delete this example"
+                  (click)="deleteExample(i)"
+                >
+                  <mat-icon class="mat-warn">remove_circle</mat-icon>
+                </button>
+              </td>
+              <td class="fit-width">{{ entry.tokenNr }}.</td>
+              <td>{{ getLiteralValues(entry.literals) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+    @if (editedExample()) {
+      <fieldset>
+        <mat-expansion-panel [expanded]="editedExample()" [disabled]="!editedExample()">
+          <mat-expansion-panel-header>
+            <mat-panel-title>Example #{{ editedExampleIndex() + 1 }}</mat-panel-title>
+          </mat-expansion-panel-header>
+          <cadmus-word-colloc-example-editor
+            [tagEntries]="litTagEntries()"
+            [example]="editedExample()!"
+            (exampleChange)="onExampleChange($event!)"
+            (cancelEdit)="closeExample()"
+          />
+        </mat-expansion-panel>
+      </fieldset>
+    }
+  </fieldset>
 
   <!-- buttons -->
   <div>

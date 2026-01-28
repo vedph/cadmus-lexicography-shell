@@ -21,7 +21,8 @@ import { WordCollocationExampleToken, WordCollocationLiteral } from '../../lex-w
 import { WordCollocLiteralEditor } from '../word-colloc-literal-editor/word-colloc-literal-editor';
 
 /**
- * Word collocation example editor component.
+ * Word collocation example token editor. This edits the token reference
+ * number and the literals collection for the edited example token.
  */
 @Component({
   selector: 'cadmus-word-colloc-example-editor',
@@ -173,8 +174,8 @@ export class WordCollocExampleEditor {
     if (!this.tokenNr.valid || !this.editedLiterals().length) {
       return;
     }
-    this.example.set(this.getExample());
     this.tokenNr.markAsPristine();
     this.dirty.set(false);
+    this.example.set(this.getExample());
   }
 }

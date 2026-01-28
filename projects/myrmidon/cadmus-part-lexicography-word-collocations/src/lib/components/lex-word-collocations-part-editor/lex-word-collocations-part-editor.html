@@ -48,6 +48,7 @@
           <thead>
             <tr>
               <th></th>
+              <th>tag</th>
               <th>nr.</th>
               <th>collocation</th>
             </tr>
@@ -97,6 +98,7 @@
                     <mat-icon class="mat-warn">remove_circle</mat-icon>
                   </button>
                 </td>
+                <td class="fit-width">{{ entry.tag }}</td>
                 <td class="fit-width">{{ i + 1 }}</td>
                 <td>{{ entry | wordCollocation: labelToIdMap() }}</td>
               </tr>

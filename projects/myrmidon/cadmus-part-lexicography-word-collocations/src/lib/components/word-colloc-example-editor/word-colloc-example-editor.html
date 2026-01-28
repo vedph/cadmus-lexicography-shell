@@ -5,7 +5,7 @@
       <mat-label>token nr.</mat-label>
       <input matInput type="number" min="1" [formControl]="tokenNr" />
       @if ($any(tokenNr).errors?.max && (tokenNr.dirty || tokenNr.touched)) {
-      <mat-error>nr. max is {{ maxTokenNr() }}</mat-error>
+        <mat-error>nr. max is {{ maxTokenNr() }}</mat-error>
       }
     </mat-form-field>
 
@@ -16,77 +16,83 @@
   </div>
 
   <!-- table-->
-  @if (literals().length > 0) {
-  <table>
-    <thead>
-      <tr>
-        <th></th>
-        <th>nr.</th>
-        <th>value</th>
-        <th>tag</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (literal of literals(); track literal; let i = $index; let first = $first; let last =
-      $last) {
-      <tr [class.selected]="i === editedIndex()">
-        <td class="fit-width">
-          <button
-            type="button"
-            mat-icon-button
-            matTooltip="Edit this literal"
-            (click)="editLiteral(literal, i)"
-          >
-            <mat-icon class="mat-primary">edit</mat-icon>
-          </button>
-          <button
-            type="button"
-            mat-icon-button
-            matTooltip="Move this literal up"
-            [disabled]="first"
-            (click)="moveLiteralUp(i)"
-          >
-            <mat-icon>arrow_upward</mat-icon>
-          </button>
-          <button
-            type="button"
-            mat-icon-button
-            matTooltip="Move this literal down"
-            [disabled]="last"
-            (click)="moveLiteralDown(i)"
-          >
-            <mat-icon>arrow_downward</mat-icon>
-          </button>
-          <button
-            type="button"
-            mat-icon-button
-            matTooltip="Delete this literal"
-            (click)="deleteLiteral(i)"
-          >
-            <mat-icon class="mat-warn">remove_circle</mat-icon>
-          </button>
-        </td>
-        <td class="fit-width">{{ $index + 1 }}.</td>
-        <td>{{ literal.value }}</td>
-        <td>{{ literal.tag | flatLookup : tagEntries() : 'id' : 'value' }}</td>
-      </tr>
-      }
-    </tbody>
-  </table>
-  } @if (edited()) {
-  <fieldset>
-    <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
-      <mat-expansion-panel-header>
-        <mat-panel-title>Literal #{{ editedIndex() + 1 }}</mat-panel-title>
-      </mat-expansion-panel-header>
-      <cadmus-word-colloc-literal-editor
-        [tagEntries]="tagEntries()"
-        [literal]="edited()"
-        (literalChange)="saveLiteral($event!)"
-        (cancelEdit)="cancel()"
-      />
-    </mat-expansion-panel>
-  </fieldset>
+  @if (editedLiterals().length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>nr.</th>
+          <th>value</th>
+          <th>tag</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (
+          literal of editedLiterals();
+          track literal;
+          let i = $index;
+          let first = $first;
+          let last = $last
+        ) {
+          <tr [class.selected]="i === editedIndex()">
+            <td class="fit-width">
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Edit this literal"
+                (click)="editLiteral(literal, i)"
+              >
+                <mat-icon class="mat-primary">edit</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Move this literal up"
+                [disabled]="first"
+                (click)="moveLiteralUp(i)"
+              >
+                <mat-icon>arrow_upward</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Move this literal down"
+                [disabled]="last"
+                (click)="moveLiteralDown(i)"
+              >
+                <mat-icon>arrow_downward</mat-icon>
+              </button>
+              <button
+                type="button"
+                mat-icon-button
+                matTooltip="Delete this literal"
+                (click)="deleteLiteral(i)"
+              >
+                <mat-icon class="mat-warn">remove_circle</mat-icon>
+              </button>
+            </td>
+            <td class="fit-width">{{ i + 1 }}.</td>
+            <td>{{ literal.value }}</td>
+            <td>{{ literal.tag | flatLookup: tagEntries() : 'id' : 'value' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+  @if (edited()) {
+    <fieldset>
+      <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
+        <mat-expansion-panel-header>
+          <mat-panel-title>Literal #{{ editedIndex() + 1 }}</mat-panel-title>
+        </mat-expansion-panel-header>
+        <cadmus-word-colloc-literal-editor
+          [tagEntries]="tagEntries()"
+          [literal]="edited()"
+          (literalChange)="saveLiteral($event!)"
+          (cancelEdit)="cancel()"
+        />
+      </mat-expansion-panel>
+    </fieldset>
   }
   <!-- buttons -->
   <div>
@@ -94,7 +100,7 @@
       <mat-icon class="mat-warn">clear</mat-icon>
     </button>
     <button
-      type="submit"
+      type="button"
       mat-icon-button
       matTooltip="Accept changes"
       [disabled]="!editedLiterals().length || !dirty()"

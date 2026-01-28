@@ -227,7 +227,7 @@ export class WordCollocEditor {
     this.editedExample.set(undefined);
   }
 
-  public saveExample(example: WordCollocationExampleToken): void {
+  public onExampleChange(example: WordCollocationExampleToken): void {
     const examples = [...this.examples.value];
     if (this.editedExampleIndex() === -1) {
       examples.push(example);
