@@ -83,6 +83,12 @@ export class WordCollocLiteralEditor {
     return entries.find((e) => e.id === id) || { id, value: id };
   }
 
+  public onTagEntriesChange(entries: ThesaurusEntry[]): void {
+    this.tag.setValue(entries.length ? entries[0] : null);
+    this.tag.markAsDirty();
+    this.tag.updateValueAndValidity();
+  }
+
   private updateForm(data: WordCollocationLiteral | undefined | null): void {
     if (!data) {
       this.form.reset();

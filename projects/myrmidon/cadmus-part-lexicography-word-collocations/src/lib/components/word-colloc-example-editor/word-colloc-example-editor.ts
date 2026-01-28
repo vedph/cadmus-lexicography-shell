@@ -1,4 +1,4 @@
-import { Component, computed, input, linkedSignal, model, output, signal } from '@angular/core';
+import { Component, computed, effect, input, linkedSignal, model, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -78,10 +78,16 @@ export class WordCollocExampleEditor {
       validators: [Validators.min(1)],
     });
 
-    // if maxTokenNr > 0, add max validator
-    if (this.maxTokenNr() > 0) {
-      this.tokenNr.addValidators(Validators.max(this.maxTokenNr()));
-    }
+    // when maxTokenNr changes, update the max validator
+    effect(() => {
+      const max = this.maxTokenNr();
+      this.tokenNr.clearValidators();
+      this.tokenNr.addValidators(Validators.min(1));
+      if (max > 0) {
+        this.tokenNr.addValidators(Validators.max(max));
+      }
+      this.tokenNr.updateValueAndValidity();
+    });
 
     // when tokenNr changes, set dirty
     this.tokenNr.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {

@@ -209,6 +209,7 @@
           </mat-expansion-panel-header>
           <cadmus-word-colloc-example-editor
             [tagEntries]="litTagEntries()"
+            [maxTokenNr]="tokens.value.length"
             [example]="editedExample()!"
             (exampleChange)="onExampleChange($event!)"
             (cancelEdit)="closeExample()"

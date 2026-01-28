@@ -18,8 +18,8 @@
         [availableEntries]="tagEntries()!"
         [entries]="tag.value ? [tag.value!] : []"
         [hierarchicLabels]="true"
-        [minEntries]="1"
         [maxEntries]="1"
+        (entriesChange)="onTagEntriesChange($event)"
       />
     } @else {
       <mat-form-field>

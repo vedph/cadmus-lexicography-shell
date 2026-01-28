@@ -15,6 +15,10 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## History
 
+### 0.0.9
+
+- 2026-01-28: fixes to collocations.
+
 ### 0.0.8
 
 - 2026-01-28:
