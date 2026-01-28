@@ -15,7 +15,13 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## History
 
-### 0.0.7./p
+### 0.0.8
+
+- 2026-01-28:
+  - UI fixes.
+  - renamed `WordCollocationExample` into `WordCollocationExampleToken`.
+
+### 0.0.7
 
 - 2026-01-27:
   - updated Angular and packages.

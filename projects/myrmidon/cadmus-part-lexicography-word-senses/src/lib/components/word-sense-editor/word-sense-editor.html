@@ -137,7 +137,7 @@
         <fieldset>
           <mat-expansion-panel [expanded]="editedEx()" [disabled]="!editedEx()">
             <mat-expansion-panel-header>
-              <mat-panel-title>Example #</mat-panel-title>
+              <mat-panel-title>Example #{{ editedExIndex() + 1 }}</mat-panel-title>
             </mat-expansion-panel-header>
             <cadmus-word-sense-example-editor
               [tagEntries]="tagEntries()"

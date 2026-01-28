@@ -17,7 +17,7 @@ import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
 
-import { WordCollocationExample, WordCollocationLiteral } from '../../lex-word-collocations-part';
+import { WordCollocationExampleToken, WordCollocationLiteral } from '../../lex-word-collocations-part';
 import { WordCollocLiteralEditor } from '../word-colloc-literal-editor/word-colloc-literal-editor';
 
 /**
@@ -56,7 +56,7 @@ export class WordCollocExampleEditor {
   /**
    * The example to edit.
    */
-  public readonly example = model<WordCollocationExample>({ tokenNr: 1, literals: [] });
+  public readonly example = model<WordCollocationExampleToken>({ tokenNr: 1, literals: [] });
 
   public readonly literals = computed<WordCollocationLiteral[]>(() => this.example().literals);
   public readonly editedLiterals = linkedSignal<WordCollocationLiteral[]>(this.literals);
@@ -158,7 +158,7 @@ export class WordCollocExampleEditor {
     this.dirty.set(true);
   }
 
-  private getExample(): WordCollocationExample {
+  private getExample(): WordCollocationExampleToken {
     return {
       tokenNr: this.tokenNr.value,
       literals: this.editedLiterals(),

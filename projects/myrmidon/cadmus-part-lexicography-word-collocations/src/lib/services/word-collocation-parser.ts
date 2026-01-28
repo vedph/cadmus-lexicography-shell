@@ -1,7 +1,7 @@
 import {
   WordCollocation,
   WordCollocationToken,
-  WordCollocationExample,
+  WordCollocationExampleToken,
   WordCollocationLiteral,
 } from '../lex-word-collocations-part';
 
@@ -245,8 +245,8 @@ export class WordCollocationParser {
     examplesStr: string,
     tokenCount: number,
     original: string
-  ): WordCollocationExample[] {
-    const examples: WordCollocationExample[] = [];
+  ): WordCollocationExampleToken[] {
+    const examples: WordCollocationExampleToken[] = [];
     const parts = this.splitExampleParts(examplesStr);
 
     let tokenNr = 0;

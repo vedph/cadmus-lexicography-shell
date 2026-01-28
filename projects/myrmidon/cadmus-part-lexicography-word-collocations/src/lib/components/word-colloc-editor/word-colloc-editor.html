@@ -90,7 +90,7 @@
                 <mat-icon class="mat-warn">remove_circle</mat-icon>
               </button>
             </td>
-            <td>{{ entry.tokenNr }}.</td>
+            <td class="fit-width">{{ entry.tokenNr }}.</td>
             <td>{{ getLiteralValues(entry.literals) }}</td>
           </tr>
         }
@@ -175,7 +175,7 @@
                 <mat-icon class="mat-warn">remove_circle</mat-icon>
               </button>
             </td>
-            <td>{{ i + 1 }}.</td>
+            <td class="fit-width">{{ i + 1 }}.</td>
             <td>{{ entry.pos | flatLookup: tokPosEntries() : 'id' : 'value' }}</td>
             <td>
               @for (f of entry.features; track f; let first = $first) {

@@ -44,77 +44,83 @@
         </button>
       </div>
       @if (collocations.value.length) {
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th>nr.</th>
-            <th>collocation</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (entry of collocations.value; track entry; let i = $index; let first = $first; let
-          last = $last) {
-          <tr [class.selected]="entry === edited()">
-            <td class="fit-width">
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Edit this collocation"
-                (click)="editCollocation(entry, i)"
-              >
-                <mat-icon class="mat-primary">edit</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Move this collocation up"
-                [disabled]="first"
-                (click)="moveCollocationUp(i)"
-              >
-                <mat-icon>arrow_upward</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Move this collocation down"
-                [disabled]="last"
-                (click)="moveCollocationDown(i)"
-              >
-                <mat-icon>arrow_downward</mat-icon>
-              </button>
-              <button
-                type="button"
-                mat-icon-button
-                matTooltip="Delete this collocation"
-                (click)="deleteCollocation(i)"
-              >
-                <mat-icon class="mat-warn">remove_circle</mat-icon>
-              </button>
-            </td>
-            <td>{{ i + 1 }}</td>
-            <td>{{ entry | wordCollocation : labelToIdMap() }}</td>
-          </tr>
-          }
-        </tbody>
-      </table>
-      } @if (edited()) {
-      <fieldset>
-        <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
-          <mat-expansion-panel-header>
-            <mat-panel-title>Collocation #</mat-panel-title>
-          </mat-expansion-panel-header>
-          <cadmus-word-colloc-editor
-            [collTagEntries]="collTagEntries()"
-            [tokPosEntries]="tokPosEntries()"
-            [tokFeatureEntries]="tokFeatureEntries()"
-            [litTagEntries]="litTagEntries()"
-            [collocation]="edited()"
-            (collocationChange)="saveCollocation($event!)"
-            (cancelEdit)="closeCollocation()"
-          />
-        </mat-expansion-panel>
-      </fieldset>
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>nr.</th>
+              <th>collocation</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (
+              entry of collocations.value;
+              track entry;
+              let i = $index;
+              let first = $first;
+              let last = $last
+            ) {
+              <tr [class.selected]="entry === edited()">
+                <td class="fit-width">
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Edit this collocation"
+                    (click)="editCollocation(entry, i)"
+                  >
+                    <mat-icon class="mat-primary">edit</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Move this collocation up"
+                    [disabled]="first"
+                    (click)="moveCollocationUp(i)"
+                  >
+                    <mat-icon>arrow_upward</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Move this collocation down"
+                    [disabled]="last"
+                    (click)="moveCollocationDown(i)"
+                  >
+                    <mat-icon>arrow_downward</mat-icon>
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    matTooltip="Delete this collocation"
+                    (click)="deleteCollocation(i)"
+                  >
+                    <mat-icon class="mat-warn">remove_circle</mat-icon>
+                  </button>
+                </td>
+                <td class="fit-width">{{ i + 1 }}</td>
+                <td>{{ entry | wordCollocation: labelToIdMap() }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+      @if (edited()) {
+        <fieldset>
+          <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
+            <mat-expansion-panel-header>
+              <mat-panel-title>Collocation #{{ editedIndex() + 1 }}</mat-panel-title>
+            </mat-expansion-panel-header>
+            <cadmus-word-colloc-editor
+              [collTagEntries]="collTagEntries()"
+              [tokPosEntries]="tokPosEntries()"
+              [tokFeatureEntries]="tokFeatureEntries()"
+              [litTagEntries]="litTagEntries()"
+              [collocation]="edited()"
+              (collocationChange)="saveCollocation($event!)"
+              (cancelEdit)="closeCollocation()"
+            />
+          </mat-expansion-panel>
+        </fieldset>
       }
     </mat-card-content>
     <mat-card-actions>

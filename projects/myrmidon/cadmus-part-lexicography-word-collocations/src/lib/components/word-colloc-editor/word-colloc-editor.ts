@@ -26,7 +26,7 @@ import { ThesaurusEntry } from '@myrmidon/cadmus-core';
 import { WordCollocTokenEditor } from '../word-colloc-token-editor/word-colloc-token-editor';
 import {
   WordCollocation,
-  WordCollocationExample,
+  WordCollocationExampleToken,
   WordCollocationLiteral,
   WordCollocationToken,
 } from '../../lex-word-collocations-part';
@@ -72,13 +72,13 @@ export class WordCollocEditor {
   public readonly editedToken = signal<WordCollocationToken | undefined>(undefined);
   public readonly editedTokenIndex = signal<number>(-1);
 
-  public readonly editedExample = signal<WordCollocationExample | undefined>(undefined);
+  public readonly editedExample = signal<WordCollocationExampleToken | undefined>(undefined);
   public readonly editedExampleIndex = signal<number>(-1);
 
   public tag: FormControl<string | null>;
   public rank: FormControl<number>;
   public tokens: FormControl<WordCollocationToken[]>;
-  public examples: FormControl<WordCollocationExample[]>;
+  public examples: FormControl<WordCollocationExampleToken[]>;
   public note: FormControl<string | null>;
   public form: FormGroup;
 
@@ -210,14 +210,14 @@ export class WordCollocEditor {
 
   //#region Examples
   public addExample(): void {
-    const example: WordCollocationExample = {
+    const example: WordCollocationExampleToken = {
       tokenNr: this.tokens.value.length + 1,
       literals: [],
     };
     this.editExample(example, -1);
   }
 
-  public editExample(example: WordCollocationExample, index: number): void {
+  public editExample(example: WordCollocationExampleToken, index: number): void {
     this.editedExampleIndex.set(index);
     this.editedExample.set(structuredClone(example));
   }
@@ -227,7 +227,7 @@ export class WordCollocEditor {
     this.editedExample.set(undefined);
   }
 
-  public saveExample(example: WordCollocationExample): void {
+  public saveExample(example: WordCollocationExampleToken): void {
     const examples = [...this.examples.value];
     if (this.editedExampleIndex() === -1) {
       examples.push(example);

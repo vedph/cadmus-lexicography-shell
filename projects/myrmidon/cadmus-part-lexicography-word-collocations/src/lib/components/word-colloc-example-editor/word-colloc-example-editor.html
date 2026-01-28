@@ -66,7 +66,7 @@
             <mat-icon class="mat-warn">remove_circle</mat-icon>
           </button>
         </td>
-        <td>{{ $index + 1 }}.</td>
+        <td class="fit-width">{{ $index + 1 }}.</td>
         <td>{{ literal.value }}</td>
         <td>{{ literal.tag | flatLookup : tagEntries() : 'id' : 'value' }}</td>
       </tr>

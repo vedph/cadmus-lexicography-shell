@@ -21,10 +21,10 @@ export interface WordCollocationLiteral {
 }
 
 /**
- * An example of a word collocation pattern.
+ * An example token of a word collocation pattern.
  */
-export interface WordCollocationExample {
-  tokenNr: number;  // 0 for connective text, 1..n for tokens
+export interface WordCollocationExampleToken {
+  tokenNr: number; // 0 for connective text, 1..n for tokens
   literals: WordCollocationLiteral[];
 }
 
@@ -45,7 +45,7 @@ export interface WordCollocation {
   tag?: string;
   rank?: number;
   tokens: WordCollocationToken[];
-  examples?: WordCollocationExample[];
+  examples?: WordCollocationExampleToken[];
   note?: string;
 }
 
