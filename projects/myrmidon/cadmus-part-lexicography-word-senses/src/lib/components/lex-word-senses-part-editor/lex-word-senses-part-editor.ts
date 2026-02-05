@@ -22,6 +22,7 @@ import { DialogService } from '@myrmidon/ngx-mat-tools';
 import { AuthJwtService } from '@myrmidon/auth-jwt-login';
 import { CloseSaveButtonsComponent, ModelEditorComponentBase } from '@myrmidon/cadmus-ui';
 import { EditedObject, ThesauriSet, ThesaurusEntry } from '@myrmidon/cadmus-core';
+import { LookupProviderOptions } from '@myrmidon/cadmus-refs-lookup';
 
 import {
   LEX_WORD_SENSES_PART_TYPEID,
@@ -29,6 +30,10 @@ import {
   WordSense,
 } from '../../lex-word-senses-part';
 import { WordSenseEditor } from '../word-sense-editor/word-sense-editor';
+
+interface LexWordSensesPartSettings {
+  lookupProviderOptions?: LookupProviderOptions;
+}
 
 /**
  * Word senses part editor component.
@@ -68,6 +73,9 @@ export class LexWordSensesPartEditor
   public readonly tagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
   // asserted-id-features
   public readonly idFeatureEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+
+  // lookup options depending on role
+  public readonly lookupProviderOptions = signal<LookupProviderOptions | undefined>(undefined);
 
   public entries: FormControl<WordSense[]>;
 
@@ -124,7 +132,16 @@ export class LexWordSensesPartEditor
     if (data?.thesauri) {
       this.updateThesauri(data.thesauri);
     }
-
+    // settings
+    this._appRepository
+      ?.getSettingFor<LexWordSensesPartSettings>(
+        LEX_WORD_SENSES_PART_TYPEID,
+        this.identity()?.roleId || undefined,
+      )
+      .then((settings) => {
+        const options = settings?.lookupProviderOptions;
+        this.lookupProviderOptions.set(options || undefined);
+      });
     // form
     this.updateForm(data?.value);
   }

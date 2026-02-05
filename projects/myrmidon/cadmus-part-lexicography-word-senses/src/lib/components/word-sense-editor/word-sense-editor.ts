@@ -45,6 +45,7 @@ import {
   CadmusTextEdBindings,
 } from '@myrmidon/cadmus-text-ed';
 import { MonacoEditorHelper } from '@myrmidon/cadmus-part-general-ui';
+import { LookupProviderOptions } from '@myrmidon/cadmus-refs-lookup';
 
 import { WordSense, WordSenseExample } from '../../lex-word-senses-part';
 import { WordSenseExampleEditor } from '../word-sense-example-editor/word-sense-example-editor';
@@ -97,6 +98,8 @@ export class WordSenseEditor implements OnDestroy {
   public readonly refTagEntries = input<ThesaurusEntry[] | undefined>();
   // asserted-id-features
   public readonly idFeatureEntries = input<ThesaurusEntry[]>();
+
+  public readonly lookupProviderOptions = input<LookupProviderOptions | undefined>();
 
   public eid: FormControl<string | null>;
   public tags: FormControl<ThesaurusEntry[]>;

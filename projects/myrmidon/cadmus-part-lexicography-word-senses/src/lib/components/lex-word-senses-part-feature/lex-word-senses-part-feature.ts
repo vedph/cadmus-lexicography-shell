@@ -24,6 +24,7 @@ export class LexWordSensesPartFeature extends EditPartFeatureBase implements OnI
     editorService: PartEditorService
   ) {
     super(router, route, snackbar, itemService, thesaurusService, editorService);
+    this.roleIdInThesauri = true;
   }
 
   protected override getReqThesauriIds(): string[] {

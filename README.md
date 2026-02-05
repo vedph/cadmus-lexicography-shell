@@ -17,6 +17,9 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ### 0.0.9
 
+- 2026-02-05:
+  - updated Angular and packages.
+  - added `lookupProviderOptions` wherever lookup components are used, getting data from settings and changing the corresponding part thesauri to be role-dependent.
 - 2026-01-28: fixes to collocations.
 
 ### 0.0.8
