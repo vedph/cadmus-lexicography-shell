@@ -1,6 +1,6 @@
 {
   "name": "@myrmidon/cadmus-part-lexicography-word-forms",
-  "version": "0.0.7",
+  "version": "0.1.0",
   "description": "Cadmus - Lexicography word forms part.",
   "keywords": [
     "Cadmus",
@@ -18,7 +18,7 @@
     "@angular/common": "^20.0.0 || ^21.0.0",
     "@angular/core": "^20.0.0 || ^21.0.0",
     "@angular/material": "^20.0.0 || ^21.0.0",
-    "@myrmidon/cadmus-part-lexicography-lemma": "^0.0.7"
+    "@myrmidon/cadmus-part-lexicography-lemma": "^0.0.8"
   },
   "dependencies": {
     "tslib": "^2.3.0"

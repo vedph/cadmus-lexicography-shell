@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -16,6 +16,7 @@ import { UserListComponent } from '@myrmidon/auth-jwt-admin';
   standalone: true,
   templateUrl: './manage-users-page.component.html',
   styleUrls: ['./manage-users-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatButtonModule,

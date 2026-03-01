@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 
@@ -20,6 +20,7 @@ import {
   standalone: true,
   templateUrl: './login-page.component.html',
   styleUrls: ['./login-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
     MatCardModule,
@@ -46,20 +47,19 @@ export class LoginPageComponent {
     this._authService.login(credentials.name, credentials.password).subscribe({
       next: (user) => {
         console.log('User logged in', user);
+        this.busy.set(false);
         this._router.navigate([credentials.returnUrl || '/items']);
       },
       error: (error) => {
+        this.busy.set(false);
         this.error.set('Login failed');
-        console.error(this.error, error);
-        this._snackbar.open(this.error()!, 'Dismiss', {
+        this._snackbar.open('Login failed', 'Dismiss', {
           duration: 5000,
         });
       },
-      complete: () => {
-        this.busy.set(false);
-      },
     });
   }
+
   public onResetRequest(): void {
     this._router.navigate(['/reset-password']);
   }

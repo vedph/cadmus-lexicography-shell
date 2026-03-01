@@ -1,7 +1,7 @@
 <cadmus-current-item-bar />
 <cadmus-lex-word-senses-part-editor
-  [identity]="identity"
-  [data]="$any(data)"
+  [identity]="identity()"
+  [data]="$any(data())"
   (dataChange)="save($event!.value!)"
   (editorClose)="close()"
   (dirtyChange)="onDirtyChange($event)"
