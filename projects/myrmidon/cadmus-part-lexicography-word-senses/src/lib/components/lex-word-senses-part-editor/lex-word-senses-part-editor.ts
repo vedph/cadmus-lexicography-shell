@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import {
   FormControl,
   FormBuilder,
@@ -7,7 +7,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 
-import { CommonModule } from '@angular/common';
+import { TitleCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -43,8 +43,8 @@ interface LexWordSensesPartSettings {
 @Component({
   selector: 'cadmus-lex-word-senses-part-editor',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
+    TitleCasePipe,
     MatButtonModule,
     MatCardModule,
     MatExpansionModule,
@@ -61,6 +61,7 @@ interface LexWordSensesPartSettings {
   ],
   templateUrl: './lex-word-senses-part-editor.html',
   styleUrl: './lex-word-senses-part-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LexWordSensesPartEditor
   extends ModelEditorComponentBase<LexWordSensesPart>

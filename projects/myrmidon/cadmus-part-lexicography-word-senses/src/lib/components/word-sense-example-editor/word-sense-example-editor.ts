@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   Inject,
   OnDestroy,
@@ -57,6 +58,7 @@ import { WordSenseExample } from '../../lex-word-senses-part';
   ],
   templateUrl: './word-sense-example-editor.html',
   styleUrl: './word-sense-example-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WordSenseExampleEditor implements OnDestroy {
   // Monaco
@@ -183,6 +185,12 @@ export class WordSenseExampleEditor implements OnDestroy {
   private mapIdToEntries(ids: string[], entries: ThesaurusEntry[] | undefined): ThesaurusEntry[] {
     if (!entries) return ids.map((id) => ({ id, value: id }));
     return ids.map((id) => entries.find((e) => e.id === id) || { id, value: id });
+  }
+
+  public onTagEntriesChange(entries: ThesaurusEntry[]): void {
+    this.tags.setValue(entries);
+    this.tags.markAsDirty();
+    this.tags.updateValueAndValidity();
   }
 
   private updateForm(example: WordSenseExample | undefined | null): void {

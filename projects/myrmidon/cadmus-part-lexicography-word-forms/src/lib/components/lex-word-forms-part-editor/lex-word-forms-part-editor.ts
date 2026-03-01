@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import {
   FormControl,
   FormBuilder,
@@ -49,6 +49,7 @@ import { LEX_WORD_FORMS_PART_TYPEID, LexWordFormsPart } from '../../lex-word-for
   ],
   templateUrl: './lex-word-forms-part-editor.html',
   styleUrl: './lex-word-forms-part-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LexWordFormsPartEditor
   extends ModelEditorComponentBase<LexWordFormsPart>
@@ -135,7 +136,7 @@ export class LexWordFormsPartEditor
 
   public onFormsChange(forms: WordForm[]): void {
     this.forms.setValue(forms || []);
-    this.form.markAsDirty();
+    this.forms.markAsDirty();
     this.forms.updateValueAndValidity();
   }
 

@@ -1,4 +1,4 @@
-import { Component, effect, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, model, output } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -36,6 +36,7 @@ import { WordForm } from '../../lex-lemma-part';
   ],
   templateUrl: './word-form-editor.html',
   styleUrl: './word-form-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WordFormEditor {
   public readonly form = model<WordForm | undefined>();

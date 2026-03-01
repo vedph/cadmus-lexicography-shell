@@ -1,4 +1,4 @@
-import { Component, effect, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, model, output, signal } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -55,6 +55,7 @@ import { WordCollocExampleEditor } from '../word-colloc-example-editor/word-coll
   ],
   templateUrl: './word-colloc-editor.html',
   styleUrl: './word-colloc-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WordCollocEditor {
   public readonly collocation = model<WordCollocation | undefined>();

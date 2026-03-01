@@ -54,7 +54,7 @@
             let first = $first;
             let last = $last
           ) {
-            <tr [class.selected]="entry === editedToken()" [class.head]="entry.isHead">
+            <tr [class.selected]="i === editedTokenIndex()" [class.head]="entry.isHead">
               <td class="fit-width">
                 <button
                   type="button"
@@ -157,7 +157,7 @@
             let first = $first;
             let last = $last
           ) {
-            <tr [class.selected]="entry === editedExample()">
+            <tr [class.selected]="i === editedExampleIndex()">
               <td class="fit-width">
                 <button
                   type="button"

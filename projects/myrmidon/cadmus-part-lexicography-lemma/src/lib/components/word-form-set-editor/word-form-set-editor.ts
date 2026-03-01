@@ -1,4 +1,4 @@
-import { Component, input, model, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, model, signal } from '@angular/core';
 
 import {
   MatExpansionPanel,
@@ -34,6 +34,7 @@ import { WordFormEditor } from '../word-form-editor/word-form-editor';
   ],
   templateUrl: './word-form-set-editor.html',
   styleUrl: './word-form-set-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WordFormSetEditor {
   /**

@@ -33,7 +33,7 @@
               let first = $first;
               let last = $last
             ) {
-              <tr [class.selected]="entry === edited()">
+              <tr [class.selected]="i === editedIndex()">
                 <td class="fit-width">
                   <button
                     type="button"

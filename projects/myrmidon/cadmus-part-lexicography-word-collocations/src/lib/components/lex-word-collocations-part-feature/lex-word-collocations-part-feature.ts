@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, ActivatedRoute } from '@angular/router';
 
@@ -13,6 +13,7 @@ import { LexWordCollocationPartEditor } from '../lex-word-collocations-part-edit
   imports: [CurrentItemBarComponent, LexWordCollocationPartEditor],
   templateUrl: './lex-word-collocations-part-feature.html',
   styleUrl: './lex-word-collocations-part-feature.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LexWordCollocationsPartFeature extends EditPartFeatureBase implements OnInit {
   constructor(

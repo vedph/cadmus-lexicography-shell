@@ -20,6 +20,7 @@
               [availableEntries]="tagEntries()!"
               [entries]="tags.value"
               [hierarchicLabels]="true"
+              (entriesChange)="onTagEntriesChange($event)"
             />
           </div>
         }

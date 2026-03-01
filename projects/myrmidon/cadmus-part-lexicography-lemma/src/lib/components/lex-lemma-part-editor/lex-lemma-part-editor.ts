@@ -1,4 +1,4 @@
-import { Component, inject, InjectionToken, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, InjectionToken, OnInit, signal } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -70,6 +70,7 @@ export const LEX_LEMMA_PART_LID_GENERATOR_TOKEN = new InjectionToken<LidGenerato
   ],
   templateUrl: './lex-lemma-part-editor.html',
   styleUrl: './lex-lemma-part-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LexLemmaPartEditor extends ModelEditorComponentBase<LexLemmaPart> implements OnInit {
   private readonly _sidGenerator: LidGenerator;

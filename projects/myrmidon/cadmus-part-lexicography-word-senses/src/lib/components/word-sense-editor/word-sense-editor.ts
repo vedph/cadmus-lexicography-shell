@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   Inject,
   OnDestroy,
@@ -73,6 +74,7 @@ import { WordSenseExampleEditor } from '../word-sense-example-editor/word-sense-
   ],
   templateUrl: './word-sense-editor.html',
   styleUrl: './word-sense-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WordSenseEditor implements OnDestroy {
   // Monaco
@@ -221,6 +223,12 @@ export class WordSenseEditor implements OnDestroy {
       this.relatedIds.setValue(sense.relatedIds || []);
       this.form.markAsPristine();
     }
+  }
+
+  public onTagEntriesChange(entries: ThesaurusEntry[]): void {
+    this.tags.setValue(entries);
+    this.tags.markAsDirty();
+    this.tags.updateValueAndValidity();
   }
 
   public onRelatedIdsChange(ids: AssertedCompositeId[]): void {

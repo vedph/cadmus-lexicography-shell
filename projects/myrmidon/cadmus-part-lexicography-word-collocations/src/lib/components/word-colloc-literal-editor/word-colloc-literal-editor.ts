@@ -1,4 +1,4 @@
-import { Component, effect, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, model, output } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -38,6 +38,7 @@ import { WordCollocationLiteral } from '../../lex-word-collocations-part';
   ],
   templateUrl: './word-colloc-literal-editor.html',
   styleUrl: './word-colloc-literal-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WordCollocLiteralEditor {
   public readonly literal = model<WordCollocationLiteral | undefined>();

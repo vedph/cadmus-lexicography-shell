@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, ActivatedRoute } from '@angular/router';
 
@@ -13,6 +13,7 @@ import { LexWordFormsPartEditor } from '../lex-word-forms-part-editor/lex-word-f
   imports: [CurrentItemBarComponent, LexWordFormsPartEditor],
   templateUrl: './lex-word-forms-part-feature.html',
   styleUrl: './lex-word-forms-part-feature.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LexWordFormsPartFeature extends EditPartFeatureBase implements OnInit {
   constructor(

@@ -15,6 +15,12 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## History
 
+### 0.1.0
+
+- 2026-03-01:
+  - updated Angular and packages.
+  - ⚠️ migrated to `OnPush`.
+
 ### 0.0.9
 
 - 2026-02-05:

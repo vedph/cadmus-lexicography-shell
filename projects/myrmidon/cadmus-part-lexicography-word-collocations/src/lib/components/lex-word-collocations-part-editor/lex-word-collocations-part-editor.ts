@@ -1,4 +1,4 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, OnInit, signal } from '@angular/core';
 import {
   FormControl,
   FormBuilder,
@@ -73,6 +73,7 @@ import { WordCollocationParser } from '../../../public-api';
   ],
   templateUrl: './lex-word-collocations-part-editor.html',
   styleUrl: './lex-word-collocations-part-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LexWordCollocationPartEditor
   extends ModelEditorComponentBase<LexWordCollocationsPart>

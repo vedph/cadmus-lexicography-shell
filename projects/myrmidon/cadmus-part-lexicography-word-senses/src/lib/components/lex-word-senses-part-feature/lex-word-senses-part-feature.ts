@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, ActivatedRoute } from '@angular/router';
 
@@ -13,6 +13,7 @@ import { LexWordSensesPartEditor } from '../lex-word-senses-part-editor/lex-word
   imports: [CurrentItemBarComponent, LexWordSensesPartEditor],
   templateUrl: './lex-word-senses-part-feature.html',
   styleUrl: './lex-word-senses-part-feature.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LexWordSensesPartFeature extends EditPartFeatureBase implements OnInit {
   constructor(
@@ -29,7 +30,6 @@ export class LexWordSensesPartFeature extends EditPartFeatureBase implements OnI
 
   protected override getReqThesauriIds(): string[] {
     return [
-      'lex-word-sense-tags',
       'lex-word-sense-tags',
       'asserted-id-scopes',
       'asserted-id-tags',

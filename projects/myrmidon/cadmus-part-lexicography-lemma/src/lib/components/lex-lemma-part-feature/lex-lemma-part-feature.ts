@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, ActivatedRoute } from '@angular/router';
 
@@ -13,6 +13,7 @@ import { LexLemmaPartEditor } from '../lex-lemma-part-editor/lex-lemma-part-edit
   imports: [CurrentItemBarComponent, LexLemmaPartEditor],
   templateUrl: './lex-lemma-part-feature.html',
   styleUrl: './lex-lemma-part-feature.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LexLemmaPartFeature extends EditPartFeatureBase implements OnInit {
   constructor(

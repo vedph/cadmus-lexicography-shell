@@ -1,4 +1,4 @@
-import { Component, effect, input, model, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, model, output } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -33,6 +33,7 @@ import { WordCollocationToken } from '../../lex-word-collocations-part';
   ],
   templateUrl: './word-colloc-token-editor.html',
   styleUrl: './word-colloc-token-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WordCollocTokenEditor {
   public readonly token = model<WordCollocationToken | undefined>();

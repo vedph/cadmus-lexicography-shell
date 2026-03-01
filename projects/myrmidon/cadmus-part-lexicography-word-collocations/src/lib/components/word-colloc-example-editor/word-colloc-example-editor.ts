@@ -1,4 +1,4 @@
-import { Component, computed, effect, input, linkedSignal, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, linkedSignal, model, output, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -44,6 +44,7 @@ import { WordCollocLiteralEditor } from '../word-colloc-literal-editor/word-coll
   ],
   templateUrl: './word-colloc-example-editor.html',
   styleUrl: './word-colloc-example-editor.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WordCollocExampleEditor {
   /**
