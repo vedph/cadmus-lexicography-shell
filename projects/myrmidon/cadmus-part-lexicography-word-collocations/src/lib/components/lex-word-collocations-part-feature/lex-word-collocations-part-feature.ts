@@ -4,7 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 
 import { ItemService, ThesaurusService } from '@myrmidon/cadmus-api';
 import { EditPartFeatureBase, PartEditorService } from '@myrmidon/cadmus-state';
-import { CurrentItemBarComponent } from '@myrmidon/cadmus-ui-pg';
+import { CurrentItemBarComponent } from '@myrmidon/cadmus-item-editor';
 
 import { LexWordCollocationPartEditor } from '../lex-word-collocations-part-editor/lex-word-collocations-part-editor';
 
