@@ -11,14 +11,14 @@
   width: 5em;
 }
 #forms-error {
-  color: darkred;
+  color: var(--mat-sys-error);
   margin-left: 8px;
 }
 fieldset {
-  border: 1px solid silver;
+  border: 1px solid var(--mat-sys-on-surface-variant);
   border-radius: 6px;
   padding: 6px;
 }
 legend {
-  color: silver;
+  color: var(--mat-sys-on-surface-variant);
 }

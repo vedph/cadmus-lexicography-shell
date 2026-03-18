@@ -14,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 // myrmidon
 import { EnvService, RamStorageService } from '@myrmidon/ngx-tools';
 import { AuthJwtService, GravatarPipe, User } from '@myrmidon/auth-jwt-login';
+import { ThemeToggleComponent } from '@myrmidon/ngx-mat-tools';
 
 // cadmus
 import { AppRepository } from '@myrmidon/cadmus-state';
@@ -29,6 +30,7 @@ import { AppRepository } from '@myrmidon/cadmus-state';
     MatToolbarModule,
     MatTooltipModule,
     GravatarPipe,
+    ThemeToggleComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',

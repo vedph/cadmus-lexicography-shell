@@ -11,6 +11,6 @@
   width: 5em;
 }
 #forms-error {
-  color: darkred;
+  color: var(--mat-sys-error);
   margin-left: 8px;
 }
