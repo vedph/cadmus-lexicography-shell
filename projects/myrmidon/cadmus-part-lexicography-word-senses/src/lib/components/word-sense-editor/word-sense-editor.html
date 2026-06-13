@@ -29,7 +29,14 @@
       <!-- definition -->
       <div id="def-container">
         <div id="def">
-          <nge-monaco-editor id="editor" (ready)="onCreateTextEditor($event)" />
+          <div id="editor">
+            <ngx-monaco-editor
+              [formControl]="definition"
+              [language]="'markdown'"
+              [options]="editorOptions"
+              (editorInitialized)="onEditorInit($event)"
+            />
+          </div>
           @if (definition.hasError('required') && (definition.touched || definition.dirty)) {
             <mat-error>text required</mat-error>
           }
@@ -40,9 +47,7 @@
         <!-- preview -->
         <div id="def-preview">
           <mat-expansion-panel expanded="true">
-            <div>
-              <nge-markdown [data]="definition.value || undefined" />
-            </div>
+            <div class="preview" [innerHTML]="previewHtml()"></div>
           </mat-expansion-panel>
         </div>
       </div>

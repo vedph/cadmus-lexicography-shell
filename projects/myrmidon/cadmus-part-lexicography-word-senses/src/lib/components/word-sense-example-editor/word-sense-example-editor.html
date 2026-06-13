@@ -28,8 +28,13 @@
       <legend>
         <mat-icon>text_snippet</mat-icon>
       </legend>
-      <div id="txt">
-        <nge-monaco-editor id="txt-editor" (ready)="onCreateTextEditor($event)" />
+      <div class="editor">
+        <ngx-monaco-editor
+          [formControl]="text"
+          [language]="'markdown'"
+          [options]="editorOptions"
+          (editorInitialized)="onTextEditorInit($event)"
+        />
         @if (text.hasError('required') && (text.touched || text.dirty)) {
           <mat-error>text required</mat-error>
         }
@@ -37,11 +42,12 @@
           <mat-error>text too long</mat-error>
         }
       </div>
+
       <!-- preview -->
       <div id="txt-preview">
         <mat-expansion-panel expanded="true">
           <div>
-            <nge-markdown [data]="text.value || undefined" />
+            <div class="preview" [innerHTML]="textPreviewHtml()"></div>
           </div>
         </mat-expansion-panel>
       </div>
@@ -54,8 +60,13 @@
       <legend>
         <mat-icon>info</mat-icon>
       </legend>
-      <div id="exp">
-        <nge-monaco-editor id="exp-editor" (ready)="onCreateExplanationEditor($event)" />
+      <div class="editor">
+        <ngx-monaco-editor
+          [formControl]="explanation"
+          [language]="'markdown'"
+          [options]="editorOptions"
+          (editorInitialized)="onExplanationEditorInit($event)"
+        />
         @if ($any(explanation).errors?.maxLength && (explanation.dirty || explanation.touched)) {
           <mat-error>explanation too long</mat-error>
         }
@@ -64,7 +75,7 @@
       <div id="exp-preview">
         <mat-expansion-panel expanded="true">
           <div>
-            <nge-markdown [data]="explanation.value || undefined" />
+            <div class="preview" [innerHTML]="explanationPreviewHtml()"></div>
           </div>
         </mat-expansion-panel>
       </div>

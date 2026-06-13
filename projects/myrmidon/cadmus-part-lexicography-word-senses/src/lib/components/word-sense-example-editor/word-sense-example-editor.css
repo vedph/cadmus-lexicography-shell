@@ -19,10 +19,15 @@ fieldset {
 legend {
   color: var(--mat-sys-on-surface-variant);
 }
-#txt-editor,
-#exp-editor {
+.editor {
   height: 300px;
 }
+.editor ngx-monaco-editor {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .mt {
   margin-top: 16px;
 }

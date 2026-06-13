@@ -2,9 +2,14 @@ import {
   ApplicationConfig,
   importProvidersFrom,
   provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection,
+  provideZonelessChangeDetection,
 } from '@angular/core';
-import { provideHttpClient, withInterceptors, withJsonpSupport } from '@angular/common/http';
+import {
+  provideHttpClient,
+  withInterceptors,
+  withJsonpSupport,
+  withXhr,
+} from '@angular/common/http';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { provideRouter, withViewTransitions } from '@angular/router';
 
@@ -12,8 +17,7 @@ import { AUTH_JWT_EXCLUDED_URLS, jwtInterceptor } from '@myrmidon/auth-jwt-login
 
 // third-party modules
 import { NgxEchartsModule } from 'ngx-echarts';
-import { NgeMonacoModule } from '@cisstech/nge/monaco';
-import { NgeMarkdownModule } from '@cisstech/nge/markdown';
+import { DefaultMonacoLoader, NGX_MONACO_LOADER_PROVIDER } from '@jean-merelis/ngx-monaco-editor';
 
 // text editor plugins
 import { MdBoldCtePlugin, MdItalicCtePlugin, MdLinkCtePlugin } from '@myrmidon/cadmus-text-ed-md';
@@ -36,17 +40,19 @@ import { AppLidGenerator } from './services/app-lid-generator';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZonelessChangeDetection(),
     provideRouter(routes, withViewTransitions()),
-    provideHttpClient(withInterceptors([jwtInterceptor]), withJsonpSupport()),
+    provideHttpClient(withXhr(), withInterceptors([jwtInterceptor]), withJsonpSupport()),
     provideNativeDateAdapter(),
     importProvidersFrom(
       NgxEchartsModule.forRoot({
         echarts: () => import('echarts'),
-      })
+      }),
     ),
-    importProvidersFrom(NgeMonacoModule.forRoot({})),
-    importProvidersFrom(NgeMarkdownModule),
+    {
+      provide: NGX_MONACO_LOADER_PROVIDER,
+      useFactory: () => new DefaultMonacoLoader({ paths: { vs: '/vs' } }),
+    },
     // parts and fragments type IDs to editor group keys mappings
     // https://github.com/nrwl/nx/issues/208#issuecomment-384102058
     // inject like: @Inject('partEditorKeys') partEditorKeys: PartEditorKeys
@@ -82,7 +88,7 @@ export const appConfig: ApplicationConfig = {
         mdBoldCtePlugin: MdBoldCtePlugin,
         mdItalicCtePlugin: MdItalicCtePlugin,
         txtEmojiCtePlugin: TxtEmojiCtePlugin,
-        mdLinkCtePlugin: MdLinkCtePlugin
+        mdLinkCtePlugin: MdLinkCtePlugin,
       ) => {
         return {
           plugins: [mdBoldCtePlugin, mdItalicCtePlugin, txtEmojiCtePlugin, mdLinkCtePlugin],

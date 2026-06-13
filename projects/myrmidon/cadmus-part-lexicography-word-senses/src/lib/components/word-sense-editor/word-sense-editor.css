@@ -39,7 +39,16 @@ tbody tr.selected {
   background-color: var(--mat-sys-secondary-container);
   color: var(--mat-sys-on-secondary-container);
 }
-  /* Layout */
+#editor {
+  height: 400px;
+}
+#editor ngx-monaco-editor {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Layout */
 #def-container {
   display: grid;
   grid-template-rows: auto;

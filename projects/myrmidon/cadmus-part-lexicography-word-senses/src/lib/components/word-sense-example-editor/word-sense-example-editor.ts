@@ -2,12 +2,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   Inject,
-  OnDestroy,
   Optional,
   effect,
+  inject,
   input,
   model,
   output,
+  signal,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -16,6 +17,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -26,8 +28,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { NgeMonacoModule } from '@cisstech/nge/monaco';
-import { NgeMarkdownModule } from '@cisstech/nge/markdown';
+import {
+  EditorInitializedEvent,
+  NgxMonacoEditorComponent,
+  StandaloneCodeEditor,
+  StandaloneEditorConstructionOptions,
+} from '@jean-merelis/ngx-monaco-editor';
+import { marked } from 'marked';
 
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
 import { ThesaurusEntriesPickerComponent } from '@myrmidon/cadmus-thesaurus-store';
@@ -36,9 +43,8 @@ import {
   CADMUS_TEXT_ED_BINDINGS_TOKEN,
   CadmusTextEdBindings,
 } from '@myrmidon/cadmus-text-ed';
-import { MonacoEditorHelper } from '@myrmidon/cadmus-part-general-ui';
-
 import { WordSenseExample } from '../../lex-word-senses-part';
+import { debounceTime } from 'rxjs';
 
 @Component({
   selector: 'cadmus-word-sense-example-editor',
@@ -52,18 +58,26 @@ import { WordSenseExample } from '../../lex-word-senses-part';
     MatInputModule,
     MatSelectModule,
     MatTooltipModule,
-    NgeMonacoModule,
-    NgeMarkdownModule,
+    NgxMonacoEditorComponent,
     ThesaurusEntriesPickerComponent,
   ],
   templateUrl: './word-sense-example-editor.html',
   styleUrl: './word-sense-example-editor.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class WordSenseExampleEditor implements OnDestroy {
+export class WordSenseExampleEditor {
   // Monaco
-  private _textHelper!: MonacoEditorHelper;
-  private _explanationHelper!: MonacoEditorHelper;
+  private _textEditor?: StandaloneCodeEditor;
+  private _explanationEditor?: StandaloneCodeEditor;
+  private readonly _sanitizer = inject(DomSanitizer);
+  public readonly textPreviewHtml = signal<SafeHtml>('');
+  public readonly explanationPreviewHtml = signal<SafeHtml>('');
+
+  public readonly editorOptions: StandaloneEditorConstructionOptions = {
+    minimap: { side: 'right' },
+    wordWrap: 'on',
+    automaticLayout: true,
+  };
 
   public readonly example = model<WordSenseExample | undefined>();
   public readonly cancelEdit = output();
@@ -112,35 +126,30 @@ export class WordSenseExampleEditor implements OnDestroy {
       note: this.note,
     });
 
-    // init Monaco helpers
-    this._textHelper = new MonacoEditorHelper(this.text);
-    this._explanationHelper = new MonacoEditorHelper(this.explanation);
-
     // when model changes, update form
     effect(() => {
       const data = this.example();
       this.updateForm(data);
     });
+
+    this.text.valueChanges.pipe(debounceTime(50)).subscribe(() => {
+      this.updateTextPreview();
+    });
+    this.explanation.valueChanges.pipe(debounceTime(50)).subscribe(() => {
+      this.updateExplanationPreview();
+    });
   }
 
-  public ngOnDestroy() {
-    this._textHelper.dispose();
-    this._explanationHelper.dispose();
-  }
-
-  private async applyEdit(selector: string, editor: monaco.editor.IStandaloneCodeEditor) {
-    if (!editor) {
+  private async applyTextEdit(selector: string) {
+    if (!this._textEditor) {
       return;
     }
-    const selection = editor.getSelection();
-    const text = selection ? editor.getModel()!.getValueInRange(selection) : '';
+    const selection = this._textEditor.getSelection();
+    const text = selection ? this._textEditor.getModel()!.getValueInRange(selection) : '';
 
-    const result = await this._editService.edit({
-      selector,
-      text: text,
-    });
+    const result = await this._editService.edit({ selector, text });
 
-    editor.executeEdits('my-source', [
+    this._textEditor.executeEdits('my-source', [
       {
         range: selection!,
         text: result.text,
@@ -149,28 +158,60 @@ export class WordSenseExampleEditor implements OnDestroy {
     ]);
   }
 
-  public onCreateTextEditor(editor: monaco.editor.IEditor) {
-    this._textHelper.initEditor(editor);
+  public onTextEditorInit(event: EditorInitializedEvent) {
+    this._textEditor = event.editor;
+    this._textEditor.focus();
 
-    // plugins
     if (this._editorBindings) {
-      this._textHelper.addBindings(
-        this._editorBindings as Record<string, string>,
-        this.applyEdit.bind(this),
-      );
+      Object.keys(this._editorBindings).forEach((key) => {
+        const n = parseInt(key, 10);
+        this._textEditor!.addCommand(n, () => {
+          this.applyTextEdit(this._editorBindings![key as any]);
+        });
+      });
     }
   }
 
-  public onCreateExplanationEditor(editor: monaco.editor.IEditor) {
-    this._explanationHelper.initEditor(editor, { minimap: { enabled: false } });
-
-    // plugins
-    if (this._editorBindings) {
-      this._explanationHelper.addBindings(
-        this._editorBindings as Record<string, string>,
-        this.applyEdit.bind(this),
-      );
+  private async applyExplanationEdit(selector: string) {
+    if (!this._explanationEditor) {
+      return;
     }
+    const selection = this._explanationEditor.getSelection();
+    const text = selection ? this._explanationEditor.getModel()!.getValueInRange(selection) : '';
+
+    const result = await this._editService.edit({ selector, text });
+
+    this._explanationEditor.executeEdits('my-source', [
+      {
+        range: selection!,
+        text: result.text,
+        forceMoveMarkers: true,
+      },
+    ]);
+  }
+
+  public onExplanationEditorInit(event: EditorInitializedEvent) {
+    this._explanationEditor = event.editor;
+    this._explanationEditor.focus();
+
+    if (this._editorBindings) {
+      Object.keys(this._editorBindings).forEach((key) => {
+        const n = parseInt(key, 10);
+        this._explanationEditor!.addCommand(n, () => {
+          this.applyExplanationEdit(this._editorBindings![key as any]);
+        });
+      });
+    }
+  }
+
+  private updateTextPreview(): void {
+    const html = marked.parse(this.text.value || '', { async: false }) as string;
+    this.textPreviewHtml.set(this._sanitizer.bypassSecurityTrustHtml(html));
+  }
+
+  private updateExplanationPreview(): void {
+    const html = marked.parse(this.explanation.value || '', { async: false }) as string;
+    this.explanationPreviewHtml.set(this._sanitizer.bypassSecurityTrustHtml(html));
   }
 
   public mapIdToEntry(
@@ -196,13 +237,11 @@ export class WordSenseExampleEditor implements OnDestroy {
   private updateForm(example: WordSenseExample | undefined | null): void {
     if (!example) {
       this.form.reset();
-      this._textHelper.setValue('');
-      this._explanationHelper.setValue('');
     } else {
       this.tags.setValue(this.mapIdToEntries(example.tags || [], this.tagEntries()));
       this.citation.setValue(example.citation || null);
-      this._textHelper.setValue(example.text || '');
-      this._explanationHelper.setValue(example.explanation || '');
+      this.text.setValue(example.text || '');
+      this.explanation.setValue(example.explanation || '');
       this.note.setValue(example.note || null);
       this.form.markAsPristine();
     }

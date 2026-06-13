@@ -1,6 +1,6 @@
 {
   "name": "@myrmidon/cadmus-part-lexicography-word-forms",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "description": "Cadmus - Lexicography word forms part.",
   "keywords": [
     "Cadmus",
@@ -15,10 +15,10 @@
     "name": "Daniele Fusi"
   },
   "peerDependencies": {
-    "@angular/common": "^20.0.0 || ^21.0.0",
-    "@angular/core": "^20.0.0 || ^21.0.0",
-    "@angular/material": "^20.0.0 || ^21.0.0",
-    "@myrmidon/cadmus-part-lexicography-lemma": "^0.1.0"
+    "@angular/common": "^22.0.1",
+    "@angular/core": "^22.0.1",
+    "@angular/material": "^22.0.1",
+    "@myrmidon/cadmus-part-lexicography-lemma": "^1.0.0"
   },
   "dependencies": {
     "tslib": "^2.3.0"
