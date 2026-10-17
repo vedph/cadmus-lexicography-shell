@@ -281,6 +281,39 @@ describe('WordFormEditor', () => {
       );
     });
 
+    it('should render no <form> element', async () => {
+      const { container } = await setup({ form: FORM });
+      expect(container.querySelector('form')).toBeNull();
+    });
+
+    it('should save on Enter in a text input once changed', async () => {
+      const { user, formChange } = await setup({ form: FORM });
+      await user.type(screen.getByRole('textbox', { name: 'value' }), 's{Enter}');
+      expect(formChange).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ value: 'canes' }),
+      );
+    });
+
+    it('should not save on Enter while pristine', async () => {
+      const { user, formChange } = await setup({ form: FORM });
+      await user.type(screen.getByRole('textbox', { name: 'value' }), '{Enter}');
+      expect(formChange).not.toHaveBeenCalled();
+    });
+
+    it('should keep the typed text when its own save comes back normalized', async () => {
+      const { user, formChange } = await setup({ form: FORM });
+      const value = screen.getByRole('textbox', { name: 'value' });
+      await user.type(value, ' ');
+      await user.click(screen.getByRole('textbox', { name: 'note' }));
+      await user.type(screen.getByRole('textbox', { name: 'note' }), 'n');
+      await user.click(acceptButton());
+      // the model got the trimmed value, the draft keeps what was typed
+      expect(formChange).toHaveBeenCalledWith(expect.objectContaining({ value: 'cane' }));
+      expect(value).toHaveValue('cane ');
+      await user.type(value, 'x');
+      expect(value).toHaveValue('cane x');
+    });
+
     it('should emit cancelEdit on discard', async () => {
       const { user, cancelEdit, formChange } = await setup({ form: FORM });
       await user.type(screen.getByRole('textbox', { name: 'value' }), 'x');
@@ -307,20 +340,30 @@ describe('WordFormEditor', () => {
       expect(acceptButton()).toBeDisabled();
     });
 
+    it('should limit the length of values while typing', async () => {
+      await setup({ form: FORM });
+      expect(screen.getByRole('textbox', { name: 'type' })).toHaveAttribute('maxlength', '50');
+      expect(screen.getByRole('textbox', { name: 'prefix' })).toHaveAttribute('maxlength', '50');
+      expect(screen.getByRole('textbox', { name: 'value' })).toHaveAttribute('maxlength', '500');
+      expect(screen.getByRole('textbox', { name: 'suffix' })).toHaveAttribute('maxlength', '50');
+    });
+
     it('should report too long values', async () => {
-      const { user } = await setup({ form: FORM });
-      const check = async (label: string, length: number) => {
-        const input = screen.getByRole('textbox', { name: label });
-        await user.clear(input);
-        await user.click(input);
-        await user.paste('x'.repeat(length));
+      // the inputs prevent typing them, but they can come from data
+      const { user } = await setup({
+        form: {
+          type: 'x'.repeat(51),
+          prefix: 'x'.repeat(51),
+          value: 'x'.repeat(501),
+          suffix: 'x'.repeat(51),
+          pos: 'n',
+        },
+      });
+      for (const label of ['type', 'prefix', 'value', 'suffix']) {
+        await user.click(screen.getByRole('textbox', { name: label }));
         await user.tab();
         expect(screen.getByText(`${label} too long`)).toBeInTheDocument();
-      };
-      await check('type', 51);
-      await check('prefix', 51);
-      await check('value', 501);
-      await check('suffix', 51);
+      }
       expect(acceptButton()).toBeDisabled();
     });
 

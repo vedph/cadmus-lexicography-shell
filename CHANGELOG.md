@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Signal forms
+
+⚠️ Updated the `@myrmidon/cadmus-*` core packages to v20, and migrated all the editors from reactive forms to Angular signal forms (`@angular/forms/signals`). Inputs, models and outputs are unchanged. Breaking for code that reached into the components' internals: the former public `FormControl`/`FormGroup` fields are now fields of a signal form. No editor renders a `<form>` element any more: part editors save only through their save button, and sub-editors save on Enter in a text input only when their accept button is enabled. Since inputs now get a native `maxlength`, text cannot be typed past its limit. Text values are trimmed on save. See `docs/signal-forms-migration-log.md` for details.
+
+- `@myrmidon/cadmus-part-lexicography-lemma`:
+  - `WordFormEditor`: the form is now `editForm` (the `form` model is unchanged). Removed messages which could never appear (prefix and suffix required, note too long).
+  - `LexLemmaPartEditor`: `lid`, `homograph` and `forms` are now `form.lid`, `form.homograph` and `form.forms`; the thesauri entries are computed signals.
+
 ### Infrastructure
 
 - replaced the libraries build script (`pnpm run build:libs`) with `scripts/build-libs.mjs`, which builds the libraries in dependency order (derived from both their manifests and their actual imports) after checking that no local library is shadowed by a copy in `node_modules` (`scripts/check-local-libs.js`, also available as `pnpm run check-libs`). Pass library names to rebuild only them and everything depending on them.

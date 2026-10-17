@@ -1,11 +1,15 @@
-import { ChangeDetectionStrategy, Component, effect, input, model, output } from '@angular/core';
 import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  input,
+  linkedSignal,
+  model,
+  output,
+  untracked,
+} from '@angular/core';
+import { FormField, form, maxLength, required } from '@angular/forms/signals';
 
 // material
 import { MatButtonModule } from '@angular/material/button';
@@ -17,14 +21,66 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
+import { isImplicitSubmission } from '@myrmidon/cadmus-ui';
 import { ThesaurusEntriesPickerComponent } from '@myrmidon/cadmus-thesaurus-store';
 
 import { WordForm } from '../../lex-lemma-part';
 
+/**
+ * The editable draft behind the form. POS, features and tags are thesaurus
+ * entry IDs ('' for no POS); the pickers get the corresponding entries.
+ */
+interface WordFormControls {
+  type: string;
+  prefix: string;
+  value: string;
+  suffix: string;
+  pos: string;
+  features: string[];
+  tags: string[];
+  note: string;
+}
+
+/**
+ * Word form -> draft. A word form without POS gets the default POS.
+ */
+function toDraft(data: WordForm | undefined, defaultPos: string): WordFormControls {
+  return {
+    type: data?.type || '',
+    prefix: data?.prefix || '',
+    value: data?.value || '',
+    suffix: data?.suffix || '',
+    pos: data ? data.pos || defaultPos : '',
+    features: [...(data?.features || [])],
+    tags: [...(data?.tags || [])],
+    note: data?.note || '',
+  };
+}
+
+/**
+ * Draft -> word form.
+ */
+function toData(draft: WordFormControls): WordForm {
+  return {
+    type: draft.type.trim(),
+    prefix: draft.prefix.trim() || undefined,
+    value: draft.value.trim(),
+    suffix: draft.suffix.trim() || undefined,
+    pos: draft.pos,
+    features: [...draft.features],
+    tags: [...draft.tags],
+    note: draft.note.trim() || undefined,
+  };
+}
+
+function mapIdToEntry(id: string, entries: ThesaurusEntry[] | undefined): ThesaurusEntry {
+  return entries?.find((e) => e.id === id) || { id, value: id };
+}
+
 @Component({
   selector: 'cadmus-word-form-editor',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatCheckboxModule,
     MatFormFieldModule,
@@ -55,111 +111,85 @@ export class WordFormEditor {
   // lex-word-form-tags
   public readonly tagEntries = input<ThesaurusEntry[] | undefined>();
 
-  public type: FormControl<string>;
-  public prefix: FormControl<string | null>;
-  public value: FormControl<string>;
-  public suffix: FormControl<string | null>;
-  public pos: FormControl<ThesaurusEntry | null>;
-  public features: FormControl<ThesaurusEntry[]>;
-  public tags: FormControl<ThesaurusEntry[]>;
-  public note: FormControl<string | null>;
-  public formCtl: FormGroup;
+  // the POS for a word form without it: a string, so that getting new
+  // POS entries with the same first entry does not rebuild the draft
+  private readonly _defaultPos = computed(() => this.posEntries()?.[0]?.id ?? '');
 
-  constructor(formBuilder: FormBuilder) {
-    // form
-    this.type = formBuilder.control('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(50)],
-    });
-    this.prefix = formBuilder.control(null, { validators: [Validators.maxLength(50)] });
-    this.value = formBuilder.control('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(500)],
-    });
-    this.suffix = formBuilder.control(null, { validators: [Validators.maxLength(50)] });
-    this.pos = formBuilder.control<ThesaurusEntry | null>(null, Validators.required);
-    this.features = formBuilder.control([], { nonNullable: true });
-    this.tags = formBuilder.control([], { nonNullable: true });
-    this.note = formBuilder.control(null);
-    this.formCtl = formBuilder.group({
-      type: this.type,
-      prefix: this.prefix,
-      value: this.value,
-      suffix: this.suffix,
-      pos: this.pos,
-      features: this.features,
-      tags: this.tags,
-      note: this.note,
-    });
+  /**
+   * The editable draft, derived from the bound word form. On the echo of
+   * our own save (the bound form equals what the draft maps to) the draft
+   * is kept, so that normalization does not overwrite it.
+   */
+  private readonly _draft = linkedSignal<
+    { data: WordForm | undefined; defaultPos: string },
+    WordFormControls
+  >({
+    source: () => ({ data: this.form(), defaultPos: this._defaultPos() }),
+    computation: (source, previous) =>
+      previous && JSON.stringify(source.data) === JSON.stringify(toData(previous.value))
+        ? previous.value
+        : toDraft(source.data, source.defaultPos),
+  });
 
-    // when model changes, update form
+  public readonly editForm = form(this._draft, (p) => {
+    required(p.type);
+    maxLength(p.type, 50);
+    maxLength(p.prefix, 50);
+    required(p.value);
+    maxLength(p.value, 500);
+    maxLength(p.suffix, 50);
+    required(p.pos);
+  });
+
+  // the entries for the pickers
+  public readonly pickedPos = computed<ThesaurusEntry[]>(() => {
+    const id = this.editForm.pos().value();
+    return id ? [mapIdToEntry(id, this.posEntries())] : [];
+  });
+  public readonly pickedFeatures = computed<ThesaurusEntry[]>(() =>
+    this.editForm
+      .features()
+      .value()
+      .map((id) => mapIdToEntry(id, this.featureEntries())),
+  );
+  public readonly pickedTags = computed<ThesaurusEntry[]>(() =>
+    this.editForm
+      .tags()
+      .value()
+      .map((id) => mapIdToEntry(id, this.tagEntries())),
+  );
+
+  constructor() {
+    // when the draft mirrors the bound form, there are no unsaved edits
     effect(() => {
-      const data = this.form();
-      this.updateForm(data);
+      const draft = this._draft();
+      untracked(() => {
+        if (this.isDraftInSync(draft)) {
+          this.editForm().reset();
+        }
+      });
     });
   }
 
-  public mapIdToEntry(
-    id: string | null,
-    entries: ThesaurusEntry[] | undefined,
-  ): ThesaurusEntry | null {
-    if (!id) return null;
-    if (!entries) return { id, value: id };
-    return entries.find((e) => e.id === id) || { id, value: id };
-  }
-
-  private mapIdsToEntries(ids: string[], entries: ThesaurusEntry[] | undefined): ThesaurusEntry[] {
-    if (!entries) return ids.map((id) => ({ id, value: id }));
-    return ids.map((id) => entries.find((e) => e.id === id) || { id, value: id });
-  }
-
-  private updateForm(data: WordForm | undefined | null): void {
-    if (!data) {
-      this.formCtl.reset();
-    } else {
-      this.type.setValue(data.type || '');
-      this.prefix.setValue(data.prefix || null);
-      this.value.setValue(data.value || '');
-      this.suffix.setValue(data.suffix || null);
-      this.pos.setValue(
-        this.mapIdToEntry(data.pos, this.posEntries()) ?? this.posEntries()?.[0] ?? null,
-      );
-      this.features.setValue(this.mapIdsToEntries(data.features || [], this.featureEntries()));
-      this.tags.setValue(this.mapIdsToEntries(data.tags || [], this.tagEntries()));
-      this.note.setValue(data.note || null);
-      this.formCtl.markAsPristine();
-    }
+  private isDraftInSync(draft: WordFormControls): boolean {
+    return (
+      JSON.stringify(draft) === JSON.stringify(toDraft(this.form(), this._defaultPos()))
+    );
   }
 
   public onPosEntriesChange(entries: ThesaurusEntry[]): void {
-    this.pos.setValue(entries[0] ?? null);
-    this.pos.markAsDirty();
-    this.pos.updateValueAndValidity();
+    this.editForm.pos().value.set(entries[0]?.id ?? '');
+    this.editForm.pos().markAsDirty();
   }
 
   public onFeatureEntriesChange(entries: ThesaurusEntry[]): void {
-    this.features.setValue(entries);
-    this.features.markAsDirty();
-    this.features.updateValueAndValidity();
+    this.editForm.features().value.set(entries.map((e) => e.id));
+    this.editForm.features().markAsDirty();
   }
 
   public onTagEntriesChange(entries: ThesaurusEntry[]): void {
-    this.tags.setValue(entries);
-    this.tags.markAsDirty();
-    this.tags.updateValueAndValidity();
-  }
-
-  private getData(): WordForm {
-    return {
-      type: this.type.value,
-      prefix: this.prefix.value || undefined,
-      value: this.value.value,
-      suffix: this.suffix.value || undefined,
-      pos: this.pos.value?.id ?? '',
-      features: this.features.value.map((e) => e.id),
-      tags: this.tags.value.map((e) => e.id),
-      note: this.note.value?.trim() || undefined,
-    };
+    this.editForm.tags().value.set(entries.map((e) => e.id));
+    this.editForm.tags().markAsDirty();
   }
 
   public cancel(): void {
@@ -167,25 +197,34 @@ export class WordFormEditor {
   }
 
   /**
-   * Saves the current form data by updating the `data` model signal.
-   * This method can be called manually (e.g., by a Save button) or
-   * automatically (via auto-save).
-   * @param pristine If true (default), the form is marked as pristine
-   * after saving.
-   * Set to false for auto-save if you want the form to remain dirty.
+   * Handle Enter: in a text input, save as the accept button would, when
+   * it is enabled.
+   * @param event The keydown event.
+   */
+  public onEnterKey(event: Event): void {
+    if (!isImplicitSubmission(event) || this.editForm().invalid() || !this.editForm().dirty()) {
+      return;
+    }
+    event.preventDefault();
+    this.save();
+  }
+
+  /**
+   * Save the current draft into the `form` model signal.
+   * @param pristine If true (default), the form's interaction state is
+   * cleared after saving.
    */
   public save(pristine = true): void {
-    if (this.formCtl.invalid) {
+    if (this.editForm().invalid()) {
       // show validation errors
-      this.formCtl.markAllAsTouched();
+      this.editForm().markAsTouched();
       return;
     }
 
-    const data = this.getData();
-    this.form.set(data);
+    this.form.set(toData(this._draft()));
 
     if (pristine) {
-      this.formCtl.markAsPristine();
+      this.editForm().reset();
     }
   }
 }

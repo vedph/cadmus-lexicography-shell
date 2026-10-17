@@ -241,6 +241,21 @@ describe('LexLemmaPartEditor', () => {
       expect(saveButton()).toBeEnabled();
     });
 
+    it('should not save the part on Enter in a word form', async () => {
+      const { user, dataChange } = await setup({ part: createPart() });
+      await user.click(screen.getByRole('button', { name: 'form' }));
+      await user.type(screen.getByRole('textbox', { name: 'value' }), 'cani{Enter}');
+      // Enter accepted the word form only
+      expect(listedForms()).toEqual(['cane', 'cani']);
+      expect(dataChange).not.toHaveBeenCalled();
+    });
+
+    it('should render no <form> element, also with a word form open', async () => {
+      const { user, container } = await setup({ part: createPart() });
+      await user.click(screen.getByRole('button', { description: 'Edit this form' }));
+      expect(container.querySelector('form')).toBeNull();
+    });
+
     it('should not save without forms', async () => {
       const { user, dataChange } = await setup();
       await user.type(screen.getByRole('textbox', { name: 'LID' }), 'cane');
@@ -269,12 +284,15 @@ describe('LexLemmaPartEditor', () => {
       expect(dataChange).not.toHaveBeenCalled();
     });
 
+    it('should limit the LID length while typing', async () => {
+      await setup({ part: createPart() });
+      expect(screen.getByRole('textbox', { name: 'LID' })).toHaveAttribute('maxlength', '300');
+    });
+
     it('should report a too long LID', async () => {
-      const { user } = await setup({ part: createPart() });
-      const lid = screen.getByRole('textbox', { name: 'LID' });
-      await user.clear(lid);
-      await user.click(lid);
-      await user.paste('x'.repeat(301));
+      // the input prevents typing it, but it can come from data
+      const { user } = await setup({ part: { ...createPart(), lid: 'x'.repeat(301) } });
+      await user.click(screen.getByRole('textbox', { name: 'LID' }));
       await user.tab();
       expect(screen.getByText('LID too long')).toBeInTheDocument();
       expect(saveButton()).toBeDisabled();
@@ -314,6 +332,13 @@ describe('LexLemmaPartEditor', () => {
       const { user, editorClose } = await setup({ part: createPart() });
       await user.click(screen.getByRole('button', { name: 'close' }));
       expect(editorClose).toHaveBeenCalledOnce();
+    });
+
+    it('should be pristine after loading a part', async () => {
+      const { fixture, dirtyChange } = await setup({ part: createPart() });
+      await fixture.whenStable();
+      expect(dirtyChange).not.toHaveBeenCalledWith(true);
+      expect(fixture.componentInstance.isDirty()).toBe(false);
     });
 
     it('should emit dirtyChange when edited and saved', async () => {
