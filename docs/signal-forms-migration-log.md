@@ -47,3 +47,20 @@ Components: `WordCollocLiteralEditor`, `WordCollocTokenEditor`, `WordCollocExamp
 - `WordCollocEditor`: `rank` had `min="0"`, which reactive forms turned into a validator: now a `min()` rule. Unlike the sense editor, its token and example sub-editors were not closed when the bound collocation changed; this was kept.
 - `LexWordCollocationPartEditor`: the DSL box is a separate signal form (`dslForm`), not affecting the part's dirty state. **Verified** (test run): typing DSL text leaves the part pristine.
 - **Believed**: "should not submit an enclosing form on Enter" (example editor inside a host `<form>`) still passes because user-event does not implicitly submit that host form, not because of the editor: with no inner form, the token number input now belongs to the host form, so `isImplicitSubmission` is false and the editor does not consume the Enter. In the app no `<form>` encloses these editors any more. Could be checked in Chrome by embedding the editor in a native form.
+
+## Browser verification (2026-10-17)
+
+**Verified** by driving headless Chrome over CDP (real key events via `Input.dispatchKeyEvent`/`Input.insertText`), against `ng serve` started after `rm -rf .angular/cache`, with all the libraries rebuilt by `pnpm build:libs`, and the backend at `localhost:5248`. 28/28 checks passed:
+
+- the served chunk contains a string present only in the new templates (`nr. required`), so the browser ran the current build;
+- one part of each type, seeded through the API with `null` optional values like real data, opens pristine (`isDirty() === false` after 1.5 s, past the child editors' debounces), and renders no `<form>`;
+- word senses (part > sense > example): Enter in an unchanged example keeps both editors open; Enter in a changed example accepts only the example; Enter in the sense EID accepts the sense; the part becomes dirty and is not saved by Enter; the save button saves it, and the API returns the edited citation;
+- word collocations (part > collocation > example > literal, no `<form>` with all open): the same, level by level; the API returns the edited literal.
+
+Not exercised in the browser: the lemma and word forms nested flows (covered by specs only).
+
+## Reported, not fixed (outside the migration's scope)
+
+- `LexWordCollocationPartEditor.parseDsl` logs exceptions with `console.error(e)`, without telling the user.
+- `CADMUS_TEXT_ED_BINDINGS_TOKEN` (`@myrmidon/cadmus-text-ed`) is typed with the wrong type (see word senses).
+- Backend: `WordCollocation.rank` and the token `isHead`/`isOptional` are non-nullable, so a part JSON with `null` there is rejected with HTTP 500 (`System.Text.Json` conversion). The frontend never sends `null` there (it omits empty values), so this only matters for data imported from elsewhere.
