@@ -9,6 +9,7 @@
 - `@myrmidon/cadmus-part-lexicography-lemma`:
   - `WordFormEditor`: the form is now `editForm` (the `form` model is unchanged). Removed messages which could never appear (prefix and suffix required, note too long).
   - `LexLemmaPartEditor`: `lid`, `homograph` and `forms` are now `form.lid`, `form.homograph` and `form.forms`; the thesauri entries are computed signals.
+- `@myrmidon/cadmus-part-lexicography-word-forms`: `LexWordFormsPartEditor.forms` is now `form.forms`; the thesauri entries are computed signals.
 
 ### Infrastructure
 

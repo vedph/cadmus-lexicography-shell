@@ -17,3 +17,9 @@ Components: `WordFormEditor` (manual save sub-editor), `WordFormSetEditor` (no f
 - **Verified** (test run): `[formField]` sets the native `maxlength` attribute on inputs, so users can no longer type past a length limit, and "too long" messages appear only for over-long values coming from data. The two specs typing over-long values were rewritten to check the attribute, and to load over-long values.
 - **Verified** (reading `cadmus-shell-v3` source): `CloseSaveButtonsComponent` disables save only when the form is invalid, not when pristine.
 - Behavior changes: Enter in a pristine word form no longer emits it unchanged (it is gated like the accept button); text values are trimmed on save. The homograph `min`/`max` attributes, which reactive forms turned into validators, are now `min()`/`max()` rules.
+
+## @myrmidon/cadmus-part-lexicography-word-forms
+
+Components: `LexWordFormsPartEditor` (part editor, reusing `WordFormSetEditor` from lemma), `LexWordFormsPartFeature` (unchanged).
+
+- Same pattern as `LexLemmaPartEditor`. **Verified** (test run against the rebuilt lemma `dist`): Enter in the nested word form editor accepts only the word form, not the part; no `<form>` is rendered with a word form open; loading a part leaves the editor pristine.

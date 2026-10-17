@@ -1,11 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
-import {
-  FormControl,
-  FormBuilder,
-  FormGroup,
-  UntypedFormGroup,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { ChangeDetectionStrategy, Component, computed, linkedSignal } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 
 import {
@@ -15,18 +8,30 @@ import {
   MatCardHeader,
   MatCardTitle,
 } from '@angular/material/card';
-import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
-import { MatIconButton } from '@angular/material/button';
-import { MatInput } from '@angular/material/input';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
 
-import { AuthJwtService } from '@myrmidon/auth-jwt-login';
-import { EditedObject, ThesauriSet, ThesaurusEntry } from '@myrmidon/cadmus-core';
-import { CloseSaveButtonsComponent, ModelEditorComponentBase } from '@myrmidon/cadmus-ui';
-import { NgxToolsValidators } from '@myrmidon/ngx-tools';
+import { ThesaurusEntry } from '@myrmidon/cadmus-core';
+import {
+  CloseSaveButtonsComponent,
+  ModelEditorComponentBase,
+  copyFormValue,
+} from '@myrmidon/cadmus-ui';
+import { NgxToolsSignalValidators } from '@myrmidon/ngx-tools';
 import { WordForm, WordFormSetEditor } from '@myrmidon/cadmus-part-lexicography-lemma';
 import { LEX_WORD_FORMS_PART_TYPEID, LexWordFormsPart } from '../../lex-word-forms-part';
+
+/**
+ * The editable draft behind the form.
+ */
+interface LexWordFormsPartControls {
+  forms: WordForm[];
+}
+
+function toDraft(part?: LexWordFormsPart | null): LexWordFormsPartControls {
+  // copy: the form tags the objects in its arrays
+  return { forms: copyFormValue(part?.forms || []) };
+}
 
 /**
  * Lexicography word forms part editor component.
@@ -36,7 +41,6 @@ import { LEX_WORD_FORMS_PART_TYPEID, LexWordFormsPart } from '../../lex-word-for
 @Component({
   selector: 'cadmus-lex-word-forms-part-editor',
   imports: [
-    ReactiveFormsModule,
     MatCard,
     MatCardActions,
     MatCardContent,
@@ -52,111 +56,46 @@ import { LEX_WORD_FORMS_PART_TYPEID, LexWordFormsPart } from '../../lex-word-for
   styleUrl: './lex-word-forms-part-editor.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LexWordFormsPartEditor
-  extends ModelEditorComponentBase<LexWordFormsPart>
-  implements OnInit
-{
-  public forms: FormControl<WordForm[]>;
-
+export class LexWordFormsPartEditor extends ModelEditorComponentBase<LexWordFormsPart> {
   // lex-word-form-types
-  public readonly typeEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly typeEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['lex-word-form-types']?.entries,
+  );
   // lex-word-form-prefixes
-  public readonly prefixEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly prefixEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['lex-word-form-prefixes']?.entries,
+  );
   // lex-word-form-suffixes
-  public readonly suffixEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly suffixEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['lex-word-form-suffixes']?.entries,
+  );
   // lex-pos-tags (required)
-  public readonly posEntries = signal<ThesaurusEntry[]>([]);
+  public readonly posEntries = computed<ThesaurusEntry[]>(
+    () => this.data()?.thesauri?.['lex-pos-tags']?.entries || [],
+  );
   // lex-word-form-features
-  public readonly featureEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly featureEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['lex-word-form-features']?.entries,
+  );
   // lex-word-form-tags
-  public readonly tagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly tagEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['lex-word-form-tags']?.entries,
+  );
 
-  constructor(authService: AuthJwtService, formBuilder: FormBuilder) {
-    super(authService, formBuilder);
-    // form
-    this.forms = formBuilder.control([], {
-      nonNullable: true,
-      validators: NgxToolsValidators.strictMinLengthValidator(1),
-    });
-  }
+  private readonly _draft = linkedSignal(() => toDraft(this.data()?.value));
+  public readonly form = this.createForm(this._draft, (p) => {
+    NgxToolsSignalValidators.strictMinLength(p.forms, 1);
+  });
 
-  public override ngOnInit(): void {
-    super.ngOnInit();
-  }
-
-  protected buildForm(formBuilder: FormBuilder): FormGroup | UntypedFormGroup {
-    return formBuilder.group({
-      forms: this.forms,
-    });
-  }
-
-  private updateThesauri(thesauri: ThesauriSet): void {
-    let key = 'lex-word-form-types';
-    if (this.hasThesaurus(key)) {
-      this.typeEntries.set(thesauri[key].entries);
-    } else {
-      this.typeEntries.set(undefined);
-    }
-    key = 'lex-word-form-prefixes';
-    if (this.hasThesaurus(key)) {
-      this.prefixEntries.set(thesauri[key].entries);
-    } else {
-      this.prefixEntries.set(undefined);
-    }
-    key = 'lex-word-form-suffixes';
-    if (this.hasThesaurus(key)) {
-      this.suffixEntries.set(thesauri[key].entries);
-    } else {
-      this.suffixEntries.set(undefined);
-    }
-    key = 'lex-pos-tags';
-    if (this.hasThesaurus(key)) {
-      this.posEntries.set(thesauri[key].entries!);
-    } else {
-      this.posEntries.set([]);
-    }
-    key = 'lex-word-form-features';
-    if (this.hasThesaurus(key)) {
-      this.featureEntries.set(thesauri[key].entries);
-    } else {
-      this.featureEntries.set(undefined);
-    }
-    key = 'lex-word-form-tags';
-    if (this.hasThesaurus(key)) {
-      this.tagEntries.set(thesauri[key].entries);
-    } else {
-      this.tagEntries.set(undefined);
-    }
-  }
-
-  private updateForm(part?: LexWordFormsPart | null): void {
-    if (!part) {
-      this.form.reset();
-      return;
-    }
-    this.forms.setValue(part.forms || []);
-    this.form.markAsPristine();
-  }
-
+  // a user action: the set editor emits only when forms are changed
   public onFormsChange(forms: WordForm[]): void {
-    this.forms.setValue(forms || []);
-    this.forms.markAsDirty();
-    this.forms.updateValueAndValidity();
-  }
-
-  protected override onDataSet(data?: EditedObject<LexWordFormsPart>): void {
-    // thesauri
-    if (data?.thesauri) {
-      this.updateThesauri(data.thesauri);
-    }
-
-    // form
-    this.updateForm(data?.value);
+    this.form.forms().value.set(copyFormValue(forms || []));
+    this.form.forms().markAsDirty();
   }
 
   protected getValue(): LexWordFormsPart {
-    let part = this.getEditedPart(LEX_WORD_FORMS_PART_TYPEID) as LexWordFormsPart;
-    part.forms = this.forms.value || [];
+    const part = this.getEditedPart(LEX_WORD_FORMS_PART_TYPEID) as LexWordFormsPart;
+    part.forms = copyFormValue(this._draft().forms);
     return part;
   }
 }

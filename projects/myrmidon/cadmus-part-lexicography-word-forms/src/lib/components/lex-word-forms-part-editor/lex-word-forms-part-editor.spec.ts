@@ -197,6 +197,21 @@ describe('LexWordFormsPartEditor', () => {
       expect(saveButton()).toBeEnabled();
     });
 
+    it('should not save the part on Enter in a word form', async () => {
+      const { user, dataChange } = await setup({ part: createPart() });
+      await user.click(screen.getByRole('button', { name: 'form' }));
+      await user.type(screen.getByRole('textbox', { name: 'value' }), 'gatti{Enter}');
+      // Enter accepted the word form only
+      expect(listedForms()).toHaveLength(2);
+      expect(dataChange).not.toHaveBeenCalled();
+    });
+
+    it('should render no <form> element, also with a word form open', async () => {
+      const { user, container } = await setup({ part: createPart() });
+      await user.click(screen.getByRole('button', { description: 'Edit this form' }));
+      expect(container.querySelector('form')).toBeNull();
+    });
+
     it('should not save without forms', async () => {
       const { user, dataChange } = await setup({ part: createPart() });
       await user.click(screen.getByRole('button', { description: 'Delete this form' }));
@@ -219,6 +234,13 @@ describe('LexWordFormsPartEditor', () => {
       const { user, editorClose } = await setup({ part: createPart() });
       await user.click(screen.getByRole('button', { name: 'close' }));
       expect(editorClose).toHaveBeenCalledOnce();
+    });
+
+    it('should be pristine after loading a part', async () => {
+      const { fixture, dirtyChange } = await setup({ part: createPart() });
+      await fixture.whenStable();
+      expect(dirtyChange).not.toHaveBeenCalledWith(true);
+      expect(fixture.componentInstance.isDirty()).toBe(false);
     });
 
     it('should emit dirtyChange when edited and saved', async () => {
