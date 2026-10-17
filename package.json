@@ -12,7 +12,8 @@
     "build:sns": "ng build @myrmidon/cadmus-part-lexicography-word-senses",
     "build:col": "ng build @myrmidon/cadmus-part-lexicography-word-collocations",
     "build:pg": "ng build @myrmidon/cadmus-part-lexicography-pg",
-    "build:libs": "pnpm run build:lem && pnpm run build:wf && pnpm run build:sns && pnpm run build:col && pnpm run build:pg"
+    "check-libs": "node scripts/check-local-libs.js",
+    "build:libs": "node scripts/build-libs.mjs"
   },
   "prettier": {
     "printWidth": 100,
