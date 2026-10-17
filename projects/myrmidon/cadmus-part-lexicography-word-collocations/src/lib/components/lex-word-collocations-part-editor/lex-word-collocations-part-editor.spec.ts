@@ -15,6 +15,7 @@ import {
 import { WordCollocLiteralEditor } from '../word-colloc-literal-editor/word-colloc-literal-editor';
 import { WordCollocTokenEditor } from '../word-colloc-token-editor/word-colloc-token-editor';
 import { LexWordCollocationPartEditor } from './lex-word-collocations-part-editor';
+import { WordCollocationParser } from '../../services/word-collocation-parser';
 
 const IDENTITY: PartIdentity = {
   itemId: 'item-1',
@@ -345,6 +346,19 @@ describe('LexWordCollocationPartEditor', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('No head token found');
       expect(listed()).toHaveLength(3);
       expect(dslText()).toHaveValue('ADJ+NOUN: x');
+    });
+
+    it('should show unexpected parser failures and add nothing', async () => {
+      const parse = vi.spyOn(WordCollocationParser, 'parse').mockImplementation(() => {
+        throw new Error('boom');
+      });
+      const { user } = await setup({ part: createPart() });
+      await typeDsl(user, 'ADJ+<NOUN>: x');
+      await user.click(screen.getByRole('button', { description: 'Parse collocations and add them' }));
+      expect(screen.getByRole('alert')).toHaveTextContent('Error parsing DSL: boom');
+      expect(listed()).toHaveLength(3);
+      expect(dslText()).toHaveValue('ADJ+<NOUN>: x');
+      parse.mockRestore();
     });
 
     it('should do nothing without text', async () => {

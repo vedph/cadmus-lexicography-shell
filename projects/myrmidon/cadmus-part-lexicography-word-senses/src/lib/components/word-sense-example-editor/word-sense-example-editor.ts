@@ -96,8 +96,9 @@ function renderMarkdown(text: string): string {
 })
 export class WordSenseExampleEditor {
   private readonly _editService = inject(CadmusTextEdService);
-  // the token is declared with the service options type, but it provides
-  // the key bindings
+  // @myrmidon/cadmus-text-ed 11.0.3 declares the token with the service
+  // options type, while it provides the key bindings (fixed upstream, to be
+  // published): the cast can be removed after updating to the fixed version
   private readonly _editorBindings = inject(CADMUS_TEXT_ED_BINDINGS_TOKEN, {
     optional: true,
   }) as unknown as CadmusTextEdBindings | null;

@@ -249,7 +249,8 @@ export class LexWordCollocationPartEditor extends ModelEditorComponentBase<LexWo
         this.dslForm().reset();
       }
     } catch (e) {
-      console.error(e);
+      // the parser reports errors in its result: this is unexpected
+      this.dslError.set(`Error parsing DSL: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 }

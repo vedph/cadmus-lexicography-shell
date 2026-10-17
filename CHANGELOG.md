@@ -18,6 +18,7 @@
   - `WordCollocLiteralEditor`, `WordCollocTokenEditor`, `WordCollocEditor`, `WordCollocExampleEditor`: their fields are now fields of `form`. In the literal editor, `tag` and `tagText` are now the single `form.tag`. In the example editor, `dirty`, `literals` and `editedLiterals` were removed (use `form().dirty()` and `form.literals`), and `edited`/`editedIndex` are linked signals, reset when the example changes.
   - `LexWordCollocationPartEditor`: `collocations` is now `form.entries`, and `dslForm`/`dslText` are now the signal form `dslForm` (`dslForm.dslText`); the thesauri entries are computed signals.
   - 🐛 `WordCollocExampleEditor`: an emptied token number was saved as `null`; it is now required. The accept button is disabled while the token number is invalid.
+  - 🐛 `LexWordCollocationPartEditor`: unexpected errors while parsing the DSL text were only logged to the console; they are now shown to the user.
 
 ### Infrastructure
 

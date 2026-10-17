@@ -59,8 +59,8 @@ Components: `WordCollocLiteralEditor`, `WordCollocTokenEditor`, `WordCollocExamp
 
 Not exercised in the browser: the lemma and word forms nested flows (covered by specs only).
 
-## Reported, not fixed (outside the migration's scope)
+## Reported issues and their follow-up
 
-- `LexWordCollocationPartEditor.parseDsl` logs exceptions with `console.error(e)`, without telling the user.
-- `CADMUS_TEXT_ED_BINDINGS_TOKEN` (`@myrmidon/cadmus-text-ed`) is typed with the wrong type (see word senses).
-- Backend: `WordCollocation.rank` and the token `isHead`/`isOptional` are non-nullable, so a part JSON with `null` there is rejected with HTTP 500 (`System.Text.Json` conversion). The frontend never sends `null` there (it omits empty values), so this only matters for data imported from elsewhere.
+- **Fixed**: `LexWordCollocationPartEditor.parseDsl` logged unexpected parser exceptions with `console.error(e)`, without telling the user. They are now shown in the DSL error alert, like parse errors. **Verified** (test run with the old code restored): "should show unexpected parser failures and add nothing" fails.
+- **Fixed upstream, not yet published**: `CADMUS_TEXT_ED_BINDINGS_TOKEN` is now `InjectionToken<CadmusTextEdBindings>` in `cadmus-bricks-shell-v3/projects/myrmidon/cadmus-text-ed` (uncommitted there; `ng build @myrmidon/cadmus-text-ed` clean). All the known consumers inject it with `@Inject()` typed as `CadmusTextEdBindings`, so the change is type-only. The cast in the word senses editors stays valid, and can be removed once the fixed version is published and installed.
+- **Withdrawn, not a bug**: the backend rejecting `null` for `rank`, `isHead` and `isOptional`. The part's JSON schema declares them as `integer` and `boolean`, and the backend docs as `short` (0 = unspecified) and `bool`, so `null` there is invalid data; the frontend omits empty values instead. The `null`s came from the test data I seeded. What remains is that the generic Cadmus API answers such invalid JSON with HTTP 500 rather than 400, which is outside this repository.
