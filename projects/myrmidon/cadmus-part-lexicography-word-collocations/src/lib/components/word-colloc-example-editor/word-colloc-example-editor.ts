@@ -1,17 +1,15 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   effect,
+  inject,
   input,
   linkedSignal,
   model,
   output,
-  signal,
   untracked,
 } from '@angular/core';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormField, form, max, min, required, validate } from '@angular/forms/signals';
 
 import { MatButton, MatIconButton } from '@angular/material/button';
 import {
@@ -27,9 +25,33 @@ import { MatInput } from '@angular/material/input';
 import { FlatLookupPipe } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
+import { copyFormValue, isImplicitSubmission } from '@myrmidon/cadmus-ui';
 
 import { WordCollocationExampleToken, WordCollocationLiteral } from '../../lex-word-collocations-part';
 import { WordCollocLiteralEditor } from '../word-colloc-literal-editor/word-colloc-literal-editor';
+
+/**
+ * The editable draft behind the form.
+ */
+interface WordCollocationExampleControls {
+  tokenNr: number | null;
+  literals: WordCollocationLiteral[];
+}
+
+function toDraft(example: WordCollocationExampleToken): WordCollocationExampleControls {
+  return {
+    tokenNr: example.tokenNr,
+    // copy: the form tags the objects in its arrays
+    literals: copyFormValue(example.literals || []),
+  };
+}
+
+function toData(draft: WordCollocationExampleControls): WordCollocationExampleToken {
+  return {
+    tokenNr: draft.tokenNr ?? 0,
+    literals: copyFormValue(draft.literals),
+  };
+}
 
 /**
  * Word collocation example token editor. This edits the token reference
@@ -38,7 +60,7 @@ import { WordCollocLiteralEditor } from '../word-colloc-literal-editor/word-coll
 @Component({
   selector: 'cadmus-word-colloc-example-editor',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButton,
     MatError,
     MatExpansionPanel,
@@ -59,6 +81,8 @@ import { WordCollocLiteralEditor } from '../word-colloc-literal-editor/word-coll
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WordCollocExampleEditor {
+  private readonly _dialogService = inject(DialogService);
+
   /**
    * Maximum token number. When 0 no limit is set.
    */
@@ -72,52 +96,57 @@ export class WordCollocExampleEditor {
    */
   public readonly example = model<WordCollocationExampleToken>({ tokenNr: 1, literals: [] });
 
-  public readonly literals = computed<WordCollocationLiteral[]>(() => this.example().literals);
-  public readonly editedLiterals = linkedSignal<WordCollocationLiteral[]>(this.literals);
-  public readonly edited = signal<WordCollocationLiteral | undefined>(undefined);
-  public readonly editedIndex = signal<number>(-1);
-  public readonly dirty = signal<boolean>(false);
+  // the literal being edited, and its index (-1 for a new one): a literal
+  // being edited belongs to the example, so they are reset when it changes
+  public readonly edited = linkedSignal<
+    WordCollocationExampleToken,
+    WordCollocationLiteral | undefined
+  >({
+    source: () => this.example(),
+    computation: () => undefined,
+  });
+  public readonly editedIndex = linkedSignal<WordCollocationExampleToken, number>({
+    source: () => this.example(),
+    computation: () => -1,
+  });
+
+  /**
+   * The editable draft, derived from the bound example. On the echo of our
+   * own save the draft is kept, so that normalization does not overwrite it.
+   */
+  private readonly _draft = linkedSignal<
+    WordCollocationExampleToken,
+    WordCollocationExampleControls
+  >({
+    source: () => this.example(),
+    computation: (example, previous) =>
+      previous && JSON.stringify(example) === JSON.stringify(toData(previous.value))
+        ? previous.value
+        : toDraft(example),
+  });
+
+  // 0=connective text, 1-N=pattern token number
+  public readonly form = form(this._draft, (p) => {
+    required(p.tokenNr);
+    min(p.tokenNr, 0);
+    max(p.tokenNr, () => this.maxTokenNr() || undefined);
+    validate(p.literals, ({ value }) => (value().length ? null : { kind: 'required' }));
+  });
 
   /**
    * Event emitted when the edit is cancelled.
    */
   public readonly cancelEdit = output();
 
-  public tokenNr: FormControl<number>;
-
-  constructor(private _dialogService: DialogService) {
-    // 0=connective text, 1-N=pattern token number
-    this.tokenNr = new FormControl<number>(this.example().tokenNr, {
-      nonNullable: true,
-      validators: [Validators.min(0)],
-    });
-
-    // when the example changes, update the form
+  constructor() {
+    // when the draft mirrors the bound example, there are no unsaved edits
     effect(() => {
-      const example = this.example();
+      const draft = this._draft();
       untracked(() => {
-        this.closeLiteral();
-        this.tokenNr.setValue(example.tokenNr, { emitEvent: false });
-        this.tokenNr.markAsPristine();
-        this.dirty.set(false);
+        if (JSON.stringify(draft) === JSON.stringify(toDraft(this.example()))) {
+          this.form().reset();
+        }
       });
-    });
-
-    // when maxTokenNr changes, update the max validator
-    effect(() => {
-      const max = this.maxTokenNr();
-      this.tokenNr.clearValidators();
-      this.tokenNr.addValidators(Validators.min(0));
-      if (max > 0) {
-        this.tokenNr.addValidators(Validators.max(max));
-      }
-      // just revalidate: this is not a user change
-      this.tokenNr.updateValueAndValidity({ emitEvent: false });
-    });
-
-    // when tokenNr changes, set dirty
-    this.tokenNr.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
-      this.dirty.set(true);
     });
   }
 
@@ -131,6 +160,7 @@ export class WordCollocExampleEditor {
 
   public editLiteral(literal: WordCollocationLiteral, index: number): void {
     this.editedIndex.set(index);
+    // structuredClone also drops the form's Symbol tag
     this.edited.set(structuredClone(literal));
   }
 
@@ -139,16 +169,21 @@ export class WordCollocExampleEditor {
     this.edited.set(undefined);
   }
 
+  // these are user actions: they set the list and mark it as dirty
+  private setLiterals(literals: WordCollocationLiteral[]): void {
+    this.form.literals().value.set(literals);
+    this.form.literals().markAsDirty();
+  }
+
   public saveLiteral(literal: WordCollocationLiteral): void {
-    const literals = [...this.editedLiterals()];
+    const literals = [...this.form.literals().value()];
     if (this.editedIndex() === -1) {
       literals.push(literal);
     } else {
       literals.splice(this.editedIndex(), 1, literal);
     }
-    this.editedLiterals.set(literals);
+    this.setLiterals(literals);
     this.closeLiteral();
-    this.dirty.set(true);
   }
 
   public deleteLiteral(index: number): void {
@@ -163,10 +198,9 @@ export class WordCollocExampleEditor {
           } else if (edited > index) {
             this.editedIndex.set(edited - 1);
           }
-          const literals = [...this.editedLiterals()];
+          const literals = [...this.form.literals().value()];
           literals.splice(index, 1);
-          this.editedLiterals.set(literals);
-          this.dirty.set(true);
+          this.setLiterals(literals);
         }
       });
   }
@@ -175,26 +209,24 @@ export class WordCollocExampleEditor {
     if (index < 1) {
       return;
     }
-    const literal = this.editedLiterals()[index];
-    const literals = [...this.editedLiterals()];
+    const literals = [...this.form.literals().value()];
+    const literal = literals[index];
     literals.splice(index, 1);
     literals.splice(index - 1, 0, literal);
-    this.editedLiterals.set(literals);
+    this.setLiterals(literals);
     this.followMovedLiteral(index, index - 1);
-    this.dirty.set(true);
   }
 
   public moveLiteralDown(index: number): void {
-    if (index + 1 >= this.editedLiterals().length) {
+    const literals = [...this.form.literals().value()];
+    if (index + 1 >= literals.length) {
       return;
     }
-    const literal = this.editedLiterals()[index];
-    const literals = [...this.editedLiterals()];
+    const literal = literals[index];
     literals.splice(index, 1);
     literals.splice(index + 1, 0, literal);
-    this.editedLiterals.set(literals);
+    this.setLiterals(literals);
     this.followMovedLiteral(index, index + 1);
-    this.dirty.set(true);
   }
 
   /**
@@ -209,23 +241,34 @@ export class WordCollocExampleEditor {
     }
   }
 
-  private getExample(): WordCollocationExampleToken {
-    return {
-      tokenNr: this.tokenNr.value,
-      literals: this.editedLiterals(),
-    };
-  }
-
   public cancel(): void {
     this.cancelEdit.emit();
   }
 
-  public save(): void {
-    if (!this.tokenNr.valid || !this.editedLiterals().length) {
+  /**
+   * Handle Enter in a text input, like the submission of a form: save when
+   * changed, or show the errors when invalid. The event is consumed in any
+   * case, so that it does not reach the enclosing collocation editor. An
+   * Enter in the nested literal editor is consumed by that editor.
+   * @param event The keydown event.
+   */
+  public onEnterKey(event: Event): void {
+    if (!isImplicitSubmission(event)) {
       return;
     }
-    this.tokenNr.markAsPristine();
-    this.dirty.set(false);
-    this.example.set(this.getExample());
+    event.preventDefault();
+    if (this.form().dirty()) {
+      this.save();
+    }
+  }
+
+  public save(): void {
+    if (this.form().invalid()) {
+      // show validation errors
+      this.form().markAsTouched();
+      return;
+    }
+    this.example.set(toData(this._draft()));
+    this.form().reset();
   }
 }

@@ -1,11 +1,16 @@
-import { ChangeDetectionStrategy, Component, effect, input, model, output, signal } from '@angular/core';
 import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+  model,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
+import { FormField, form, maxLength, min } from '@angular/forms/signals';
 
 import {
   MatExpansionPanel,
@@ -19,9 +24,10 @@ import { MatInput } from '@angular/material/input';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { MatTooltip } from '@angular/material/tooltip';
 
-import { FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
+import { FlatLookupPipe, NgxToolsSignalValidators } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
+import { copyFormValue, isImplicitSubmission } from '@myrmidon/cadmus-ui';
 
 import { WordCollocTokenEditor } from '../word-colloc-token-editor/word-colloc-token-editor';
 import {
@@ -32,10 +38,42 @@ import {
 } from '../../lex-word-collocations-part';
 import { WordCollocExampleEditor } from '../word-colloc-example-editor/word-colloc-example-editor';
 
+/**
+ * The editable draft behind the form.
+ */
+interface WordCollocationControls {
+  tag: string;
+  rank: number | null;
+  tokens: WordCollocationToken[];
+  examples: WordCollocationExampleToken[];
+  note: string;
+}
+
+function toDraft(collocation: WordCollocation | undefined): WordCollocationControls {
+  return {
+    tag: collocation?.tag || '',
+    rank: collocation?.rank || 0,
+    // copy: the form tags the objects in its arrays
+    tokens: copyFormValue(collocation?.tokens || []),
+    examples: copyFormValue(collocation?.examples || []),
+    note: collocation?.note || '',
+  };
+}
+
+function toData(draft: WordCollocationControls): WordCollocation {
+  return {
+    tag: draft.tag.trim() || undefined,
+    rank: draft.rank || undefined,
+    tokens: copyFormValue(draft.tokens),
+    examples: draft.examples.length ? copyFormValue(draft.examples) : undefined,
+    note: draft.note.trim() || undefined,
+  };
+}
+
 @Component({
   selector: 'cadmus-word-colloc-editor',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButton,
     MatError,
     MatExpansionPanel,
@@ -58,6 +96,8 @@ import { WordCollocExampleEditor } from '../word-colloc-example-editor/word-coll
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WordCollocEditor {
+  private readonly _dialogService = inject(DialogService);
+
   public readonly collocation = model<WordCollocation | undefined>();
   public readonly cancelEdit = output();
 
@@ -76,61 +116,47 @@ export class WordCollocEditor {
   public readonly editedExample = signal<WordCollocationExampleToken | undefined>(undefined);
   public readonly editedExampleIndex = signal<number>(-1);
 
-  public tag: FormControl<string | null>;
-  public rank: FormControl<number>;
-  public tokens: FormControl<WordCollocationToken[]>;
-  public examples: FormControl<WordCollocationExampleToken[]>;
-  public note: FormControl<string | null>;
-  public form: FormGroup;
+  /**
+   * The editable draft, derived from the bound collocation. On the echo of
+   * our own save the draft is kept, so that normalization does not
+   * overwrite it.
+   */
+  private readonly _draft = linkedSignal<WordCollocation | undefined, WordCollocationControls>({
+    source: () => this.collocation(),
+    computation: (collocation, previous) =>
+      previous && JSON.stringify(collocation) === JSON.stringify(toData(previous.value))
+        ? previous.value
+        : toDraft(collocation),
+  });
 
-  constructor(
-    formBuilder: FormBuilder,
-    private _dialogService: DialogService,
-  ) {
-    this.tag = formBuilder.control(null, Validators.maxLength(100));
-    this.rank = formBuilder.control(0, { nonNullable: true });
-    this.tokens = formBuilder.control([], {
-      nonNullable: true,
-      validators: [NgxToolsValidators.strictMinLengthValidator(1)],
-    });
-    this.examples = formBuilder.control([], { nonNullable: true });
-    this.note = formBuilder.control(null, Validators.maxLength(1000));
-    this.form = formBuilder.group({
-      tag: this.tag,
-      rank: this.rank,
-      tokens: this.tokens,
-      examples: this.examples,
-      note: this.note,
-    });
+  public readonly form = form(this._draft, (p) => {
+    maxLength(p.tag, 100);
+    min(p.rank, 0);
+    NgxToolsSignalValidators.strictMinLength(p.tokens, 1);
+    maxLength(p.note, 1000);
+  });
 
-    // when model changes, update form
+  constructor() {
+    // when the draft mirrors the bound collocation, there are no unsaved edits
     effect(() => {
-      const data = this.collocation();
-      this.updateForm(data);
+      const draft = this._draft();
+      untracked(() => {
+        if (JSON.stringify(draft) === JSON.stringify(toDraft(this.collocation()))) {
+          this.form().reset();
+        }
+      });
     });
   }
 
-  private updateForm(data: WordCollocation | undefined | null): void {
-    if (!data) {
-      this.form.reset();
-    } else {
-      this.tag.setValue(data.tag || null);
-      this.rank.setValue(data.rank || 0);
-      this.tokens.setValue(data.tokens || []);
-      this.examples.setValue(data.examples || []);
-      this.note.setValue(data.note || null);
-      this.form.markAsPristine();
-    }
+  // these are user actions: they set the list and mark it as dirty
+  private setTokens(tokens: WordCollocationToken[]): void {
+    this.form.tokens().value.set(tokens);
+    this.form.tokens().markAsDirty();
   }
 
-  private getCollocation(): WordCollocation {
-    return {
-      tag: this.tag.value || undefined,
-      rank: this.rank.value || undefined,
-      tokens: this.tokens.value,
-      examples: this.examples.value.length ? this.examples.value : undefined,
-      note: this.note.value?.trim() || undefined,
-    };
+  private setExamples(examples: WordCollocationExampleToken[]): void {
+    this.form.examples().value.set(examples);
+    this.form.examples().markAsDirty();
   }
 
   //#region Tokens
@@ -143,6 +169,7 @@ export class WordCollocEditor {
 
   public editToken(token: WordCollocationToken, index: number): void {
     this.editedTokenIndex.set(index);
+    // structuredClone also drops the form's Symbol tag
     this.editedToken.set(structuredClone(token));
   }
 
@@ -152,15 +179,13 @@ export class WordCollocEditor {
   }
 
   public saveToken(entry: WordCollocationToken): void {
-    const entries = [...this.tokens.value];
+    const entries = [...this.form.tokens().value()];
     if (this.editedTokenIndex() === -1) {
       entries.push(entry);
     } else {
       entries.splice(this.editedTokenIndex(), 1, entry);
     }
-    this.tokens.setValue(entries);
-    this.tokens.markAsDirty();
-    this.tokens.updateValueAndValidity();
+    this.setTokens(entries);
     this.closeToken();
   }
 
@@ -176,11 +201,9 @@ export class WordCollocEditor {
           } else if (edited > index) {
             this.editedTokenIndex.set(edited - 1);
           }
-          const tokens = [...this.tokens.value];
+          const tokens = [...this.form.tokens().value()];
           tokens.splice(index, 1);
-          this.tokens.setValue(tokens);
-          this.tokens.markAsDirty();
-          this.tokens.updateValueAndValidity();
+          this.setTokens(tokens);
           // examples referring to the deleted token become connective text,
           // and those referring to the following tokens are renumbered
           const nr = index + 1;
@@ -193,27 +216,23 @@ export class WordCollocEditor {
     if (index < 1) {
       return;
     }
-    const token = this.tokens.value[index];
-    const tokens = [...this.tokens.value];
+    const token = this.form.tokens().value()[index];
+    const tokens = [...this.form.tokens().value()];
     tokens.splice(index, 1);
     tokens.splice(index - 1, 0, token);
-    this.tokens.setValue(tokens);
-    this.tokens.markAsDirty();
-    this.tokens.updateValueAndValidity();
+    this.setTokens(tokens);
     this.onTokensSwapped(index, index - 1);
   }
 
   public moveTokenDown(index: number): void {
-    if (index + 1 >= this.tokens.value.length) {
+    if (index + 1 >= this.form.tokens().value().length) {
       return;
     }
-    const token = this.tokens.value[index];
-    const tokens = [...this.tokens.value];
+    const token = this.form.tokens().value()[index];
+    const tokens = [...this.form.tokens().value()];
     tokens.splice(index, 1);
     tokens.splice(index + 1, 0, token);
-    this.tokens.setValue(tokens);
-    this.tokens.markAsDirty();
-    this.tokens.updateValueAndValidity();
+    this.setTokens(tokens);
     this.onTokensSwapped(index, index + 1);
   }
 
@@ -238,18 +257,20 @@ export class WordCollocEditor {
    */
   private remapExampleTokens(map: (tokenNr: number) => number): void {
     let changed = false;
-    const examples = this.examples.value.map((e) => {
-      const tokenNr = map(e.tokenNr);
-      if (tokenNr === e.tokenNr) {
-        return e;
-      }
-      changed = true;
-      return { ...e, tokenNr };
-    });
+    const examples = this.form
+      .examples()
+      .value()
+      .map((e) => {
+        const tokenNr = map(e.tokenNr);
+        if (tokenNr === e.tokenNr) {
+          return e;
+        }
+        changed = true;
+        // a new object: do not spread the form's own one
+        return { tokenNr, literals: copyFormValue(e.literals) };
+      });
     if (changed) {
-      this.examples.setValue(examples);
-      this.examples.markAsDirty();
-      this.examples.updateValueAndValidity();
+      this.setExamples(examples);
     }
   }
   //#endregion
@@ -257,9 +278,9 @@ export class WordCollocEditor {
   //#region Examples
   public addExample(): void {
     // default to the pattern token following the last example's one
-    const lastNr = this.examples.value.at(-1)?.tokenNr ?? 0;
+    const lastNr = this.form.examples().value().at(-1)?.tokenNr ?? 0;
     const example: WordCollocationExampleToken = {
-      tokenNr: Math.min(lastNr + 1, this.tokens.value.length),
+      tokenNr: Math.min(lastNr + 1, this.form.tokens().value().length),
       literals: [],
     };
     this.editExample(example, -1);
@@ -267,6 +288,7 @@ export class WordCollocEditor {
 
   public editExample(example: WordCollocationExampleToken, index: number): void {
     this.editedExampleIndex.set(index);
+    // structuredClone also drops the form's Symbol tag
     this.editedExample.set(structuredClone(example));
   }
 
@@ -276,15 +298,13 @@ export class WordCollocEditor {
   }
 
   public onExampleChange(example: WordCollocationExampleToken): void {
-    const examples = [...this.examples.value];
+    const examples = [...this.form.examples().value()];
     if (this.editedExampleIndex() === -1) {
       examples.push(example);
     } else {
       examples.splice(this.editedExampleIndex(), 1, example);
     }
-    this.examples.setValue(examples);
-    this.examples.markAsDirty();
-    this.examples.updateValueAndValidity();
+    this.setExamples(examples);
     this.closeExample();
   }
 
@@ -300,11 +320,9 @@ export class WordCollocEditor {
           } else if (edited > index) {
             this.editedExampleIndex.set(edited - 1);
           }
-          const examples = [...this.examples.value];
+          const examples = [...this.form.examples().value()];
           examples.splice(index, 1);
-          this.examples.setValue(examples);
-          this.examples.markAsDirty();
-          this.examples.updateValueAndValidity();
+          this.setExamples(examples);
         }
       });
   }
@@ -313,27 +331,23 @@ export class WordCollocEditor {
     if (index < 1) {
       return;
     }
-    const example = this.examples.value[index];
-    const examples = [...this.examples.value];
+    const example = this.form.examples().value()[index];
+    const examples = [...this.form.examples().value()];
     examples.splice(index, 1);
     examples.splice(index - 1, 0, example);
-    this.examples.setValue(examples);
-    this.examples.markAsDirty();
-    this.examples.updateValueAndValidity();
+    this.setExamples(examples);
     this.followMovedExample(index, index - 1);
   }
 
   public moveExampleDown(index: number): void {
-    if (index + 1 >= this.examples.value.length) {
+    if (index + 1 >= this.form.examples().value().length) {
       return;
     }
-    const example = this.examples.value[index];
-    const examples = [...this.examples.value];
+    const example = this.form.examples().value()[index];
+    const examples = [...this.form.examples().value()];
     examples.splice(index, 1);
     examples.splice(index + 1, 0, example);
-    this.examples.setValue(examples);
-    this.examples.markAsDirty();
-    this.examples.updateValueAndValidity();
+    this.setExamples(examples);
     this.followMovedExample(index, index + 1);
   }
 
@@ -359,25 +373,38 @@ export class WordCollocEditor {
   }
 
   /**
-   * Saves the current form data by updating the `data` model signal.
-   * This method can be called manually (e.g., by a Save button) or
-   * automatically (via auto-save).
-   * @param pristine If true (default), the form is marked as pristine
-   * after saving.
-   * Set to false for auto-save if you want the form to remain dirty.
+   * Handle Enter in a text input, like the submission of a form: save when
+   * changed, or show the errors when invalid. The event is consumed in any
+   * case, so that it does not reach an enclosing editor. An Enter in the
+   * nested example editor is consumed by that editor.
+   * @param event The keydown event.
+   */
+  public onEnterKey(event: Event): void {
+    if (!isImplicitSubmission(event)) {
+      return;
+    }
+    event.preventDefault();
+    if (this.form().dirty()) {
+      this.save();
+    }
+  }
+
+  /**
+   * Save the current draft into the `collocation` model signal.
+   * @param pristine If true (default), the form's interaction state is
+   * cleared after saving.
    */
   public save(pristine = true): void {
-    if (this.form.invalid) {
+    if (this.form().invalid()) {
       // show validation errors
-      this.form.markAllAsTouched();
+      this.form().markAsTouched();
       return;
     }
 
-    const collocation = this.getCollocation();
-    this.collocation.set(collocation);
+    this.collocation.set(toData(this._draft()));
 
     if (pristine) {
-      this.form.markAsPristine();
+      this.form().reset();
     }
   }
 }

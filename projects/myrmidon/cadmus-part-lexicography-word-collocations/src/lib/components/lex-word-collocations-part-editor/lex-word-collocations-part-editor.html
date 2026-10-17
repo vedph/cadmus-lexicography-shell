@@ -1,142 +1,145 @@
-<form [formGroup]="form" (submit)="save()">
-  <mat-card>
-    <mat-card-header>
-      <div mat-card-avatar>
-        <mat-icon>picture_in_picture</mat-icon>
-      </div>
-      <mat-card-title>
-        {{ (modelName() | titlecase) || 'Word Collocations Part' }}
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <!-- batch add collocations -->
-      <div>
-        <fieldset>
-          <legend>batch</legend>
-          <!-- this form is nested in the part's form: stop submit from saving the part -->
-          <form [formGroup]="dslForm" (submit)="$event.stopPropagation(); parseDsl()">
-            <mat-form-field class="long-text">
-              <textarea
-                matInput
-                [formControl]="dslText"
-                placeholder="collocation(s), one per line"
-                rows="3"
-              ></textarea>
-              <mat-hint>(RANK) POS+...: &lt;a&gt; [b, c] d</mat-hint>
-            </mat-form-field>
-            @if (dslError()) {
-              <mat-error role="alert" class="dsl-error">{{ dslError() }}</mat-error>
-            }
-            <div>
-              <button
-                type="button"
-                mat-icon-button
-                class="mat-primary"
-                (click)="parseDsl()"
-                matTooltip="Parse collocations and add them"
-              >
-                <mat-icon>library_add</mat-icon>
-              </button>
-            </div>
-          </form>
-        </fieldset>
-      </div>
-      <!-- add collocation -->
-      <div class="mt">
-        <button type="button" mat-flat-button class="mat-primary" (click)="addCollocation()">
-          <mat-icon>add_circle</mat-icon> collocation
-        </button>
-      </div>
-      @if (collocations.value.length) {
-        <table>
-          <thead>
-            <tr>
-              <th></th>
-              <th>tag</th>
-              <th>nr.</th>
-              <th>collocation</th>
+<!-- no <form> here: the part is saved by the save button -->
+<mat-card>
+  <mat-card-header>
+    <div mat-card-avatar>
+      <mat-icon>picture_in_picture</mat-icon>
+    </div>
+    <mat-card-title>
+      {{ (modelName() | titlecase) || 'Word Collocations Part' }}
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <!-- batch add collocations -->
+    <div>
+      <fieldset>
+        <legend>batch</legend>
+        <div>
+          <mat-form-field class="long-text">
+            <textarea
+              matInput
+              [formField]="dslForm.dslText"
+              placeholder="collocation(s), one per line"
+              rows="3"
+            ></textarea>
+            <mat-hint>(RANK) POS+...: &lt;a&gt; [b, c] d</mat-hint>
+          </mat-form-field>
+          @if (dslError()) {
+            <mat-error role="alert" class="dsl-error">{{ dslError() }}</mat-error>
+          }
+          <div>
+            <button
+              type="button"
+              mat-icon-button
+              class="mat-primary"
+              (click)="parseDsl()"
+              matTooltip="Parse collocations and add them"
+            >
+              <mat-icon>library_add</mat-icon>
+            </button>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <!-- add collocation -->
+    <div class="mt">
+      <button type="button" mat-flat-button class="mat-primary" (click)="addCollocation()">
+        <mat-icon>add_circle</mat-icon> collocation
+      </button>
+    </div>
+    @if (form.entries().value().length) {
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>tag</th>
+            <th>nr.</th>
+            <th>collocation</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (
+            entry of form.entries().value();
+            track entry;
+            let i = $index;
+            let first = $first;
+            let last = $last
+          ) {
+            <tr [class.selected]="i === editedIndex()">
+              <td class="fit-width">
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Edit this collocation"
+                  (click)="editCollocation(entry, i)"
+                >
+                  <mat-icon class="mat-primary">edit</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Move this collocation up"
+                  [disabled]="first"
+                  (click)="moveCollocationUp(i)"
+                >
+                  <mat-icon>arrow_upward</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Move this collocation down"
+                  [disabled]="last"
+                  (click)="moveCollocationDown(i)"
+                >
+                  <mat-icon>arrow_downward</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Delete this collocation"
+                  (click)="deleteCollocation(i)"
+                >
+                  <mat-icon class="mat-warn">remove_circle</mat-icon>
+                </button>
+              </td>
+              <td class="fit-width">{{ entry.tag | flatLookup: collTagEntries() : 'id' : 'value' }}</td>
+              <td class="fit-width">{{ i + 1 }}</td>
+              <td>{{ entry | wordCollocation: labelToIdMap() }}</td>
             </tr>
-          </thead>
-          <tbody>
-            @for (
-              entry of collocations.value;
-              track entry;
-              let i = $index;
-              let first = $first;
-              let last = $last
-            ) {
-              <tr [class.selected]="i === editedIndex()">
-                <td class="fit-width">
-                  <button
-                    type="button"
-                    mat-icon-button
-                    matTooltip="Edit this collocation"
-                    (click)="editCollocation(entry, i)"
-                  >
-                    <mat-icon class="mat-primary">edit</mat-icon>
-                  </button>
-                  <button
-                    type="button"
-                    mat-icon-button
-                    matTooltip="Move this collocation up"
-                    [disabled]="first"
-                    (click)="moveCollocationUp(i)"
-                  >
-                    <mat-icon>arrow_upward</mat-icon>
-                  </button>
-                  <button
-                    type="button"
-                    mat-icon-button
-                    matTooltip="Move this collocation down"
-                    [disabled]="last"
-                    (click)="moveCollocationDown(i)"
-                  >
-                    <mat-icon>arrow_downward</mat-icon>
-                  </button>
-                  <button
-                    type="button"
-                    mat-icon-button
-                    matTooltip="Delete this collocation"
-                    (click)="deleteCollocation(i)"
-                  >
-                    <mat-icon class="mat-warn">remove_circle</mat-icon>
-                  </button>
-                </td>
-                <td class="fit-width">{{ entry.tag | flatLookup: collTagEntries() : 'id' : 'value' }}</td>
-                <td class="fit-width">{{ i + 1 }}</td>
-                <td>{{ entry | wordCollocation: labelToIdMap() }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-      @if (edited()) {
-        <fieldset>
-          <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                @if (editedIndex() > -1) {
-                  Collocation #{{ editedIndex() + 1 }}
-                } @else {
-                  New collocation
-                }
-              </mat-panel-title>
-            </mat-expansion-panel-header>
-            <cadmus-word-colloc-editor
-              [collTagEntries]="collTagEntries()"
-              [tokPosEntries]="tokPosEntries()"
-              [tokFeatureEntries]="tokFeatureEntries()"
-              [litTagEntries]="litTagEntries()"
-              [collocation]="edited()"
-              (collocationChange)="saveCollocation($event!)"
-              (cancelEdit)="closeCollocation()"
-            />
-          </mat-expansion-panel>
-        </fieldset>
-      }
-    </mat-card-content>
-    <mat-card-actions>
-      <cadmus-close-save-buttons [form]="form" [noSave]="userLevel < 2" (closeRequest)="close()" />
-    </mat-card-actions>
-  </mat-card>
-</form>
+          }
+        </tbody>
+      </table>
+    }
+    @if (edited()) {
+      <fieldset>
+        <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              @if (editedIndex() > -1) {
+                Collocation #{{ editedIndex() + 1 }}
+              } @else {
+                New collocation
+              }
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <cadmus-word-colloc-editor
+            [collTagEntries]="collTagEntries()"
+            [tokPosEntries]="tokPosEntries()"
+            [tokFeatureEntries]="tokFeatureEntries()"
+            [litTagEntries]="litTagEntries()"
+            [collocation]="edited()"
+            (collocationChange)="saveCollocation($event!)"
+            (cancelEdit)="closeCollocation()"
+          />
+        </mat-expansion-panel>
+      </fieldset>
+    }
+  </mat-card-content>
+  <mat-card-actions>
+    <cadmus-close-save-buttons
+      [form]="form"
+      [noSave]="userLevel < 2"
+      (closeRequest)="close()"
+      (saveRequest)="save()"
+    />
+  </mat-card-actions>
+</mat-card>

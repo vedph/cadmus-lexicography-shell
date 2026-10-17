@@ -1,15 +1,21 @@
-<!-- this form is nested in the collocation's form: do not submit it -->
-<form (submit)="$event.preventDefault(); $event.stopPropagation(); save()">
+<!-- no <form> here: this editor is nested in the collocation editor. Enter in
+     a text input saves it, as the accept button would. -->
+<div (keydown.enter)="onEnterKey($event)">
   <div class="form-row">
     <!-- nr -->
     <mat-form-field class="nr">
       <mat-label>token nr.</mat-label>
-      <input matInput type="number" min="0" [formControl]="tokenNr" />
+      <input matInput type="number" [formField]="form.tokenNr" />
       <mat-hint>0=connective text</mat-hint>
-      @if ($any(tokenNr).errors?.min && (tokenNr.dirty || tokenNr.touched)) {
+      @if (
+        form.tokenNr().getError('required') && (form.tokenNr().dirty() || form.tokenNr().touched())
+      ) {
+        <mat-error>nr. required</mat-error>
+      }
+      @if (form.tokenNr().getError('min') && (form.tokenNr().dirty() || form.tokenNr().touched())) {
         <mat-error>nr. min is 0</mat-error>
       }
-      @if ($any(tokenNr).errors?.max && (tokenNr.dirty || tokenNr.touched)) {
+      @if (form.tokenNr().getError('max') && (form.tokenNr().dirty() || form.tokenNr().touched())) {
         <mat-error>nr. max is {{ maxTokenNr() }}</mat-error>
       }
     </mat-form-field>
@@ -21,7 +27,7 @@
   </div>
 
   <!-- table-->
-  @if (editedLiterals().length > 0) {
+  @if (form.literals().value().length > 0) {
     <table>
       <thead>
         <tr>
@@ -33,7 +39,7 @@
       </thead>
       <tbody>
         @for (
-          literal of editedLiterals();
+          literal of form.literals().value();
           track literal;
           let i = $index;
           let first = $first;
@@ -114,10 +120,10 @@
       type="button"
       mat-icon-button
       matTooltip="Accept changes"
-      [disabled]="!editedLiterals().length || !dirty()"
+      [disabled]="form().invalid() || !form().dirty()"
       (click)="save()"
     >
       <mat-icon class="mat-primary">check_circle</mat-icon>
     </button>
   </div>
-</form>
+</div>

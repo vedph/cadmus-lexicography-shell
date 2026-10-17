@@ -1,12 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, OnInit, signal } from '@angular/core';
-import {
-  FormControl,
-  FormBuilder,
-  FormGroup,
-  UntypedFormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { FormField, form, required } from '@angular/forms/signals';
 import { TitleCasePipe } from '@angular/common';
 
 import {
@@ -27,11 +20,14 @@ import {
 import { MatError, MatFormField, MatHint } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 
-import { FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
+import { FlatLookupPipe, NgxToolsSignalValidators } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
-import { EditedObject, ThesauriSet, ThesaurusEntry } from '@myrmidon/cadmus-core';
-import { CloseSaveButtonsComponent, ModelEditorComponentBase } from '@myrmidon/cadmus-ui';
-import { AuthJwtService } from '@myrmidon/auth-jwt-login';
+import { ThesaurusEntry } from '@myrmidon/cadmus-core';
+import {
+  CloseSaveButtonsComponent,
+  ModelEditorComponentBase,
+  copyFormValue,
+} from '@myrmidon/cadmus-ui';
 
 import {
   LEX_WORD_COLLOCATIONS_PART_TYPEID,
@@ -43,6 +39,18 @@ import { WordCollocationPipe } from '../../pipes/word-collocation.pipe';
 import { WordCollocationParser } from '../../services/word-collocation-parser';
 
 /**
+ * The editable draft behind the form.
+ */
+interface LexWordCollocationsPartControls {
+  entries: WordCollocation[];
+}
+
+function toDraft(part?: LexWordCollocationsPart | null): LexWordCollocationsPartControls {
+  // copy: the form tags the objects in its arrays
+  return { entries: copyFormValue(part?.collocations || []) };
+}
+
+/**
  * WordCollocationsPart editor component.
  * Thesauri: lex-word-ctoken-pos-tags, lex-word-ctoken-features, lex-word-cliteral-tags,
  * lex-word-collocation-tags.
@@ -50,7 +58,7 @@ import { WordCollocationParser } from '../../services/word-collocation-parser';
 @Component({
   selector: 'cadmus-lex-word-collocations-part-editor',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButton,
     MatCard,
     MatCardActions,
@@ -77,21 +85,28 @@ import { WordCollocationParser } from '../../services/word-collocation-parser';
   styleUrl: './lex-word-collocations-part-editor.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LexWordCollocationPartEditor
-  extends ModelEditorComponentBase<LexWordCollocationsPart>
-  implements OnInit
-{
+export class LexWordCollocationPartEditor extends ModelEditorComponentBase<LexWordCollocationsPart> {
+  private readonly _dialogService = inject(DialogService);
+
   public readonly editedIndex = signal<number>(-1);
   public readonly edited = signal<WordCollocation | undefined>(undefined);
 
   // lex-word-collocation-tags
-  public readonly collTagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly collTagEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['lex-word-collocation-tags']?.entries,
+  );
   // lex-word-ctoken-pos-tags
-  public readonly tokPosEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly tokPosEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['lex-word-ctoken-pos-tags']?.entries,
+  );
   // lex-word-ctoken-features
-  public readonly tokFeatureEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly tokFeatureEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['lex-word-ctoken-features']?.entries,
+  );
   // lex-word-cliteral-tags
-  public readonly litTagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly litTagEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['lex-word-cliteral-tags']?.entries,
+  );
 
   public readonly labelToIdMap = computed<{ [key: string]: string }>(() => {
     const map: { [key: string]: string } = {};
@@ -104,92 +119,30 @@ export class LexWordCollocationPartEditor
     return map;
   });
 
-  public collocations: FormControl<WordCollocation[]>;
+  private readonly _draft = linkedSignal(() => toDraft(this.data()?.value));
+  public readonly form = this.createForm(this._draft, (p) => {
+    // at least 1 entry
+    NgxToolsSignalValidators.strictMinLength(p.entries, 1);
+  });
 
-  public dslText: FormControl<string | null>;
-  public dslForm: FormGroup;
+  // the DSL form: not part of the edited model, so that it does not
+  // affect the part's dirty and valid state
+  private readonly _dsl = signal({ dslText: '' });
+  public readonly dslForm = form(this._dsl, (p) => {
+    required(p.dslText);
+  });
   public readonly dslError = signal<string | undefined>(undefined);
 
-  constructor(
-    authService: AuthJwtService,
-    formBuilder: FormBuilder,
-    private _dialogService: DialogService
-  ) {
-    super(authService, formBuilder);
-    // form
-    this.collocations = formBuilder.control([], {
-      // at least 1 entry
-      validators: NgxToolsValidators.strictMinLengthValidator(1),
-      nonNullable: true,
-    });
-
-    // DSL form
-    this.dslText = formBuilder.control(null, Validators.required);
-    this.dslForm = formBuilder.group({
-      dslText: this.dslText,
-    });
-  }
-
-  public override ngOnInit(): void {
-    super.ngOnInit();
-  }
-
-  protected buildForm(formBuilder: FormBuilder): FormGroup | UntypedFormGroup {
-    return formBuilder.group({
-      entries: this.collocations,
-    });
-  }
-
-  private updateThesauri(thesauri: ThesauriSet): void {
-    let key = 'lex-word-collocation-tags';
-    if (this.hasThesaurus(key)) {
-      this.collTagEntries.set(thesauri[key].entries);
-    } else {
-      this.collTagEntries.set(undefined);
-    }
-    key = 'lex-word-ctoken-pos-tags';
-    if (this.hasThesaurus(key)) {
-      this.tokPosEntries.set(thesauri[key].entries);
-    } else {
-      this.tokPosEntries.set(undefined);
-    }
-    key = 'lex-word-ctoken-features';
-    if (this.hasThesaurus(key)) {
-      this.tokFeatureEntries.set(thesauri[key].entries);
-    } else {
-      this.tokFeatureEntries.set(undefined);
-    }
-    key = 'lex-word-cliteral-tags';
-    if (this.hasThesaurus(key)) {
-      this.litTagEntries.set(thesauri[key].entries);
-    } else {
-      this.litTagEntries.set(undefined);
-    }
-  }
-
-  private updateForm(part?: LexWordCollocationsPart | null): void {
-    if (!part) {
-      this.form.reset();
-      return;
-    }
-    this.collocations.setValue(part.collocations || []);
-    this.form.markAsPristine();
-  }
-
-  protected override onDataSet(data?: EditedObject<LexWordCollocationsPart>): void {
-    // thesauri
-    if (data?.thesauri) {
-      this.updateThesauri(data.thesauri);
-    }
-
-    // form
-    this.updateForm(data?.value);
-  }
-
   protected getValue(): LexWordCollocationsPart {
-    let part = this.getEditedPart(LEX_WORD_COLLOCATIONS_PART_TYPEID) as LexWordCollocationsPart;
-    part.collocations = this.collocations.value || [];
+    const part = this.getEditedPart(LEX_WORD_COLLOCATIONS_PART_TYPEID) as LexWordCollocationsPart;
+    part.collocations = copyFormValue(this._draft().entries);
     return part;
+  }
+
+  // these are user actions: they set the list and mark it as dirty
+  private setEntries(entries: WordCollocation[]): void {
+    this.form.entries().value.set(entries);
+    this.form.entries().markAsDirty();
   }
 
   public addCollocation(): void {
@@ -201,6 +154,7 @@ export class LexWordCollocationPartEditor
 
   public editCollocation(collocation: WordCollocation, index: number): void {
     this.editedIndex.set(index);
+    // structuredClone also drops the form's Symbol tag
     this.edited.set(structuredClone(collocation));
   }
 
@@ -210,15 +164,13 @@ export class LexWordCollocationPartEditor
   }
 
   public saveCollocation(collocation: WordCollocation): void {
-    const collocations = [...this.collocations.value];
+    const collocations = [...this.form.entries().value()];
     if (this.editedIndex() === -1) {
       collocations.push(collocation);
     } else {
       collocations.splice(this.editedIndex(), 1, collocation);
     }
-    this.collocations.setValue(collocations);
-    this.collocations.markAsDirty();
-    this.collocations.updateValueAndValidity();
+    this.setEntries(collocations);
     this.closeCollocation();
   }
 
@@ -234,11 +186,9 @@ export class LexWordCollocationPartEditor
           } else if (edited > index) {
             this.editedIndex.set(edited - 1);
           }
-          const collocations = [...this.collocations.value];
+          const collocations = [...this.form.entries().value()];
           collocations.splice(index, 1);
-          this.collocations.setValue(collocations);
-          this.collocations.markAsDirty();
-          this.collocations.updateValueAndValidity();
+          this.setEntries(collocations);
         }
       });
   }
@@ -247,27 +197,23 @@ export class LexWordCollocationPartEditor
     if (index < 1) {
       return;
     }
-    const collocation = this.collocations.value[index];
-    const collocations = [...this.collocations.value];
+    const collocation = this.form.entries().value()[index];
+    const collocations = [...this.form.entries().value()];
     collocations.splice(index, 1);
     collocations.splice(index - 1, 0, collocation);
-    this.collocations.setValue(collocations);
-    this.collocations.markAsDirty();
-    this.collocations.updateValueAndValidity();
+    this.setEntries(collocations);
     this.followMovedCollocation(index, index - 1);
   }
 
   public moveCollocationDown(index: number): void {
-    if (index + 1 >= this.collocations.value.length) {
+    if (index + 1 >= this.form.entries().value().length) {
       return;
     }
-    const collocation = this.collocations.value[index];
-    const collocations = [...this.collocations.value];
+    const collocation = this.form.entries().value()[index];
+    const collocations = [...this.form.entries().value()];
     collocations.splice(index, 1);
     collocations.splice(index + 1, 0, collocation);
-    this.collocations.setValue(collocations);
-    this.collocations.markAsDirty();
-    this.collocations.updateValueAndValidity();
+    this.setEntries(collocations);
     this.followMovedCollocation(index, index + 1);
   }
 
@@ -284,7 +230,7 @@ export class LexWordCollocationPartEditor
   }
 
   public parseDsl(): void {
-    const dsl = this.dslText.value;
+    const dsl = this.dslForm.dslText().value();
     if (!dsl) {
       return;
     }
@@ -294,14 +240,13 @@ export class LexWordCollocationPartEditor
       if (result.error) {
         this.dslError.set(`Error parsing DSL: ${result.error}`);
       } else {
-        const collocations = [...this.collocations.value];
+        const collocations = [...this.form.entries().value()];
         collocations.push(...result.value);
-        this.collocations.setValue(collocations);
-        this.collocations.markAsDirty();
-        this.collocations.updateValueAndValidity();
+        this.setEntries(collocations);
         this.dslError.set(undefined);
         // clear the parsed text, so that it cannot be added twice
-        this.dslText.reset();
+        this._dsl.set({ dslText: '' });
+        this.dslForm().reset();
       }
     } catch (e) {
       console.error(e);

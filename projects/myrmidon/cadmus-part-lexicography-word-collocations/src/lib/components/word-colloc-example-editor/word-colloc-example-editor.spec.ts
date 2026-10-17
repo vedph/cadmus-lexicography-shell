@@ -135,7 +135,9 @@ describe('WordCollocExampleEditor', () => {
       await user.type(tokenNr(), '4');
       await user.tab();
       expect(screen.getByText('nr. max is 3')).toBeInTheDocument();
-      await user.click(acceptButton());
+      expect(acceptButton()).toBeDisabled();
+      // Enter does not save it either
+      await user.type(tokenNr(), '{Enter}');
       expect(exampleChange).not.toHaveBeenCalled();
     });
 
@@ -145,7 +147,27 @@ describe('WordCollocExampleEditor', () => {
       await user.type(tokenNr(), '-1');
       await user.tab();
       expect(screen.getByText('nr. min is 0')).toBeInTheDocument();
-      await user.click(acceptButton());
+      expect(acceptButton()).toBeDisabled();
+      // Enter does not save it either
+      await user.type(tokenNr(), '{Enter}');
+      expect(exampleChange).not.toHaveBeenCalled();
+    });
+
+    it('should save on Enter in the token number once changed', async () => {
+      const { user, exampleChange } = await setup({ example: createExample() });
+      await user.clear(tokenNr());
+      await user.type(tokenNr(), '3{Enter}');
+      expect(exampleChange).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ tokenNr: 3 }),
+      );
+    });
+
+    it('should require a token number', async () => {
+      const { user, exampleChange } = await setup({ example: createExample() });
+      await user.clear(tokenNr());
+      await user.tab();
+      expect(screen.getByText('nr. required')).toBeInTheDocument();
+      expect(acceptButton()).toBeDisabled();
       expect(exampleChange).not.toHaveBeenCalled();
     });
 
@@ -189,6 +211,27 @@ describe('WordCollocExampleEditor', () => {
         tokenNr: 2,
         literals: [...createExample().literals, expect.objectContaining({ value: 'delta' })],
       });
+    });
+
+    it('should not save the example on Enter in an unchanged literal', async () => {
+      const { user, exampleChange } = await setup({ example: createExample() });
+      // the example is changed, so Enter would save it
+      await user.clear(tokenNr());
+      await user.type(tokenNr(), '3');
+      await user.click(rowButton(1, 'Edit this literal'));
+      await user.type(literalValue(), '{Enter}');
+      expect(exampleChange).not.toHaveBeenCalled();
+      expect(literalValue()).toBeInTheDocument();
+    });
+
+    it('should save only the literal on Enter in a changed literal', async () => {
+      const { user, exampleChange } = await setup({ example: createExample() });
+      await user.click(rowButton(1, 'Edit this literal'));
+      await user.type(literalValue(), 's{Enter}');
+      expect(listedValues()).toEqual(['alpha', 'betas', 'gamma']);
+      expect(screen.queryByRole('textbox', { name: 'value' })).not.toBeInTheDocument();
+      expect(exampleChange).not.toHaveBeenCalled();
+      expect(acceptButton()).toBeEnabled();
     });
 
     it('should edit a literal', async () => {

@@ -80,12 +80,15 @@ describe('WordCollocLiteralEditor', () => {
       });
     });
 
+    it('should limit the length of a typed tag', async () => {
+      await setup({ literal: LITERAL });
+      expect(screen.getByRole('textbox', { name: 'tag' })).toHaveAttribute('maxlength', '50');
+    });
+
     it('should report a too long tag', async () => {
-      const { user } = await setup({ literal: LITERAL });
-      const tag = screen.getByRole('textbox', { name: 'tag' });
-      await user.clear(tag);
-      await user.click(tag);
-      await user.paste('x'.repeat(51));
+      // the input prevents typing it, but it can come from data
+      const { user } = await setup({ literal: { ...LITERAL, tag: 'x'.repeat(51) } });
+      await user.click(screen.getByRole('textbox', { name: 'tag' }));
       await user.tab();
       expect(screen.getByText('tag too long')).toBeInTheDocument();
       expect(acceptButton()).toBeDisabled();
@@ -103,19 +106,22 @@ describe('WordCollocLiteralEditor', () => {
       expect(literalChange).not.toHaveBeenCalled();
     });
 
+    it('should limit the length of value and note while typing', async () => {
+      await setup({ literal: LITERAL });
+      expect(screen.getByRole('textbox', { name: 'value' })).toHaveAttribute('maxlength', '100');
+      expect(screen.getByRole('textbox', { name: 'note' })).toHaveAttribute('maxlength', '1000');
+    });
+
     it('should report too long value and note', async () => {
-      const { user } = await setup({ literal: LITERAL });
-      const paste = async (name: string, length: number) => {
-        const input = screen.getByRole('textbox', { name });
-        await user.clear(input);
-        await user.click(input);
-        await user.paste('x'.repeat(length));
+      // the inputs prevent typing them, but they can come from data
+      const { user } = await setup({
+        literal: { ...LITERAL, value: 'x'.repeat(101), note: 'x'.repeat(1001) },
+      });
+      for (const name of ['value', 'note']) {
+        await user.click(screen.getByRole('textbox', { name }));
         await user.tab();
-      };
-      await paste('value', 101);
-      expect(screen.getByText('value too long')).toBeInTheDocument();
-      await paste('note', 1001);
-      expect(screen.getByText('note too long')).toBeInTheDocument();
+        expect(screen.getByText(`${name} too long`)).toBeInTheDocument();
+      }
     });
   });
 

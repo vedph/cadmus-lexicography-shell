@@ -177,19 +177,43 @@ describe('WordCollocEditor', () => {
       expect(collocationChange).not.toHaveBeenCalled();
     });
 
+    it('should limit the length of tag and note while typing', async () => {
+      await setup({ collocation: createCollocation() });
+      expect(screen.getByRole('textbox', { name: 'tag' })).toHaveAttribute('maxlength', '100');
+      expect(collocationNote()).toHaveAttribute('maxlength', '1000');
+    });
+
     it('should report too long tag and note', async () => {
-      const { user } = await setup({ collocation: createCollocation() });
-      const paste = async (input: HTMLElement, length: number) => {
-        await user.clear(input);
-        await user.click(input);
-        await user.paste('x'.repeat(length));
-        await user.tab();
-      };
-      await paste(screen.getByRole('textbox', { name: 'tag' }), 101);
+      // the inputs prevent typing them, but they can come from data
+      const { user } = await setup({
+        collocation: { ...createCollocation(), tag: 'x'.repeat(101), note: 'x'.repeat(1001) },
+      });
+      await user.click(screen.getByRole('textbox', { name: 'tag' }));
+      await user.tab();
       expect(screen.getByText('tag too long')).toBeInTheDocument();
-      await paste(collocationNote(), 1001);
+      await user.click(collocationNote());
+      await user.tab();
       expect(screen.getByText('note too long')).toBeInTheDocument();
       expect(acceptButton()).toBeDisabled();
+    });
+
+    it('should save on Enter in a text input once changed', async () => {
+      const { user, collocationChange } = await setup({ collocation: createCollocation() });
+      await user.type(screen.getByRole('textbox', { name: 'tag' }), '2{Enter}');
+      expect(collocationChange).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ tag: 'fixed2' }),
+      );
+    });
+
+    it('should keep the typed text when its own save comes back normalized', async () => {
+      const { user, collocationChange } = await setup({ collocation: createCollocation() });
+      const tag = screen.getByRole('textbox', { name: 'tag' });
+      await user.type(tag, ' ');
+      await user.click(acceptButton());
+      expect(collocationChange).toHaveBeenCalledWith(expect.objectContaining({ tag: 'fixed' }));
+      expect(tag).toHaveValue('fixed ');
+      await user.type(tag, 'x');
+      expect(tag).toHaveValue('fixed x');
     });
 
     it('should emit cancelEdit on discard', async () => {
@@ -344,6 +368,35 @@ describe('WordCollocEditor', () => {
       await user.type(nr, '0');
       await acceptNested(user);
       expect(cellsIn('example tokens')[1]).toEqual(['0.', 'strong; black']);
+    });
+
+    it('should not save the collocation on Enter in an unchanged example', async () => {
+      const { user, collocationChange } = await setup({ collocation: createCollocation() });
+      // the collocation is changed, so Enter would save it
+      await user.type(screen.getByRole('textbox', { name: 'tag' }), 'x');
+      await user.click(exampleButton(1, 'Edit this example'));
+      await user.type(screen.getByRole('spinbutton', { name: 'token nr.' }), '{Enter}');
+      expect(collocationChange).not.toHaveBeenCalled();
+      expect(screen.getByRole('spinbutton', { name: 'token nr.' })).toBeInTheDocument();
+    });
+
+    it('should save only the example on Enter in a changed example', async () => {
+      const { user, collocationChange } = await setup({ collocation: createCollocation() });
+      await user.click(exampleButton(1, 'Edit this example'));
+      const nr = screen.getByRole('spinbutton', { name: 'token nr.' });
+      await user.clear(nr);
+      await user.type(nr, '2{Enter}');
+      expect(cellsIn('example tokens')[1]).toEqual(['2.', 'strong; black']);
+      expect(screen.queryByRole('spinbutton', { name: 'token nr.' })).not.toBeInTheDocument();
+      expect(collocationChange).not.toHaveBeenCalled();
+    });
+
+    it('should render no <form> element, also with nested editors open', async () => {
+      const { user, container } = await setup({ collocation: createCollocation() });
+      await user.click(tokenButton(0, 'Edit this token'));
+      await user.click(exampleButton(1, 'Edit this example'));
+      await user.click(screen.getAllByRole('button', { description: 'Edit this literal' })[0]);
+      expect(container.querySelector('form')).toBeNull();
     });
 
     it('should limit example token numbers to the pattern tokens', async () => {

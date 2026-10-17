@@ -1,11 +1,15 @@
-import { ChangeDetectionStrategy, Component, effect, input, model, output } from '@angular/core';
 import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  input,
+  linkedSignal,
+  model,
+  output,
+  untracked,
+} from '@angular/core';
+import { FormField, form, maxLength, required } from '@angular/forms/signals';
 
 // material
 import { MatButtonModule } from '@angular/material/button';
@@ -16,9 +20,36 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
+import { isImplicitSubmission } from '@myrmidon/cadmus-ui';
 import { ThesaurusEntriesPickerComponent } from '@myrmidon/cadmus-thesaurus-store';
 
 import { WordCollocationLiteral } from '../../lex-word-collocations-part';
+
+/**
+ * The editable draft behind the form. The tag is either picked from the
+ * thesaurus (its entry ID), or typed when there is no thesaurus.
+ */
+interface WordCollocationLiteralControls {
+  value: string;
+  tag: string;
+  note: string;
+}
+
+function toDraft(literal: WordCollocationLiteral | undefined): WordCollocationLiteralControls {
+  return {
+    value: literal?.value || '',
+    tag: literal?.tag || '',
+    note: literal?.note || '',
+  };
+}
+
+function toData(draft: WordCollocationLiteralControls): WordCollocationLiteral {
+  return {
+    value: draft.value.trim(),
+    tag: draft.tag.trim() || undefined,
+    note: draft.note.trim() || undefined,
+  };
+}
 
 /**
  * Word collocation literal editor.
@@ -26,7 +57,7 @@ import { WordCollocationLiteral } from '../../lex-word-collocations-part';
 @Component({
   selector: 'cadmus-word-colloc-literal-editor',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatCheckboxModule,
     MatFormFieldModule,
@@ -47,73 +78,50 @@ export class WordCollocLiteralEditor {
 
   public readonly cancelEdit = output();
 
-  public value: FormControl<string>;
-  // the tag when picked from thesaurus entries
-  public tag: FormControl<ThesaurusEntry | null>;
-  // the tag when typed (no thesaurus entries)
-  public tagText: FormControl<string | null>;
-  public note: FormControl<string | null>;
-  public form: FormGroup;
+  /**
+   * The editable draft, derived from the bound literal. On the echo of our
+   * own save the draft is kept, so that normalization does not overwrite it.
+   */
+  private readonly _draft = linkedSignal<
+    WordCollocationLiteral | undefined,
+    WordCollocationLiteralControls
+  >({
+    source: () => this.literal(),
+    computation: (literal, previous) =>
+      previous && JSON.stringify(literal) === JSON.stringify(toData(previous.value))
+        ? previous.value
+        : toDraft(literal),
+  });
 
-  constructor(formBuilder: FormBuilder) {
-    // form
-    this.value = formBuilder.control('', {
-      validators: [Validators.required, Validators.maxLength(100)],
-      nonNullable: true,
-    });
-    this.tag = formBuilder.control(null);
-    this.tagText = formBuilder.control(null, Validators.maxLength(50));
-    this.note = formBuilder.control(null, {
-      validators: Validators.maxLength(1000),
-    });
-    this.form = formBuilder.group({
-      value: this.value,
-      tag: this.tag,
-      tagText: this.tagText,
-      note: this.note,
-    });
+  public readonly form = form(this._draft, (p) => {
+    required(p.value);
+    maxLength(p.value, 100);
+    // only a typed tag is limited
+    maxLength(p.tag, () => (this.tagEntries()?.length ? undefined : 50));
+    maxLength(p.note, 1000);
+  });
 
-    // when model changes, update form
+  // the entries for the tag picker
+  public readonly pickedTag = computed<ThesaurusEntry[]>(() => {
+    const id = this.form.tag().value();
+    return id ? [this.tagEntries()?.find((e) => e.id === id) || { id, value: id }] : [];
+  });
+
+  constructor() {
+    // when the draft mirrors the bound literal, there are no unsaved edits
     effect(() => {
-      const data = this.literal();
-      this.updateForm(data);
+      const draft = this._draft();
+      untracked(() => {
+        if (JSON.stringify(draft) === JSON.stringify(toDraft(this.literal()))) {
+          this.form().reset();
+        }
+      });
     });
-  }
-
-  public mapIdToEntry(
-    id: string | null,
-    entries: ThesaurusEntry[] | undefined
-  ): ThesaurusEntry | null {
-    if (!id) return null;
-    if (!entries) return { id, value: id };
-    return entries.find((e) => e.id === id) || { id, value: id };
   }
 
   public onTagEntriesChange(entries: ThesaurusEntry[]): void {
-    this.tag.setValue(entries.length ? entries[0] : null);
-    this.tag.markAsDirty();
-    this.tag.updateValueAndValidity();
-  }
-
-  private updateForm(data: WordCollocationLiteral | undefined | null): void {
-    if (!data) {
-      this.form.reset();
-    } else {
-      this.value.setValue(data.value);
-      this.tag.setValue(data.tag ? this.mapIdToEntry(data.tag, this.tagEntries()) || null : null);
-      this.tagText.setValue(data.tag || null);
-      this.note.setValue(data.note || null);
-      this.form.markAsPristine();
-    }
-  }
-
-  private getData(): WordCollocationLiteral {
-    return {
-      value: this.value.value.trim(),
-      tag:
-        (this.tagEntries()?.length ? this.tag.value?.id : this.tagText.value?.trim()) || undefined,
-      note: this.note.value?.trim() || undefined,
-    };
+    this.form.tag().value.set(entries[0]?.id ?? '');
+    this.form.tag().markAsDirty();
   }
 
   public cancel(): void {
@@ -121,25 +129,37 @@ export class WordCollocLiteralEditor {
   }
 
   /**
-   * Saves the current form data by updating the `data` model signal.
-   * This method can be called manually (e.g., by a Save button) or
-   * automatically (via auto-save).
-   * @param pristine If true (default), the form is marked as pristine
-   * after saving.
-   * Set to false for auto-save if you want the form to remain dirty.
+   * Handle Enter in a text input, like the submission of a form: save when
+   * changed, or show the errors when invalid. The event is consumed in any
+   * case, so that it does not reach the enclosing example editor.
+   * @param event The keydown event.
+   */
+  public onEnterKey(event: Event): void {
+    if (!isImplicitSubmission(event)) {
+      return;
+    }
+    event.preventDefault();
+    if (this.form().dirty()) {
+      this.save();
+    }
+  }
+
+  /**
+   * Save the current draft into the `literal` model signal.
+   * @param pristine If true (default), the form's interaction state is
+   * cleared after saving.
    */
   public save(pristine = true): void {
-    if (this.form.invalid) {
+    if (this.form().invalid()) {
       // show validation errors
-      this.form.markAllAsTouched();
+      this.form().markAsTouched();
       return;
     }
 
-    const data = this.getData();
-    this.literal.set(data);
+    this.literal.set(toData(this._draft()));
 
     if (pristine) {
-      this.form.markAsPristine();
+      this.form().reset();
     }
   }
 }

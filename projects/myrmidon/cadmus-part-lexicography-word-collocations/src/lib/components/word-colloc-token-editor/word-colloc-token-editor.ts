@@ -1,11 +1,15 @@
-import { ChangeDetectionStrategy, Component, effect, input, model, output } from '@angular/core';
 import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  input,
+  linkedSignal,
+  model,
+  output,
+  untracked,
+} from '@angular/core';
+import { FormField, form, maxLength, required } from '@angular/forms/signals';
 
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
@@ -19,10 +23,52 @@ import { ThesaurusEntriesPickerComponent } from '@myrmidon/cadmus-thesaurus-stor
 
 import { WordCollocationToken } from '../../lex-word-collocations-part';
 
+/**
+ * The editable draft behind the form. POS and features are thesaurus entry
+ * IDs ('' for no POS); the pickers get the corresponding entries.
+ */
+interface WordCollocationTokenControls {
+  pos: string;
+  features: string[];
+  isHead: boolean;
+  isOptional: boolean;
+  note: string;
+}
+
+/**
+ * Token -> draft. A token without POS gets the default POS.
+ */
+function toDraft(
+  token: WordCollocationToken | undefined,
+  defaultPos: string,
+): WordCollocationTokenControls {
+  return {
+    pos: token ? token.pos || defaultPos : '',
+    features: [...(token?.features || [])],
+    isHead: !!token?.isHead,
+    isOptional: !!token?.isOptional,
+    note: token?.note || '',
+  };
+}
+
+function toData(draft: WordCollocationTokenControls): WordCollocationToken {
+  return {
+    pos: draft.pos,
+    features: [...draft.features],
+    isHead: draft.isHead,
+    isOptional: draft.isOptional,
+    note: draft.note.trim() || undefined,
+  };
+}
+
+function mapIdToEntry(id: string, entries: ThesaurusEntry[] | undefined): ThesaurusEntry {
+  return entries?.find((e) => e.id === id) || { id, value: id };
+}
+
 @Component({
   selector: 'cadmus-word-colloc-token-editor',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatCheckbox,
     MatError,
     MatFormField,
@@ -48,85 +94,64 @@ export class WordCollocTokenEditor {
   // lex-word-cliteral-tags
   public readonly literalTagEntries = input<ThesaurusEntry[] | undefined>();
 
-  public pos: FormControl<ThesaurusEntry | null>;
-  public features: FormControl<ThesaurusEntry[]>;
-  public isHead: FormControl<boolean>;
-  public isOptional: FormControl<boolean>;
-  public note: FormControl<string | null>;
-  public form: FormGroup;
+  // the POS for a token without it: a string, so that getting new POS
+  // entries with the same first entry does not rebuild the draft
+  private readonly _defaultPos = computed(() => this.posEntries()?.[0]?.id ?? '');
 
-  constructor(formBuilder: FormBuilder) {
-    this.pos = formBuilder.control<ThesaurusEntry | null>(null, Validators.required);
-    this.features = formBuilder.control([], {
-      nonNullable: true,
-    });
-    this.isHead = formBuilder.control(false, { nonNullable: true });
-    this.isOptional = formBuilder.control(false, { nonNullable: true });
-    this.note = formBuilder.control(null, { validators: Validators.maxLength(1000) });
-    this.form = formBuilder.group({
-      pos: this.pos,
-      features: this.features,
-      isHead: this.isHead,
-      isOptional: this.isOptional,
-      note: this.note,
-    });
+  /**
+   * The editable draft, derived from the bound token. On the echo of our
+   * own save the draft is kept, so that normalization does not overwrite it.
+   */
+  private readonly _draft = linkedSignal<
+    { token: WordCollocationToken | undefined; defaultPos: string },
+    WordCollocationTokenControls
+  >({
+    source: () => ({ token: this.token(), defaultPos: this._defaultPos() }),
+    computation: (source, previous) =>
+      previous && JSON.stringify(source.token) === JSON.stringify(toData(previous.value))
+        ? previous.value
+        : toDraft(source.token, source.defaultPos),
+  });
 
-    // when model changes, update form
+  public readonly form = form(this._draft, (p) => {
+    required(p.pos);
+    maxLength(p.note, 1000);
+  });
+
+  // the entries for the pickers
+  public readonly pickedPos = computed<ThesaurusEntry[]>(() => {
+    const id = this.form.pos().value();
+    return id ? [mapIdToEntry(id, this.posEntries())] : [];
+  });
+  public readonly pickedFeatures = computed<ThesaurusEntry[]>(() =>
+    this.form
+      .features()
+      .value()
+      .map((id) => mapIdToEntry(id, this.featureEntries())),
+  );
+
+  constructor() {
+    // when the draft mirrors the bound token, there are no unsaved edits
     effect(() => {
-      const data = this.token();
-      this.updateForm(data);
+      const draft = this._draft();
+      untracked(() => {
+        if (
+          JSON.stringify(draft) === JSON.stringify(toDraft(this.token(), this._defaultPos()))
+        ) {
+          this.form().reset();
+        }
+      });
     });
-  }
-
-  private mapIdToEntry(
-    id: string | null,
-    entries: ThesaurusEntry[] | undefined
-  ): ThesaurusEntry | null {
-    if (!id) return null;
-    if (!entries) return { id, value: id };
-    return entries.find((e) => e.id === id) || { id, value: id };
-  }
-
-  private mapIdsToEntries(ids: string[], entries: ThesaurusEntry[] | undefined): ThesaurusEntry[] {
-    if (!entries) return ids.map((id) => ({ id, value: id }));
-    return ids.map((id) => entries.find((e) => e.id === id) || { id, value: id });
-  }
-
-  private updateForm(data: WordCollocationToken | undefined | null): void {
-    if (!data) {
-      this.form.reset();
-    } else {
-      this.pos.setValue(
-        this.mapIdToEntry(data.pos, this.posEntries()) ?? this.posEntries()?.[0] ?? null,
-      );
-      this.features.setValue(this.mapIdsToEntries(data.features || [], this.featureEntries()));
-      this.isHead.setValue(!!data.isHead);
-      this.isOptional.setValue(!!data.isOptional);
-      this.note.setValue(data.note || null);
-      this.form.markAsPristine();
-    }
   }
 
   public onPosEntriesChange(entries: ThesaurusEntry[]): void {
-    this.pos.setValue(entries[0] ?? null);
-    this.pos.markAsDirty();
-    this.pos.updateValueAndValidity();
+    this.form.pos().value.set(entries[0]?.id ?? '');
+    this.form.pos().markAsDirty();
   }
 
   public onFeaturesChange(entries: ThesaurusEntry[]): void {
-    this.features.setValue(entries);
-    this.features.markAsDirty();
-    this.features.updateValueAndValidity();
-  }
-
-  private getToken(): WordCollocationToken {
-    return {
-      pos: this.pos.value?.id ?? '',
-      features: this.features.value.map((e) => e.id),
-      isHead: this.isHead.value,
-      isOptional: this.isOptional.value,
-      note: this.note.value?.trim() || undefined,
-    };
+    this.form.features().value.set(entries.map((e) => e.id));
+    this.form.features().markAsDirty();
   }
 
   public cancel(): void {
@@ -134,25 +159,21 @@ export class WordCollocTokenEditor {
   }
 
   /**
-   * Saves the current form data by updating the `data` model signal.
-   * This method can be called manually (e.g., by a Save button) or
-   * automatically (via auto-save).
-   * @param pristine If true (default), the form is marked as pristine
-   * after saving.
-   * Set to false for auto-save if you want the form to remain dirty.
+   * Save the current draft into the `token` model signal.
+   * @param pristine If true (default), the form's interaction state is
+   * cleared after saving.
    */
   public save(pristine = true): void {
-    if (this.form.invalid) {
+    if (this.form().invalid()) {
       // show validation errors
-      this.form.markAllAsTouched();
+      this.form().markAsTouched();
       return;
     }
 
-    const data = this.getToken();
-    this.token.set(data);
+    this.token.set(toData(this._draft()));
 
     if (pristine) {
-      this.form.markAsPristine();
+      this.form().reset();
     }
   }
 }

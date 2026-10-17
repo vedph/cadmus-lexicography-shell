@@ -4,7 +4,7 @@
 
 ### Signal forms
 
-⚠️ Updated the `@myrmidon/cadmus-*` core packages to v20, and migrated all the editors from reactive forms to Angular signal forms (`@angular/forms/signals`). Inputs, models and outputs are unchanged. Breaking for code that reached into the components' internals: the former public `FormControl`/`FormGroup` fields are now fields of a signal form. No editor renders a `<form>` element any more: part editors save only through their save button, and sub-editors save on Enter in a text input only when their accept button is enabled. Since inputs now get a native `maxlength`, text cannot be typed past its limit. Text values are trimmed on save. See `docs/signal-forms-migration-log.md` for details.
+⚠️ Updated the `@myrmidon/cadmus-*` core packages to v20, and migrated all the editors from reactive forms to Angular signal forms (`@angular/forms/signals`). Inputs, models and outputs are unchanged. Breaking for code that reached into the components' internals: the former public `FormControl`/`FormGroup` fields are now fields of a signal form. No editor renders a `<form>` element any more: part editors save only through their save button. Enter in a text input of a sub-editor saves it when changed (or shows its errors when invalid), and never reaches the editors enclosing it. Since inputs now get a native `maxlength`, text cannot be typed past its limit. Text values are trimmed on save. See `docs/signal-forms-migration-log.md` for details.
 
 - `@myrmidon/cadmus-part-lexicography-lemma`:
   - `WordFormEditor`: the form is now `editForm` (the `form` model is unchanged). Removed messages which could never appear (prefix and suffix required, note too long).
@@ -14,6 +14,10 @@
   - `WordSenseEditor`, `WordSenseExampleEditor`: their fields are now fields of `form`; the Markdown previews are computed signals. `WordSenseEditor.editedEx` and `editedExIndex` are now linked signals, reset when the sense changes.
   - `LexWordSensesPartEditor`: `entries` is now `form.entries`; the thesauri entries are computed signals; settings are loaded once per identity rather than on each data change.
   - 🐛 the related IDs editor emitting a normalized copy of the IDs it received no longer makes the sense look changed.
+- `@myrmidon/cadmus-part-lexicography-word-collocations`:
+  - `WordCollocLiteralEditor`, `WordCollocTokenEditor`, `WordCollocEditor`, `WordCollocExampleEditor`: their fields are now fields of `form`. In the literal editor, `tag` and `tagText` are now the single `form.tag`. In the example editor, `dirty`, `literals` and `editedLiterals` were removed (use `form().dirty()` and `form.literals`), and `edited`/`editedIndex` are linked signals, reset when the example changes.
+  - `LexWordCollocationPartEditor`: `collocations` is now `form.entries`, and `dslForm`/`dslText` are now the signal form `dslForm` (`dslForm.dslText`); the thesauri entries are computed signals.
+  - 🐛 `WordCollocExampleEditor`: an emptied token number was saved as `null`; it is now required. The accept button is disabled while the token number is invalid.
 
 ### Infrastructure
 

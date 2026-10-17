@@ -1,12 +1,13 @@
-<!-- this form is nested in the part's form: stop submit from saving the part -->
-<form [formGroup]="form" (submit)="$event.stopPropagation(); save()">
+<!-- no <form> here: this editor is nested in the part editor. Enter in a text
+     input saves it, as the accept button would. -->
+<div (keydown.enter)="onEnterKey($event)">
   <div class="form-row">
     <!-- tag (bound) -->
     @if (collTagEntries()?.length) {
       <mat-form-field>
         <mat-label>tag</mat-label>
-        <mat-select [formControl]="tag">
-          <mat-option [value]="null">(none)</mat-option>
+        <mat-select [formField]="form.tag">
+          <mat-option [value]="''">(none)</mat-option>
           @for (e of collTagEntries(); track e.id) {
             <mat-option [value]="e.id">{{ e.value }}</mat-option>
           }
@@ -16,8 +17,8 @@
       <!-- tag (free) -->
       <mat-form-field>
         <mat-label>tag</mat-label>
-        <input matInput [formControl]="tag" />
-        @if ($any(tag).errors?.maxlength && (tag.dirty || tag.touched)) {
+        <input matInput [formField]="form.tag" />
+        @if (form.tag().getError('maxLength') && (form.tag().dirty() || form.tag().touched())) {
           <mat-error>tag too long</mat-error>
         }
       </mat-form-field>
@@ -25,7 +26,7 @@
     <!-- rank -->
     <mat-form-field>
       <mat-label>rank</mat-label>
-      <input matInput type="number" min="0" [formControl]="rank" />
+      <input matInput type="number" [formField]="form.rank" />
     </mat-form-field>
   </div>
 
@@ -37,7 +38,7 @@
         <mat-icon>add_circle</mat-icon> token
       </button>
     </div>
-    @if (tokens.value.length) {
+    @if (form.tokens().value().length) {
       <table>
         <thead>
           <tr>
@@ -50,7 +51,7 @@
         </thead>
         <tbody>
           @for (
-            entry of tokens.value;
+            entry of form.tokens().value();
             track entry;
             let i = $index;
             let first = $first;
@@ -148,7 +149,7 @@
         <mat-icon>add_circle</mat-icon> example
       </button>
     </div>
-    @if (examples.value.length) {
+    @if (form.examples().value().length) {
       <table>
         <thead>
           <tr>
@@ -159,7 +160,7 @@
         </thead>
         <tbody>
           @for (
-            entry of examples.value;
+            entry of form.examples().value();
             track entry;
             let i = $index;
             let first = $first;
@@ -223,7 +224,7 @@
           </mat-expansion-panel-header>
           <cadmus-word-colloc-example-editor
             [tagEntries]="litTagEntries()"
-            [maxTokenNr]="tokens.value.length"
+            [maxTokenNr]="form.tokens().value().length"
             [example]="editedExample()!"
             (exampleChange)="onExampleChange($event!)"
             (cancelEdit)="closeExample()"
@@ -237,8 +238,8 @@
   <div>
     <mat-form-field class="long-text">
       <mat-label>note</mat-label>
-      <textarea matInput [formControl]="note" rows="3"></textarea>
-      @if ($any(note).errors?.maxlength && (note.dirty || note.touched)) {
+      <textarea matInput [formField]="form.note" rows="3"></textarea>
+      @if (form.note().getError('maxLength') && (form.note().dirty() || form.note().touched())) {
         <mat-error>note too long</mat-error>
       }
     </mat-form-field>
@@ -250,12 +251,13 @@
       <mat-icon class="mat-warn">clear</mat-icon>
     </button>
     <button
-      type="submit"
+      type="button"
       mat-icon-button
       matTooltip="Accept changes"
-      [disabled]="form.invalid || form.pristine"
+      [disabled]="form().invalid() || !form().dirty()"
+      (click)="save()"
     >
       <mat-icon class="mat-primary">check_circle</mat-icon>
     </button>
   </div>
-</form>
+</div>

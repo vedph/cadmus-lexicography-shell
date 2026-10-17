@@ -107,12 +107,15 @@ describe('WordCollocTokenEditor', () => {
     expect(tokenChange).not.toHaveBeenCalled();
   });
 
+  it('should limit the note length while typing', async () => {
+    await setup({ token: TOKEN });
+    expect(screen.getByRole('textbox', { name: 'note' })).toHaveAttribute('maxlength', '1000');
+  });
+
   it('should report a too long note', async () => {
-    const { user } = await setup({ token: TOKEN });
-    const note = screen.getByRole('textbox', { name: 'note' });
-    await user.clear(note);
-    await user.click(note);
-    await user.paste('x'.repeat(1001));
+    // the input prevents typing it, but it can come from data
+    const { user } = await setup({ token: { ...TOKEN, note: 'x'.repeat(1001) } });
+    await user.click(screen.getByRole('textbox', { name: 'note' }));
     await user.tab();
     expect(screen.getByText('note too long')).toBeInTheDocument();
     expect(acceptButton()).toBeDisabled();

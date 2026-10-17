@@ -209,6 +209,21 @@ describe('LexWordCollocationPartEditor', () => {
       expect(saveButton()).toBeEnabled();
     });
 
+    it('should save only the collocation on Enter in its rank', async () => {
+      const { user, dataChange } = await setup({ part: createPart() });
+      await user.click(rowButton(0, 'Edit this collocation'));
+      await user.type(screen.getByRole('spinbutton', { name: 'rank' }), '5{Enter}');
+      expect(screen.queryByRole('spinbutton', { name: 'rank' })).not.toBeInTheDocument();
+      expect(dataChange).not.toHaveBeenCalled();
+      expect(saveButton()).toBeEnabled();
+    });
+
+    it('should render no <form> element, also with a collocation open', async () => {
+      const { user, container } = await setup({ part: createPart() });
+      await user.click(rowButton(0, 'Edit this collocation'));
+      expect(container.querySelector('form')).toBeNull();
+    });
+
     it('should edit a collocation', async () => {
       const { user } = await setup({ part: createPart() });
       await user.click(rowButton(1, 'Edit this collocation'));
@@ -379,6 +394,19 @@ describe('LexWordCollocationPartEditor', () => {
       const { user, editorClose } = await setup({ part: createPart() });
       await user.click(screen.getByRole('button', { name: 'close' }));
       expect(editorClose).toHaveBeenCalledOnce();
+    });
+
+    it('should be pristine after loading a part', async () => {
+      const { fixture, dirtyChange } = await setup({ part: createPart() });
+      await fixture.whenStable();
+      expect(dirtyChange).not.toHaveBeenCalledWith(true);
+      expect(fixture.componentInstance.isDirty()).toBe(false);
+    });
+
+    it('should not make the part dirty when typing DSL text', async () => {
+      const { user, fixture } = await setup({ part: createPart() });
+      await typeDsl(user, 'x');
+      expect(fixture.componentInstance.isDirty()).toBe(false);
     });
 
     it('should emit dirtyChange when edited and saved', async () => {

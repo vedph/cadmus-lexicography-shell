@@ -1,42 +1,42 @@
-<!-- this form is nested in the collocation's form: stop submit from saving it -->
-<form [formGroup]="form" (submit)="$event.stopPropagation(); save()">
+<!-- no <form> here: this editor is nested in the collocation editor -->
+<div>
   <div class="form-row">
     <!-- pos (always bound) -->
     <cadmus-thesaurus-entries-picker
       [availableEntries]="posEntries()!"
-      [entries]="pos.value ? [pos.value] : []"
+      [entries]="pickedPos()"
       [hierarchicLabels]="true"
       [minEntries]="1"
       [maxEntries]="1"
       (entriesChange)="onPosEntriesChange($event!)"
     />
     <!-- isHead -->
-    <mat-checkbox [formControl]="isHead">head</mat-checkbox>
+    <mat-checkbox [formField]="form.isHead">head</mat-checkbox>
     <!-- isOptional -->
-    <mat-checkbox [formControl]="isOptional">optional</mat-checkbox>
+    <mat-checkbox [formField]="form.isOptional">optional</mat-checkbox>
   </div>
   <!-- features -->
   <div>
     @if (featureEntries()?.length) {
-    <div>
-      <fieldset>
-        <legend>features</legend>
-        <cadmus-thesaurus-entries-picker
-          [availableEntries]="featureEntries()!"
-          [entries]="features.value"
-          (entriesChange)="onFeaturesChange($event!)"
-        />
-      </fieldset>
-    </div>
+      <div>
+        <fieldset>
+          <legend>features</legend>
+          <cadmus-thesaurus-entries-picker
+            [availableEntries]="featureEntries()!"
+            [entries]="pickedFeatures()"
+            (entriesChange)="onFeaturesChange($event!)"
+          />
+        </fieldset>
+      </div>
     }
   </div>
   <!-- note -->
   <div>
     <mat-form-field class="long-text">
       <mat-label>note</mat-label>
-      <textarea matInput [formControl]="note" rows="3"></textarea>
-      @if ($any(note).errors?.maxlength && (note.dirty || note.touched)) {
-      <mat-error>note too long</mat-error>
+      <textarea matInput [formField]="form.note" rows="3"></textarea>
+      @if (form.note().getError('maxLength') && (form.note().dirty() || form.note().touched())) {
+        <mat-error>note too long</mat-error>
       }
     </mat-form-field>
   </div>
@@ -46,12 +46,13 @@
       <mat-icon class="mat-warn">clear</mat-icon>
     </button>
     <button
-      type="submit"
+      type="button"
       mat-icon-button
       matTooltip="Accept changes"
-      [disabled]="form.invalid || form.pristine"
+      [disabled]="form().invalid() || !form().dirty()"
+      (click)="save()"
     >
       <mat-icon class="mat-primary">check_circle</mat-icon>
     </button>
   </div>
-</form>
+</div>
