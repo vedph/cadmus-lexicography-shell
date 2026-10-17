@@ -8,6 +8,8 @@
 - migrated tests from Karma/Jasmine to Vitest via the Angular `@angular/build:unit-test` builder (jsdom environment), with Angular Testing Library (`@testing-library/angular`, `@testing-library/user-event`) and `@testing-library/jest-dom` matchers (registered in `test-setup.ts`). Removed all the Karma and Jasmine packages. Library test targets use the app's zoneless `testing` build configuration. Added `test:<lib>` and `test:libs` scripts.
 - pnpm settings moved from `package.json` (no longer read by pnpm 12) into `pnpm-workspace.yaml`; added an override forcing `@jridgewell/sourcemap-codec` to `^1.6.0`, required by `@angular/compiler-cli` 22.2 but not declared by it; set `extendNodePath: false`, because the `NODE_PATH` set by pnpm's command shims made the test builder detect a `zone.js` that Vite could not then resolve.
 - test helpers shared by the specs of a library live in its `src/testing` folder, excluded from the library build and from coverage.
+- `test-providers.ts` provides global test providers: it disables Material animations, as jsdom does not run CSS transitions, and some Material components (like tabs) wait for their end before showing their content. Library coverage reports include only the library's own sources (`--coverage`).
+- added a test for the routes of `@myrmidon/cadmus-part-lexicography-pg`, which had no tests.
 
 ### @myrmidon/cadmus-part-lexicography-lemma
 
