@@ -48,7 +48,10 @@ export class WordCollocLiteralEditor {
   public readonly cancelEdit = output();
 
   public value: FormControl<string>;
+  // the tag when picked from thesaurus entries
   public tag: FormControl<ThesaurusEntry | null>;
+  // the tag when typed (no thesaurus entries)
+  public tagText: FormControl<string | null>;
   public note: FormControl<string | null>;
   public form: FormGroup;
 
@@ -59,12 +62,14 @@ export class WordCollocLiteralEditor {
       nonNullable: true,
     });
     this.tag = formBuilder.control(null);
+    this.tagText = formBuilder.control(null, Validators.maxLength(50));
     this.note = formBuilder.control(null, {
       validators: Validators.maxLength(1000),
     });
     this.form = formBuilder.group({
       value: this.value,
       tag: this.tag,
+      tagText: this.tagText,
       note: this.note,
     });
 
@@ -96,6 +101,7 @@ export class WordCollocLiteralEditor {
     } else {
       this.value.setValue(data.value);
       this.tag.setValue(data.tag ? this.mapIdToEntry(data.tag, this.tagEntries()) || null : null);
+      this.tagText.setValue(data.tag || null);
       this.note.setValue(data.note || null);
       this.form.markAsPristine();
     }
@@ -104,7 +110,8 @@ export class WordCollocLiteralEditor {
   private getData(): WordCollocationLiteral {
     return {
       value: this.value.value.trim(),
-      tag: this.tag.value?.id || undefined,
+      tag:
+        (this.tagEntries()?.length ? this.tag.value?.id : this.tagText.value?.trim()) || undefined,
       note: this.note.value?.trim() || undefined,
     };
   }

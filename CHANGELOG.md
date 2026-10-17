@@ -40,3 +40,27 @@ Added tests for all the components. Fixes:
 - `WordSenseEditor`, `WordSenseExampleEditor`: "too long" errors were never shown, because templates checked for a `maxLength` error key while Angular's validator uses `maxlength`.
 - `WordSenseEditor`, `WordSenseExampleEditor`: their preview subscriptions to form value changes were never unsubscribed; they are now bound to the component lifetime. Also replaced an import from the `rxjs/internal` path with the public `rxjs` one.
 - `WordSenseEditor`, `WordSenseExampleEditor`: the Markdown editor groups (definition, text, explanation) had only an icon as their legend, so they had no accessible name: added labels.
+
+### @myrmidon/cadmus-part-lexicography-word-collocations
+
+Added tests for all the components and for the collocation pipe, and more tests for the collocations parser (whose existing spec used Jasmine's `fdescribe`, unavailable in Vitest). Fixes:
+
+- `WordCollocEditor`, `WordCollocTokenEditor`, `WordCollocExampleEditor`, `WordCollocLiteralEditor`, `LexWordCollocationPartEditor` (batch form): accepting a nested editor also submitted all its enclosing forms, so that e.g. accepting a token also accepted its collocation, and could save the whole part. The nested forms now stop the propagation of their `submit` event. In `WordCollocExampleEditor`, which had a plain `<form>` without a form directive, pressing Enter in the token number field also triggered the browser's native submission.
+- `WordCollocExampleEditor`: the token number was never loaded from the edited example (it was set only once from the default example, when building the component), so editing an example always showed token 1, and saving it changed its token number to 1.
+- `WordCollocExampleEditor`: the token number had to be at least 1, while 0 is the documented value for connective text (and is produced by the collocations parser). Now 0 is allowed.
+- `WordCollocExampleEditor`: discarding the changes of a literal closed the whole example editor, rather than just the literal editor.
+- `WordCollocExampleEditor`: the editor was marked as changed as soon as it was shown, because revalidating the token number when setting its maximum value was taken as a user change.
+- `WordCollocEditor`: moving or deleting a pattern token did not update the example tokens referring to pattern tokens by their number, so that examples ended up referring to the wrong tokens. Now moved tokens keep their examples, and examples of deleted tokens become connective text (0).
+- `WordCollocEditor`: a new example defaulted to a token number beyond the last pattern token, which was invalid; it now defaults to the token following the last example's one, up to the last pattern token.
+- `WordCollocEditor`: the collocation note was loaded and saved, but there was no field to edit it. Added the note field.
+- `WordCollocEditor`: adding a token without the POS tags thesaurus crashed the editor.
+- `WordCollocEditor`: once a tag was picked from its thesaurus, it could not be removed, as the select had no empty option. Added a `(none)` option.
+- `WordCollocTokenEditor`: removing the POS from its picker crashed the editor, and a missing POS was represented by an empty entry which passed the `required` validator (the same bug fixed in the lemma's `WordFormEditor`). The POS control is now nullable.
+- `WordCollocTokenEditor`: the `MatTooltip` directive was not imported, so the buttons had no tooltips.
+- `WordCollocLiteralEditor`: without the literal tags thesaurus, the tag text field was bound to a control holding a thesaurus entry, so that a loaded tag was displayed as `[object Object]`, and a typed tag was not saved. The free tag now has its own text control (max 50 characters).
+- `LexWordCollocationPartEditor`: collocations added in batch were parsed without mapping the POS labels to their IDs, while the list displays POS mapping IDs to labels: so typing a collocation like it is displayed stored labels instead of IDs.
+- `LexWordCollocationPartEditor`: batch parsing errors were never shown. Also, on success the batch text was kept, so that adding it again duplicated the collocations: now it is cleared.
+- `LexWordCollocationPartEditor`: the edited collocation row was never highlighted, because it was compared by reference with a copy; and the tag column showed the tag ID rather than its thesaurus label.
+- `LexWordCollocationPartEditor`, `WordCollocEditor`, `WordCollocExampleEditor`: deleting an item before the edited one, or moving the edited item (or its neighbor), left the edited index stale, so that saving replaced the wrong item. The index now follows the list changes. New items were titled `#0`, they are now titled `New ...`.
+- all editors: "too long" errors were never shown, because templates checked for a `maxLength` error key while Angular's validator uses `maxlength`.
+- `LexWordCollocationPartEditor`: imported the parser from the library's own public API, a circular import; now it imports it directly.

@@ -129,15 +129,14 @@ export class WordCollocEditor {
       rank: this.rank.value || undefined,
       tokens: this.tokens.value,
       examples: this.examples.value.length ? this.examples.value : undefined,
-      note: this.note.value || undefined,
+      note: this.note.value?.trim() || undefined,
     };
   }
 
   //#region Tokens
   public addToken(): void {
-    const entries: ThesaurusEntry[] = this.tokPosEntries()!;
     const token: WordCollocationToken = {
-      pos: entries[0]?.id || '',
+      pos: this.tokPosEntries()?.[0]?.id || '',
     };
     this.editToken(token, -1);
   }
@@ -170,14 +169,22 @@ export class WordCollocEditor {
       .confirm('Confirmation', 'Delete token?')
       .subscribe((yes: boolean | undefined) => {
         if (yes) {
-          if (this.editedTokenIndex() === index) {
+          // keep the edited token index in sync with the list
+          const edited = this.editedTokenIndex();
+          if (edited === index) {
             this.closeToken();
+          } else if (edited > index) {
+            this.editedTokenIndex.set(edited - 1);
           }
           const tokens = [...this.tokens.value];
           tokens.splice(index, 1);
           this.tokens.setValue(tokens);
           this.tokens.markAsDirty();
           this.tokens.updateValueAndValidity();
+          // examples referring to the deleted token become connective text,
+          // and those referring to the following tokens are renumbered
+          const nr = index + 1;
+          this.remapExampleTokens((n) => (n === nr ? 0 : n > nr ? n - 1 : n));
         }
       });
   }
@@ -193,6 +200,7 @@ export class WordCollocEditor {
     this.tokens.setValue(tokens);
     this.tokens.markAsDirty();
     this.tokens.updateValueAndValidity();
+    this.onTokensSwapped(index, index - 1);
   }
 
   public moveTokenDown(index: number): void {
@@ -206,13 +214,52 @@ export class WordCollocEditor {
     this.tokens.setValue(tokens);
     this.tokens.markAsDirty();
     this.tokens.updateValueAndValidity();
+    this.onTokensSwapped(index, index + 1);
+  }
+
+  /**
+   * Keep the edited token index and the examples referring to tokens
+   * in sync after the token at index a has been swapped with the one
+   * at index b.
+   */
+  private onTokensSwapped(a: number, b: number): void {
+    if (this.editedTokenIndex() === a) {
+      this.editedTokenIndex.set(b);
+    } else if (this.editedTokenIndex() === b) {
+      this.editedTokenIndex.set(a);
+    }
+    const [nrA, nrB] = [a + 1, b + 1];
+    this.remapExampleTokens((n) => (n === nrA ? nrB : n === nrB ? nrA : n));
+  }
+
+  /**
+   * Remap the pattern token numbers referred to by examples.
+   * @param map The function mapping an old token number to the new one.
+   */
+  private remapExampleTokens(map: (tokenNr: number) => number): void {
+    let changed = false;
+    const examples = this.examples.value.map((e) => {
+      const tokenNr = map(e.tokenNr);
+      if (tokenNr === e.tokenNr) {
+        return e;
+      }
+      changed = true;
+      return { ...e, tokenNr };
+    });
+    if (changed) {
+      this.examples.setValue(examples);
+      this.examples.markAsDirty();
+      this.examples.updateValueAndValidity();
+    }
   }
   //#endregion
 
   //#region Examples
   public addExample(): void {
+    // default to the pattern token following the last example's one
+    const lastNr = this.examples.value.at(-1)?.tokenNr ?? 0;
     const example: WordCollocationExampleToken = {
-      tokenNr: this.tokens.value.length + 1,
+      tokenNr: Math.min(lastNr + 1, this.tokens.value.length),
       literals: [],
     };
     this.editExample(example, -1);
@@ -246,8 +293,12 @@ export class WordCollocEditor {
       .confirm('Confirmation', 'Delete example?')
       .subscribe((yes: boolean | undefined) => {
         if (yes) {
-          if (this.editedExampleIndex() === index) {
+          // keep the edited example index in sync with the list
+          const edited = this.editedExampleIndex();
+          if (edited === index) {
             this.closeExample();
+          } else if (edited > index) {
+            this.editedExampleIndex.set(edited - 1);
           }
           const examples = [...this.examples.value];
           examples.splice(index, 1);
@@ -269,6 +320,7 @@ export class WordCollocEditor {
     this.examples.setValue(examples);
     this.examples.markAsDirty();
     this.examples.updateValueAndValidity();
+    this.followMovedExample(index, index - 1);
   }
 
   public moveExampleDown(index: number): void {
@@ -282,6 +334,19 @@ export class WordCollocEditor {
     this.examples.setValue(examples);
     this.examples.markAsDirty();
     this.examples.updateValueAndValidity();
+    this.followMovedExample(index, index + 1);
+  }
+
+  /**
+   * Keep the edited example index in sync with the list after the example
+   * at index from has been swapped with the one at index to.
+   */
+  private followMovedExample(from: number, to: number): void {
+    if (this.editedExampleIndex() === from) {
+      this.editedExampleIndex.set(to);
+    } else if (this.editedExampleIndex() === to) {
+      this.editedExampleIndex.set(from);
+    }
   }
   //#endregion
 

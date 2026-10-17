@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, linkedSignal, model, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  input,
+  linkedSignal,
+  model,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -8,7 +19,7 @@ import {
   MatExpansionPanelHeader,
   MatExpansionPanelTitle,
 } from '@angular/material/expansion';
-import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
+import { MatFormField, MatLabel, MatError, MatHint } from '@angular/material/form-field';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
 import { MatInput } from '@angular/material/input';
@@ -34,6 +45,7 @@ import { WordCollocLiteralEditor } from '../word-colloc-literal-editor/word-coll
     MatExpansionPanelHeader,
     MatExpansionPanelTitle,
     MatFormField,
+    MatHint,
     MatIcon,
     MatIconButton,
     MatInput,
@@ -74,20 +86,33 @@ export class WordCollocExampleEditor {
   public tokenNr: FormControl<number>;
 
   constructor(private _dialogService: DialogService) {
+    // 0=connective text, 1-N=pattern token number
     this.tokenNr = new FormControl<number>(this.example().tokenNr, {
       nonNullable: true,
-      validators: [Validators.min(1)],
+      validators: [Validators.min(0)],
+    });
+
+    // when the example changes, update the form
+    effect(() => {
+      const example = this.example();
+      untracked(() => {
+        this.closeLiteral();
+        this.tokenNr.setValue(example.tokenNr, { emitEvent: false });
+        this.tokenNr.markAsPristine();
+        this.dirty.set(false);
+      });
     });
 
     // when maxTokenNr changes, update the max validator
     effect(() => {
       const max = this.maxTokenNr();
       this.tokenNr.clearValidators();
-      this.tokenNr.addValidators(Validators.min(1));
+      this.tokenNr.addValidators(Validators.min(0));
       if (max > 0) {
         this.tokenNr.addValidators(Validators.max(max));
       }
-      this.tokenNr.updateValueAndValidity();
+      // just revalidate: this is not a user change
+      this.tokenNr.updateValueAndValidity({ emitEvent: false });
     });
 
     // when tokenNr changes, set dirty
@@ -131,8 +156,12 @@ export class WordCollocExampleEditor {
       .confirm('Confirmation', 'Delete literal?')
       .subscribe((yes: boolean | undefined) => {
         if (yes) {
-          if (this.editedIndex() === index) {
+          // keep the edited literal index in sync with the list
+          const edited = this.editedIndex();
+          if (edited === index) {
             this.closeLiteral();
+          } else if (edited > index) {
+            this.editedIndex.set(edited - 1);
           }
           const literals = [...this.editedLiterals()];
           literals.splice(index, 1);
@@ -151,6 +180,7 @@ export class WordCollocExampleEditor {
     literals.splice(index, 1);
     literals.splice(index - 1, 0, literal);
     this.editedLiterals.set(literals);
+    this.followMovedLiteral(index, index - 1);
     this.dirty.set(true);
   }
 
@@ -163,7 +193,20 @@ export class WordCollocExampleEditor {
     literals.splice(index, 1);
     literals.splice(index + 1, 0, literal);
     this.editedLiterals.set(literals);
+    this.followMovedLiteral(index, index + 1);
     this.dirty.set(true);
+  }
+
+  /**
+   * Keep the edited literal index in sync with the list after the literal
+   * at index from has been swapped with the one at index to.
+   */
+  private followMovedLiteral(from: number, to: number): void {
+    if (this.editedIndex() === from) {
+      this.editedIndex.set(to);
+    } else if (this.editedIndex() === to) {
+      this.editedIndex.set(from);
+    }
   }
 
   private getExample(): WordCollocationExampleToken {

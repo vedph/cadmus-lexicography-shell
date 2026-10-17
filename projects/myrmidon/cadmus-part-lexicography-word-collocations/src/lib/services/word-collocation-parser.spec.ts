@@ -1,6 +1,6 @@
 import { WordCollocationParser } from './word-collocation-parser';
 
-fdescribe('WordCollocationParser', () => {
+describe('WordCollocationParser', () => {
   describe('parse', () => {
     it('should parse basic collocation with rank', () => {
       const input = '(1) <NOUN>+VERB: la <Prefettura> [applica, decide, emette (provvedimenti)]';
@@ -396,6 +396,67 @@ NOUN+VERB: invalid
 
       const result = WordCollocationParser.toString(collocation);
       expect(result).toBe('(2) <n>+v: <test>');
+    });
+
+    it('should convert alternatives with notes', () => {
+      const result = WordCollocationParser.toString({
+        tokens: [{ pos: 'ADJ' }, { pos: 'NOUN', isHead: true }],
+        examples: [
+          { tokenNr: 0, literals: [{ value: 'un' }] },
+          { tokenNr: 1, literals: [{ value: 'forte', note: 'f.' }] },
+          {
+            tokenNr: 2,
+            literals: [{ value: 'tè', note: 'n.' }, { value: 'caffè' }],
+          },
+        ],
+      });
+      expect(result).toBe('ADJ+<NOUN>: un [forte (f.)] [tè (n.), caffè]');
+    });
+  });
+
+  describe('parse edge cases', () => {
+    it('should report an empty token', () => {
+      const result = WordCollocationParser.parse('<NOUN>++VERB: x');
+      expect(result.value).toEqual([]);
+      expect(result.error).toContain('Empty token');
+    });
+
+    it('should report missing tokens before the colon', () => {
+      const result = WordCollocationParser.parse(': x');
+      expect(result.error).toContain("No tokens found before ':'");
+    });
+
+    it('should parse a head token with a note after its brackets', () => {
+      const result = WordCollocationParser.parse('<NOUN> (subject)+VERB:');
+      expect(result.error).toBeUndefined();
+      expect(result.value[0].tokens[0]).toEqual({ pos: 'NOUN', isHead: true, note: 'subject' });
+    });
+
+    it('should parse optional alternatives ignoring their marker', () => {
+      const result = WordCollocationParser.parse('<NOUN>+ADJ: <tè> [? forte, nero]');
+      expect(result.error).toBeUndefined();
+      expect(result.value[0].examples![1].literals).toEqual([{ value: 'forte' }, { value: 'nero' }]);
+    });
+
+    it('should parse alternative literals with notes', () => {
+      const result = WordCollocationParser.parse('<NOUN>+ADJ: <tè> [forte (f.), nero]');
+      expect(result.value[0].examples![1].literals).toEqual([
+        { value: 'forte', note: 'f.' },
+        { value: 'nero' },
+      ]);
+    });
+
+    it('should keep valid lines when other lines have errors', () => {
+      const result = WordCollocationParser.parse('<NOUN>+ADJ: <tè>\nbad line');
+      expect(result.value.length).toBe(1);
+      expect(result.error).toBe(`Line 2: Missing ':' separator in "bad line"`);
+    });
+
+    it('should round-trip a complex collocation', () => {
+      const text = '(3) ADJ (qual.)+<NOUN>: un [forte (f.), nero] <tè (n.)> caldo';
+      const parsed = WordCollocationParser.parse(text);
+      expect(parsed.error).toBeUndefined();
+      expect(WordCollocationParser.toString(parsed.value[0])).toBe(text);
     });
   });
 });

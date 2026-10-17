@@ -13,7 +13,8 @@
       <div>
         <fieldset>
           <legend>batch</legend>
-          <form [formGroup]="dslForm" (submit)="parseDsl()">
+          <!-- this form is nested in the part's form: stop submit from saving the part -->
+          <form [formGroup]="dslForm" (submit)="$event.stopPropagation(); parseDsl()">
             <mat-form-field class="long-text">
               <textarea
                 matInput
@@ -23,6 +24,9 @@
               ></textarea>
               <mat-hint>(RANK) POS+...: &lt;a&gt; [b, c] d</mat-hint>
             </mat-form-field>
+            @if (dslError()) {
+              <mat-error role="alert" class="dsl-error">{{ dslError() }}</mat-error>
+            }
             <div>
               <button
                 type="button"
@@ -61,7 +65,7 @@
               let first = $first;
               let last = $last
             ) {
-              <tr [class.selected]="entry === edited()">
+              <tr [class.selected]="i === editedIndex()">
                 <td class="fit-width">
                   <button
                     type="button"
@@ -98,7 +102,7 @@
                     <mat-icon class="mat-warn">remove_circle</mat-icon>
                   </button>
                 </td>
-                <td class="fit-width">{{ entry.tag }}</td>
+                <td class="fit-width">{{ entry.tag | flatLookup: collTagEntries() : 'id' : 'value' }}</td>
                 <td class="fit-width">{{ i + 1 }}</td>
                 <td>{{ entry | wordCollocation: labelToIdMap() }}</td>
               </tr>
@@ -110,7 +114,13 @@
         <fieldset>
           <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
             <mat-expansion-panel-header>
-              <mat-panel-title>Collocation #{{ editedIndex() + 1 }}</mat-panel-title>
+              <mat-panel-title>
+                @if (editedIndex() > -1) {
+                  Collocation #{{ editedIndex() + 1 }}
+                } @else {
+                  New collocation
+                }
+              </mat-panel-title>
             </mat-expansion-panel-header>
             <cadmus-word-colloc-editor
               [collTagEntries]="collTagEntries()"

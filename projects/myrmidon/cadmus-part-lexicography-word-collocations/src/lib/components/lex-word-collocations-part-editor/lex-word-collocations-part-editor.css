@@ -33,3 +33,6 @@ fieldset {
 .mt {
   margin-top: 16px;
 }
+.dsl-error {
+  white-space: pre-line;
+}

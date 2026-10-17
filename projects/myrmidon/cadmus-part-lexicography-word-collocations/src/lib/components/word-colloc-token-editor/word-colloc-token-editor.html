@@ -1,9 +1,10 @@
-<form [formGroup]="form" (submit)="save()">
+<!-- this form is nested in the collocation's form: stop submit from saving it -->
+<form [formGroup]="form" (submit)="$event.stopPropagation(); save()">
   <div class="form-row">
     <!-- pos (always bound) -->
     <cadmus-thesaurus-entries-picker
       [availableEntries]="posEntries()!"
-      [entries]="[this.pos.value]"
+      [entries]="pos.value ? [pos.value] : []"
       [hierarchicLabels]="true"
       [minEntries]="1"
       [maxEntries]="1"
@@ -34,7 +35,7 @@
     <mat-form-field class="long-text">
       <mat-label>note</mat-label>
       <textarea matInput [formControl]="note" rows="3"></textarea>
-      @if ($any(note).errors?.maxLength && (note.dirty || note.touched)) {
+      @if ($any(note).errors?.maxlength && (note.dirty || note.touched)) {
       <mat-error>note too long</mat-error>
       }
     </mat-form-field>

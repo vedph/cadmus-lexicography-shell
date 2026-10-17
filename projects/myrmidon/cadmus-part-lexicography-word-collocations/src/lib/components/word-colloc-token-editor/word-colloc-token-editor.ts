@@ -12,6 +12,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
+import { MatTooltip } from '@angular/material/tooltip';
 
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
 import { ThesaurusEntriesPickerComponent } from '@myrmidon/cadmus-thesaurus-store';
@@ -29,6 +30,7 @@ import { WordCollocationToken } from '../../lex-word-collocations-part';
     MatIcon,
     MatInput,
     MatLabel,
+    MatTooltip,
     ThesaurusEntriesPickerComponent,
   ],
   templateUrl: './word-colloc-token-editor.html',
@@ -46,7 +48,7 @@ export class WordCollocTokenEditor {
   // lex-word-cliteral-tags
   public readonly literalTagEntries = input<ThesaurusEntry[] | undefined>();
 
-  public pos: FormControl<ThesaurusEntry>;
+  public pos: FormControl<ThesaurusEntry | null>;
   public features: FormControl<ThesaurusEntry[]>;
   public isHead: FormControl<boolean>;
   public isOptional: FormControl<boolean>;
@@ -54,13 +56,7 @@ export class WordCollocTokenEditor {
   public form: FormGroup;
 
   constructor(formBuilder: FormBuilder) {
-    this.pos = formBuilder.control(
-      { id: '', value: '' },
-      {
-        nonNullable: true,
-        validators: Validators.required,
-      }
-    );
+    this.pos = formBuilder.control<ThesaurusEntry | null>(null, Validators.required);
     this.features = formBuilder.control([], {
       nonNullable: true,
     });
@@ -100,7 +96,9 @@ export class WordCollocTokenEditor {
     if (!data) {
       this.form.reset();
     } else {
-      this.pos.setValue(this.mapIdToEntry(data.pos, this.posEntries()) || this.posEntries()?.[0]!);
+      this.pos.setValue(
+        this.mapIdToEntry(data.pos, this.posEntries()) ?? this.posEntries()?.[0] ?? null,
+      );
       this.features.setValue(this.mapIdsToEntries(data.features || [], this.featureEntries()));
       this.isHead.setValue(!!data.isHead);
       this.isOptional.setValue(!!data.isOptional);
@@ -110,7 +108,7 @@ export class WordCollocTokenEditor {
   }
 
   public onPosEntriesChange(entries: ThesaurusEntry[]): void {
-    this.pos.setValue(entries[0]);
+    this.pos.setValue(entries[0] ?? null);
     this.pos.markAsDirty();
     this.pos.updateValueAndValidity();
   }
@@ -123,7 +121,7 @@ export class WordCollocTokenEditor {
 
   private getToken(): WordCollocationToken {
     return {
-      pos: this.pos.value.id,
+      pos: this.pos.value?.id ?? '',
       features: this.features.value.map((e) => e.id),
       isHead: this.isHead.value,
       isOptional: this.isOptional.value,

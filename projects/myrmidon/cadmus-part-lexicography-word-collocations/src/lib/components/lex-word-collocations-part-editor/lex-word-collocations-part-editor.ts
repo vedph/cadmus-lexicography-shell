@@ -24,10 +24,10 @@ import {
   MatExpansionPanelHeader,
   MatExpansionPanelTitle,
 } from '@angular/material/expansion';
-import { MatFormField, MatHint } from '@angular/material/form-field';
+import { MatError, MatFormField, MatHint } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 
-import { NgxToolsValidators } from '@myrmidon/ngx-tools';
+import { FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
 import { EditedObject, ThesauriSet, ThesaurusEntry } from '@myrmidon/cadmus-core';
 import { CloseSaveButtonsComponent, ModelEditorComponentBase } from '@myrmidon/cadmus-ui';
@@ -40,7 +40,7 @@ import {
 } from '../../lex-word-collocations-part';
 import { WordCollocEditor } from '../word-colloc-editor/word-colloc-editor';
 import { WordCollocationPipe } from '../../pipes/word-collocation.pipe';
-import { WordCollocationParser } from '../../../public-api';
+import { WordCollocationParser } from '../../services/word-collocation-parser';
 
 /**
  * WordCollocationsPart editor component.
@@ -57,6 +57,7 @@ import { WordCollocationParser } from '../../../public-api';
     MatCardContent,
     MatCardHeader,
     MatCardTitle,
+    MatError,
     MatExpansionPanel,
     MatExpansionPanelHeader,
     MatExpansionPanelTitle,
@@ -69,6 +70,7 @@ import { WordCollocationParser } from '../../../public-api';
     CloseSaveButtonsComponent,
     WordCollocEditor,
     WordCollocationPipe,
+    FlatLookupPipe,
     MatHint,
   ],
   templateUrl: './lex-word-collocations-part-editor.html',
@@ -225,8 +227,12 @@ export class LexWordCollocationPartEditor
       .confirm('Confirmation', 'Delete collocation?')
       .subscribe((yes: boolean | undefined) => {
         if (yes) {
-          if (this.editedIndex() === index) {
+          // keep the edited collocation index in sync with the list
+          const edited = this.editedIndex();
+          if (edited === index) {
             this.closeCollocation();
+          } else if (edited > index) {
+            this.editedIndex.set(edited - 1);
           }
           const collocations = [...this.collocations.value];
           collocations.splice(index, 1);
@@ -248,6 +254,7 @@ export class LexWordCollocationPartEditor
     this.collocations.setValue(collocations);
     this.collocations.markAsDirty();
     this.collocations.updateValueAndValidity();
+    this.followMovedCollocation(index, index - 1);
   }
 
   public moveCollocationDown(index: number): void {
@@ -261,6 +268,19 @@ export class LexWordCollocationPartEditor
     this.collocations.setValue(collocations);
     this.collocations.markAsDirty();
     this.collocations.updateValueAndValidity();
+    this.followMovedCollocation(index, index + 1);
+  }
+
+  /**
+   * Keep the edited collocation index in sync with the list after the
+   * collocation at index from has been swapped with the one at index to.
+   */
+  private followMovedCollocation(from: number, to: number): void {
+    if (this.editedIndex() === from) {
+      this.editedIndex.set(to);
+    } else if (this.editedIndex() === to) {
+      this.editedIndex.set(from);
+    }
   }
 
   public parseDsl(): void {
@@ -269,7 +289,8 @@ export class LexWordCollocationPartEditor
       return;
     }
     try {
-      const result = WordCollocationParser.parse(dsl);
+      // POS are typed as labels, like they are displayed
+      const result = WordCollocationParser.parse(dsl, this.labelToIdMap());
       if (result.error) {
         this.dslError.set(`Error parsing DSL: ${result.error}`);
       } else {
@@ -279,6 +300,8 @@ export class LexWordCollocationPartEditor
         this.collocations.markAsDirty();
         this.collocations.updateValueAndValidity();
         this.dslError.set(undefined);
+        // clear the parsed text, so that it cannot be added twice
+        this.dslText.reset();
       }
     } catch (e) {
       console.error(e);
