@@ -25,6 +25,7 @@ import { MatIcon } from '@angular/material/icon';
 import { EditedObject, ThesauriSet, ThesaurusEntry } from '@myrmidon/cadmus-core';
 import { CloseSaveButtonsComponent, ModelEditorComponentBase } from '@myrmidon/cadmus-ui';
 import { AuthJwtService } from '@myrmidon/auth-jwt-login';
+import { NgxToolsValidators } from '@myrmidon/ngx-tools';
 
 import { LEX_LEMMA_PART_TYPEID, LexLemmaPart, WordForm } from '../../lex-lemma-part';
 import { WordFormSetEditor } from '../word-form-set-editor/word-form-set-editor';
@@ -100,7 +101,10 @@ export class LexLemmaPartEditor extends ModelEditorComponentBase<LexLemmaPart> i
       validators: [Validators.required, Validators.maxLength(300)],
     });
     this.homograph = formBuilder.control(0, { nonNullable: true });
-    this.forms = formBuilder.control([], { nonNullable: true });
+    this.forms = formBuilder.control([], {
+      nonNullable: true,
+      validators: NgxToolsValidators.strictMinLengthValidator(1),
+    });
 
     this._sidGenerator = inject(LEX_LEMMA_PART_LID_GENERATOR_TOKEN);
   }

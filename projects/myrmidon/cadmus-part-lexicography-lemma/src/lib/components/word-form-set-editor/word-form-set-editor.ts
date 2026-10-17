@@ -101,8 +101,12 @@ export class WordFormSetEditor {
       .confirm('Confirmation', `Delete form #${index + 1}?`)
       .subscribe((yes: boolean | undefined) => {
         if (yes) {
-          if (this.editedIndex() === index) {
+          // keep the edited form index in sync with the list
+          const edited = this.editedIndex();
+          if (edited === index) {
             this.closeForm();
+          } else if (edited > index) {
+            this.editedIndex.set(edited - 1);
           }
           const forms = [...this.forms()];
           forms.splice(index, 1);
@@ -120,6 +124,7 @@ export class WordFormSetEditor {
     forms.splice(index, 1);
     forms.splice(index - 1, 0, form);
     this.forms.set(forms);
+    this.followMovedForm(index, index - 1);
   }
 
   public moveFormDown(index: number): void {
@@ -131,5 +136,18 @@ export class WordFormSetEditor {
     forms.splice(index, 1);
     forms.splice(index + 1, 0, form);
     this.forms.set(forms);
+    this.followMovedForm(index, index + 1);
+  }
+
+  /**
+   * Keep the edited form index in sync with the list after the form at
+   * index from has been swapped with the one at index to.
+   */
+  private followMovedForm(from: number, to: number): void {
+    if (this.editedIndex() === from) {
+      this.editedIndex.set(to);
+    } else if (this.editedIndex() === to) {
+      this.editedIndex.set(from);
+    }
   }
 }

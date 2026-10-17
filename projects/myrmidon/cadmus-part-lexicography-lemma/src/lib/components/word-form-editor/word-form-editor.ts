@@ -59,7 +59,7 @@ export class WordFormEditor {
   public prefix: FormControl<string | null>;
   public value: FormControl<string>;
   public suffix: FormControl<string | null>;
-  public pos: FormControl<ThesaurusEntry>;
+  public pos: FormControl<ThesaurusEntry | null>;
   public features: FormControl<ThesaurusEntry[]>;
   public tags: FormControl<ThesaurusEntry[]>;
   public note: FormControl<string | null>;
@@ -77,13 +77,7 @@ export class WordFormEditor {
       validators: [Validators.required, Validators.maxLength(500)],
     });
     this.suffix = formBuilder.control(null, { validators: [Validators.maxLength(50)] });
-    this.pos = formBuilder.control(
-      { id: '', value: '' },
-      {
-        nonNullable: true,
-        validators: Validators.required,
-      },
-    );
+    this.pos = formBuilder.control<ThesaurusEntry | null>(null, Validators.required);
     this.features = formBuilder.control([], { nonNullable: true });
     this.tags = formBuilder.control([], { nonNullable: true });
     this.note = formBuilder.control(null);
@@ -127,7 +121,9 @@ export class WordFormEditor {
       this.prefix.setValue(data.prefix || null);
       this.value.setValue(data.value || '');
       this.suffix.setValue(data.suffix || null);
-      this.pos.setValue(this.mapIdToEntry(data.pos, this.posEntries()) || this.posEntries()?.[0]!);
+      this.pos.setValue(
+        this.mapIdToEntry(data.pos, this.posEntries()) ?? this.posEntries()?.[0] ?? null,
+      );
       this.features.setValue(this.mapIdsToEntries(data.features || [], this.featureEntries()));
       this.tags.setValue(this.mapIdsToEntries(data.tags || [], this.tagEntries()));
       this.note.setValue(data.note || null);
@@ -136,7 +132,7 @@ export class WordFormEditor {
   }
 
   public onPosEntriesChange(entries: ThesaurusEntry[]): void {
-    this.pos.setValue(entries[0]);
+    this.pos.setValue(entries[0] ?? null);
     this.pos.markAsDirty();
     this.pos.updateValueAndValidity();
   }
@@ -159,7 +155,7 @@ export class WordFormEditor {
       prefix: this.prefix.value || undefined,
       value: this.value.value,
       suffix: this.suffix.value || undefined,
-      pos: this.pos.value.id,
+      pos: this.pos.value?.id ?? '',
       features: this.features.value.map((e) => e.id),
       tags: this.tags.value.map((e) => e.id),
       note: this.note.value?.trim() || undefined,

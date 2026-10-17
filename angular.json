@@ -127,6 +127,9 @@
             "runner": "vitest",
             "setupFiles": [
               "test-setup.ts"
+            ],
+            "coverageExclude": [
+              "**/testing/**"
             ]
           }
         }
@@ -158,6 +161,9 @@
             "runner": "vitest",
             "setupFiles": [
               "test-setup.ts"
+            ],
+            "coverageExclude": [
+              "**/testing/**"
             ]
           }
         }
@@ -189,6 +195,9 @@
             "runner": "vitest",
             "setupFiles": [
               "test-setup.ts"
+            ],
+            "coverageExclude": [
+              "**/testing/**"
             ]
           }
         }
@@ -220,6 +229,9 @@
             "runner": "vitest",
             "setupFiles": [
               "test-setup.ts"
+            ],
+            "coverageExclude": [
+              "**/testing/**"
             ]
           }
         }
@@ -251,6 +263,9 @@
             "runner": "vitest",
             "setupFiles": [
               "test-setup.ts"
+            ],
+            "coverageExclude": [
+              "**/testing/**"
             ]
           }
         }

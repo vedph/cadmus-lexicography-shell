@@ -17,7 +17,7 @@
           @if ($any(lid).errors?.required && (lid.dirty || lid.touched)) {
             <mat-error>LID required</mat-error>
           }
-          @if ($any(lid).errors?.maxLength && (lid.dirty || lid.touched)) {
+          @if ($any(lid).errors?.maxlength && (lid.dirty || lid.touched)) {
             <mat-error>LID too long</mat-error>
           }
         </mat-form-field>
