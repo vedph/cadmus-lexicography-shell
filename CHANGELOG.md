@@ -20,3 +20,10 @@ Added tests for all the components. Fixes:
 - `WordFormSetEditor`: deleting a form before the edited one, or moving the edited form (or its neighbor), left the edited form index stale, so that saving the edited form replaced the wrong one. The index now follows the list changes.
 - `WordFormSetEditor`: a new form was titled `form #0`; it is now titled `new form`.
 - `LexLemmaPartEditor`: a lemma could be saved without forms, while its schema requires at least one (the editor just showed an error icon). Forms are now required, like in the word senses and collocations part editors.
+
+### @myrmidon/cadmus-part-lexicography-word-forms
+
+Added tests for all the components. Fixes:
+
+- `LexWordFormsPartEditor`: a part could be saved without forms, while its schema requires at least one (the editor just showed an error icon). Forms are now required.
+- the fixes to the word form editors of `@myrmidon/cadmus-part-lexicography-lemma`, which this part reuses, also apply here: in particular, accepting a word form no longer saves the whole part.

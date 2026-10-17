@@ -130,6 +130,9 @@
             ],
             "coverageExclude": [
               "**/testing/**"
+            ],
+            "coverageInclude": [
+              "projects/myrmidon/cadmus-part-lexicography-lemma/src/**/*.ts"
             ]
           }
         }
@@ -164,6 +167,9 @@
             ],
             "coverageExclude": [
               "**/testing/**"
+            ],
+            "coverageInclude": [
+              "projects/myrmidon/cadmus-part-lexicography-pg/src/**/*.ts"
             ]
           }
         }
@@ -198,6 +204,9 @@
             ],
             "coverageExclude": [
               "**/testing/**"
+            ],
+            "coverageInclude": [
+              "projects/myrmidon/cadmus-part-lexicography-word-forms/src/**/*.ts"
             ]
           }
         }
@@ -232,6 +241,9 @@
             ],
             "coverageExclude": [
               "**/testing/**"
+            ],
+            "coverageInclude": [
+              "projects/myrmidon/cadmus-part-lexicography-word-senses/src/**/*.ts"
             ]
           }
         }
@@ -266,6 +278,9 @@
             ],
             "coverageExclude": [
               "**/testing/**"
+            ],
+            "coverageInclude": [
+              "projects/myrmidon/cadmus-part-lexicography-word-collocations/src/**/*.ts"
             ]
           }
         }

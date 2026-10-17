@@ -24,6 +24,7 @@ import { MatIcon } from '@angular/material/icon';
 import { AuthJwtService } from '@myrmidon/auth-jwt-login';
 import { EditedObject, ThesauriSet, ThesaurusEntry } from '@myrmidon/cadmus-core';
 import { CloseSaveButtonsComponent, ModelEditorComponentBase } from '@myrmidon/cadmus-ui';
+import { NgxToolsValidators } from '@myrmidon/ngx-tools';
 import { WordForm, WordFormSetEditor } from '@myrmidon/cadmus-part-lexicography-lemma';
 import { LEX_WORD_FORMS_PART_TYPEID, LexWordFormsPart } from '../../lex-word-forms-part';
 
@@ -73,7 +74,10 @@ export class LexWordFormsPartEditor
   constructor(authService: AuthJwtService, formBuilder: FormBuilder) {
     super(authService, formBuilder);
     // form
-    this.forms = formBuilder.control([], { nonNullable: true });
+    this.forms = formBuilder.control([], {
+      nonNullable: true,
+      validators: NgxToolsValidators.strictMinLengthValidator(1),
+    });
   }
 
   public override ngOnInit(): void {
