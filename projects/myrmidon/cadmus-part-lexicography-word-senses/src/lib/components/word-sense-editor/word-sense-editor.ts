@@ -1,24 +1,17 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  Inject,
-  Optional,
+  computed,
   effect,
   inject,
   input,
+  linkedSignal,
   model,
   output,
-  signal,
+  untracked,
 } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormField, form, maxLength, required } from '@angular/forms/signals';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -43,6 +36,12 @@ import { EllipsisPipe, FlatLookupPipe } from '@myrmidon/ngx-tools';
 
 import { ThesaurusEntry } from '@myrmidon/cadmus-core';
 import {
+  copyFormValue,
+  isImplicitSubmission,
+  setFieldFromChild,
+  setFieldFromEditor,
+} from '@myrmidon/cadmus-ui';
+import {
   AssertedCompositeId,
   AssertedCompositeIdsComponent,
 } from '@myrmidon/cadmus-refs-asserted-ids';
@@ -56,12 +55,46 @@ import { LookupProviderOptions } from '@myrmidon/cadmus-refs-lookup';
 
 import { WordSense, WordSenseExample } from '../../lex-word-senses-part';
 import { WordSenseExampleEditor } from '../word-sense-example-editor/word-sense-example-editor';
-import { debounceTime } from 'rxjs';
+
+/**
+ * The editable draft behind the form. Tags are thesaurus entry IDs.
+ */
+interface WordSenseControls {
+  eid: string;
+  tags: string[];
+  definition: string;
+  note: string;
+  examples: WordSenseExample[];
+  relatedIds: AssertedCompositeId[];
+}
+
+function toDraft(sense: WordSense | undefined): WordSenseControls {
+  return {
+    eid: sense?.eid || '',
+    tags: [...(sense?.tags || [])],
+    definition: sense?.definition || '',
+    note: sense?.note || '',
+    // copy: the form tags the objects in its arrays
+    examples: copyFormValue(sense?.examples || []),
+    relatedIds: copyFormValue(sense?.relatedIds || []),
+  };
+}
+
+function toData(draft: WordSenseControls): WordSense {
+  return {
+    eid: draft.eid.trim() || undefined,
+    tags: draft.tags.length ? [...draft.tags] : undefined,
+    definition: draft.definition.trim(),
+    note: draft.note.trim() || undefined,
+    examples: draft.examples.length ? copyFormValue(draft.examples) : undefined,
+    relatedIds: draft.relatedIds.length ? copyFormValue(draft.relatedIds) : undefined,
+  };
+}
 
 @Component({
   selector: 'cadmus-word-sense-editor',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     MatButtonModule,
     MatCheckboxModule,
     MatExpansionModule,
@@ -83,6 +116,15 @@ import { debounceTime } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class WordSenseEditor {
+  private readonly _dialogService = inject(DialogService);
+  private readonly _editService = inject(CadmusTextEdService);
+  // the token is declared with the service options type, but it provides
+  // the key bindings
+  private readonly _editorBindings = inject(CADMUS_TEXT_ED_BINDINGS_TOKEN, {
+    optional: true,
+  }) as unknown as CadmusTextEdBindings | null;
+  private readonly _sanitizer = inject(DomSanitizer);
+
   // Monaco
   private _editor?: StandaloneCodeEditor;
   public readonly editorOptions: StandaloneEditorConstructionOptions = {
@@ -90,15 +132,20 @@ export class WordSenseEditor {
     wordWrap: 'on',
     automaticLayout: true,
   };
-  // preview
-  public readonly previewHtml = signal<SafeHtml>('');
-  private readonly _sanitizer = inject(DomSanitizer);
 
   public readonly sense = model<WordSense | undefined>();
   public readonly cancelEdit = output();
 
-  public readonly editedEx = signal<WordSenseExample | undefined>(undefined);
-  public readonly editedExIndex = signal<number>(-1);
+  // the example being edited, and its index (-1 for a new one): an example
+  // being edited belongs to the sense, so they are reset when it changes
+  public readonly editedEx = linkedSignal<WordSense | undefined, WordSenseExample | undefined>({
+    source: () => this.sense(),
+    computation: () => undefined,
+  });
+  public readonly editedExIndex = linkedSignal<WordSense | undefined, number>({
+    source: () => this.sense(),
+    computation: () => -1,
+  });
 
   // lex-word-sense-tags
   public readonly tagEntries = input<ThesaurusEntry[] | undefined>();
@@ -117,60 +164,50 @@ export class WordSenseEditor {
 
   public readonly lookupProviderOptions = input<LookupProviderOptions | undefined>();
 
-  public eid: FormControl<string | null>;
-  public tags: FormControl<ThesaurusEntry[]>;
-  public definition: FormControl<string>;
-  public note: FormControl<string | null>;
-  public examples: FormControl<WordSenseExample[]>;
-  public relatedIds: FormControl<AssertedCompositeId[]>;
-  public form: FormGroup;
+  /**
+   * The editable draft, derived from the bound sense. On the echo of our
+   * own save the draft is kept, so that normalization does not overwrite it.
+   */
+  private readonly _draft = linkedSignal<WordSense | undefined, WordSenseControls>({
+    source: () => this.sense(),
+    computation: (sense, previous) =>
+      previous && JSON.stringify(sense) === JSON.stringify(toData(previous.value))
+        ? previous.value
+        : toDraft(sense),
+  });
 
-  constructor(
-    formBuilder: FormBuilder,
-    private _dialogService: DialogService,
-    private _editService: CadmusTextEdService,
-    @Inject(CADMUS_TEXT_ED_BINDINGS_TOKEN)
-    @Optional()
-    private _editorBindings?: CadmusTextEdBindings,
-  ) {
-    // form
-    this.eid = formBuilder.control(null, {
-      validators: Validators.maxLength(50),
-    });
-    this.tags = formBuilder.control([], {
-      nonNullable: true,
-    });
-    this.definition = formBuilder.control('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(5000)],
-    });
-    this.note = formBuilder.control(null, {
-      nonNullable: true,
-      validators: [Validators.maxLength(1000)],
-    });
-    this.examples = formBuilder.control([], {
-      nonNullable: true,
-    });
-    this.relatedIds = formBuilder.control([], {
-      nonNullable: true,
-    });
-    this.form = formBuilder.group({
-      eid: this.eid,
-      tags: this.tags,
-      definition: this.definition,
-      note: this.note,
-      examples: this.examples,
-      relatedIds: this.relatedIds,
-    });
+  public readonly form = form(this._draft, (p) => {
+    maxLength(p.eid, 50);
+    required(p.definition);
+    maxLength(p.definition, 5000);
+    maxLength(p.note, 1000);
+  });
 
-    // when model changes, update form
+  public readonly setFieldFromEditor = setFieldFromEditor;
+
+  public readonly pickedTags = computed<ThesaurusEntry[]>(() => {
+    const entries = this.tagEntries();
+    return this.form
+      .tags()
+      .value()
+      .map((id) => entries?.find((e) => e.id === id) || { id, value: id });
+  });
+
+  public readonly previewHtml = computed<SafeHtml>(() =>
+    this._sanitizer.bypassSecurityTrustHtml(
+      marked.parse(this.form.definition().value(), { async: false }) as string,
+    ),
+  );
+
+  constructor() {
+    // when the draft mirrors the bound sense, there are no unsaved edits
     effect(() => {
-      const data = this.sense();
-      this.updateForm(data);
-    });
-
-    this.definition.valueChanges.pipe(debounceTime(50), takeUntilDestroyed()).subscribe(() => {
-      this.updatePreview();
+      const draft = this._draft();
+      untracked(() => {
+        if (JSON.stringify(draft) === JSON.stringify(toDraft(this.sense()))) {
+          this.form().reset();
+        }
+      });
     });
   }
 
@@ -196,84 +233,35 @@ export class WordSenseEditor {
     this._editor = event.editor;
     this._editor.focus();
 
-    if (this._editorBindings) {
-      Object.keys(this._editorBindings).forEach((key) => {
+    const bindings = this._editorBindings;
+    if (bindings) {
+      Object.keys(bindings).forEach((key) => {
         const n = parseInt(key, 10);
         this._editor!.addCommand(n, () => {
-          this.applyEdit(this._editorBindings![key as any]);
+          this.applyEdit(bindings[n]);
         });
       });
     }
   }
 
-  private updatePreview(): void {
-    const html = marked.parse(this.definition.value || '', { async: false }) as string;
-    this.previewHtml.set(this._sanitizer.bypassSecurityTrustHtml(html));
-  }
-
-  public mapIdToEntry(
-    id: string | null,
-    entries: ThesaurusEntry[] | undefined,
-  ): ThesaurusEntry | null {
-    if (!id) return null;
-    if (!entries) return { id, value: id };
-    return entries.find((e) => e.id === id) || { id, value: id };
-  }
-
-  private mapIdToEntries(ids: string[], entries: ThesaurusEntry[] | undefined): ThesaurusEntry[] {
-    if (!entries) return ids.map((id) => ({ id, value: id }));
-    return ids.map((id) => entries.find((e) => e.id === id) || { id, value: id });
-  }
-
-  private updateForm(sense: WordSense | undefined | null): void {
-    // an example being edited belongs to the previous sense
-    this.closeExample();
-    if (!sense) {
-      this.form.reset();
-    } else {
-      this.eid.setValue(sense.eid || null);
-      this.tags.setValue(this.mapIdToEntries(sense.tags || [], this.tagEntries()));
-      this.definition.setValue(sense.definition || '');
-      this.note.setValue(sense.note || null);
-      this.examples.setValue(sense.examples || []);
-      this.relatedIds.setValue(sense.relatedIds || []);
-      this.form.markAsPristine();
-    }
-  }
-
   public onTagEntriesChange(entries: ThesaurusEntry[]): void {
-    this.tags.setValue(entries);
-    this.tags.markAsDirty();
-    this.tags.updateValueAndValidity();
+    this.form.tags().value.set(entries.map((e) => e.id));
+    this.form.tags().markAsDirty();
   }
 
+  // a child editor's output: it may emit a copy of the IDs it received
   public onRelatedIdsChange(ids: AssertedCompositeId[]): void {
-    this.relatedIds.setValue(ids);
-    this.relatedIds.markAsDirty();
-    this.relatedIds.updateValueAndValidity();
-  }
-
-  private getSense(): WordSense {
-    return {
-      eid: this.eid.value || undefined,
-      tags: this.tags.value?.length ? this.tags.value.map((e) => e.id) : undefined,
-      definition: this.definition.value?.trim() || '',
-      note: this.note.value?.trim() || undefined,
-      examples: this.examples.value?.length ? this.examples.value : undefined,
-      relatedIds: this.relatedIds.value?.length ? this.relatedIds.value : undefined,
-    };
+    setFieldFromChild(this.form.relatedIds, copyFormValue(ids || []));
   }
 
   public addExample(): void {
-    const entry: WordSenseExample = {
-      text: '',
-    };
     this.editedExIndex.set(-1);
-    this.editedEx.set(entry);
+    this.editedEx.set({ text: '' });
   }
 
   public editExample(entry: WordSenseExample, index: number): void {
     this.editedExIndex.set(index);
+    // structuredClone also drops the form's Symbol tag
     this.editedEx.set(structuredClone(entry));
   }
 
@@ -282,16 +270,20 @@ export class WordSenseEditor {
     this.editedEx.set(undefined);
   }
 
+  // these are user actions: they set the list and mark it as dirty
+  private setExamples(examples: WordSenseExample[]): void {
+    this.form.examples().value.set(examples);
+    this.form.examples().markAsDirty();
+  }
+
   public saveExample(entry: WordSenseExample): void {
-    const entries = [...this.examples.value];
+    const entries = [...this.form.examples().value()];
     if (this.editedExIndex() === -1) {
       entries.push(entry);
     } else {
       entries.splice(this.editedExIndex(), 1, entry);
     }
-    this.examples.setValue(entries);
-    this.examples.markAsDirty();
-    this.examples.updateValueAndValidity();
+    this.setExamples(entries);
     this.closeExample();
   }
 
@@ -307,11 +299,9 @@ export class WordSenseEditor {
           } else if (edited > index) {
             this.editedExIndex.set(edited - 1);
           }
-          const entries = [...this.examples.value];
+          const entries = [...this.form.examples().value()];
           entries.splice(index, 1);
-          this.examples.setValue(entries);
-          this.examples.markAsDirty();
-          this.examples.updateValueAndValidity();
+          this.setExamples(entries);
         }
       });
   }
@@ -320,27 +310,23 @@ export class WordSenseEditor {
     if (index < 1) {
       return;
     }
-    const entry = this.examples.value[index];
-    const entries = [...this.examples.value];
+    const entries = [...this.form.examples().value()];
+    const entry = entries[index];
     entries.splice(index, 1);
     entries.splice(index - 1, 0, entry);
-    this.examples.setValue(entries);
-    this.examples.markAsDirty();
-    this.examples.updateValueAndValidity();
+    this.setExamples(entries);
     this.followMovedExample(index, index - 1);
   }
 
   public moveExampleDown(index: number): void {
-    if (index + 1 >= this.examples.value.length) {
+    const entries = [...this.form.examples().value()];
+    if (index + 1 >= entries.length) {
       return;
     }
-    const entry = this.examples.value[index];
-    const entries = [...this.examples.value];
+    const entry = entries[index];
     entries.splice(index, 1);
     entries.splice(index + 1, 0, entry);
-    this.examples.setValue(entries);
-    this.examples.markAsDirty();
-    this.examples.updateValueAndValidity();
+    this.setExamples(entries);
     this.followMovedExample(index, index + 1);
   }
 
@@ -361,25 +347,38 @@ export class WordSenseEditor {
   }
 
   /**
-   * Saves the current form data by updating the `sense` model signal.
-   * This method can be called manually (e.g., by a Save button) or
-   * automatically (via auto-save).
-   * @param pristine If true (default), the form is marked as pristine
-   * after saving.
-   * Set to false for auto-save if you want the form to remain dirty.
+   * Handle Enter in a text input, like the submission of a form: save when
+   * changed, or show the errors when invalid. The event is consumed in any
+   * case, so that it does not reach an enclosing editor. An Enter in the
+   * nested example editor is consumed by that editor.
+   * @param event The keydown event.
+   */
+  public onEnterKey(event: Event): void {
+    if (!isImplicitSubmission(event)) {
+      return;
+    }
+    event.preventDefault();
+    if (this.form().dirty()) {
+      this.save();
+    }
+  }
+
+  /**
+   * Save the current draft into the `sense` model signal.
+   * @param pristine If true (default), the form's interaction state is
+   * cleared after saving.
    */
   public save(pristine = true): void {
-    if (this.form.invalid) {
+    if (this.form().invalid()) {
       // show validation errors
-      this.form.markAllAsTouched();
+      this.form().markAsTouched();
       return;
     }
 
-    const sense = this.getSense();
-    this.sense.set(sense);
+    this.sense.set(toData(this._draft()));
 
     if (pristine) {
-      this.form.markAsPristine();
+      this.form().reset();
     }
   }
 }

@@ -197,16 +197,19 @@ export class WordFormEditor {
   }
 
   /**
-   * Handle Enter: in a text input, save as the accept button would, when
-   * it is enabled.
+   * Handle Enter in a text input, like the submission of a form: save when
+   * changed, or show the errors when invalid. The event is consumed in any
+   * case, so that it does not reach an enclosing editor.
    * @param event The keydown event.
    */
   public onEnterKey(event: Event): void {
-    if (!isImplicitSubmission(event) || this.editForm().invalid() || !this.editForm().dirty()) {
+    if (!isImplicitSubmission(event)) {
       return;
     }
     event.preventDefault();
-    this.save();
+    if (this.editForm().dirty()) {
+      this.save();
+    }
   }
 
   /**

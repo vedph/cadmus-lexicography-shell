@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import {
-  FormControl,
-  FormBuilder,
-  FormGroup,
-  UntypedFormGroup,
-  ReactiveFormsModule,
-} from '@angular/forms';
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 
 import { TitleCasePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,11 +17,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { EllipsisPipe, FlatLookupPipe, NgxToolsValidators } from '@myrmidon/ngx-tools';
+import { EllipsisPipe, FlatLookupPipe, NgxToolsSignalValidators } from '@myrmidon/ngx-tools';
 import { DialogService } from '@myrmidon/ngx-mat-tools';
-import { AuthJwtService } from '@myrmidon/auth-jwt-login';
-import { CloseSaveButtonsComponent, ModelEditorComponentBase } from '@myrmidon/cadmus-ui';
-import { EditedObject, ThesauriSet, ThesaurusEntry } from '@myrmidon/cadmus-core';
+import {
+  CloseSaveButtonsComponent,
+  ModelEditorComponentBase,
+  copyFormValue,
+} from '@myrmidon/cadmus-ui';
+import { ThesaurusEntry } from '@myrmidon/cadmus-core';
 import { LookupProviderOptions } from '@myrmidon/cadmus-refs-lookup';
 
 import {
@@ -36,6 +39,18 @@ interface LexWordSensesPartSettings {
 }
 
 /**
+ * The editable draft behind the form.
+ */
+interface LexWordSensesPartControls {
+  entries: WordSense[];
+}
+
+function toDraft(part?: LexWordSensesPart | null): LexWordSensesPartControls {
+  // copy: the form tags the objects in its arrays
+  return { entries: copyFormValue(part?.senses || []) };
+}
+
+/**
  * Word senses part editor component.
  * Thesauri: lex-word-sense-tags, asserted-id-scopes, asserted-id-tags,
  * assertion-tags, doc-reference-types, doc-reference-tags, asserted-id-features.
@@ -43,7 +58,6 @@ interface LexWordSensesPartSettings {
 @Component({
   selector: 'cadmus-lex-word-senses-part-editor',
   imports: [
-    ReactiveFormsModule,
     TitleCasePipe,
     MatButtonModule,
     MatCardModule,
@@ -63,100 +77,60 @@ interface LexWordSensesPartSettings {
   styleUrl: './lex-word-senses-part-editor.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LexWordSensesPartEditor
-  extends ModelEditorComponentBase<LexWordSensesPart>
-  implements OnInit
-{
+export class LexWordSensesPartEditor extends ModelEditorComponentBase<LexWordSensesPart> {
+  private readonly _dialogService = inject(DialogService);
+
   public readonly editedIndex = signal<number>(-1);
   public readonly edited = signal<WordSense | undefined>(undefined);
 
   // lex-word-sense-tags
-  public readonly tagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly tagEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['lex-word-sense-tags']?.entries,
+  );
   // asserted-id-scopes
-  public readonly assIdScopeEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly assIdScopeEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['asserted-id-scopes']?.entries,
+  );
   // asserted-id-tags
-  public readonly assIdTagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly assIdTagEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['asserted-id-tags']?.entries,
+  );
   // assertion-tags
-  public readonly assTagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly assTagEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['assertion-tags']?.entries,
+  );
   // doc-reference-types
-  public readonly refTypeEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly refTypeEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['doc-reference-types']?.entries,
+  );
   // doc-reference-tags
-  public readonly refTagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly refTagEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['doc-reference-tags']?.entries,
+  );
   // asserted-id-features
-  public readonly idFeatureEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  public readonly idFeatureEntries = computed<ThesaurusEntry[] | undefined>(
+    () => this.data()?.thesauri?.['asserted-id-features']?.entries,
+  );
 
   // lookup options depending on role
   public readonly lookupProviderOptions = signal<LookupProviderOptions | undefined>(undefined);
 
-  public entries: FormControl<WordSense[]>;
+  private readonly _draft = linkedSignal(() => toDraft(this.data()?.value));
+  public readonly form = this.createForm(this._draft, (p) => {
+    // at least 1 entry
+    NgxToolsSignalValidators.strictMinLength(p.entries, 1);
+  });
 
-  constructor(
-    authService: AuthJwtService,
-    formBuilder: FormBuilder,
-    private _dialogService: DialogService,
-  ) {
-    super(authService, formBuilder);
-    // form
-    this.entries = formBuilder.control([], {
-      // at least 1 entry
-      validators: NgxToolsValidators.strictMinLengthValidator(1),
-      nonNullable: true,
-    });
-  }
-
-  public override ngOnInit(): void {
-    super.ngOnInit();
-  }
-
-  protected buildForm(formBuilder: FormBuilder): FormGroup | UntypedFormGroup {
-    return formBuilder.group({
-      entries: this.entries,
-    });
-  }
-
-  private updateThesauri(thesauri: ThesauriSet): void {
-    const entries = (key: string) =>
-      this.hasThesaurus(key) ? thesauri[key].entries : undefined;
-    this.tagEntries.set(entries('lex-word-sense-tags'));
-    this.assIdScopeEntries.set(entries('asserted-id-scopes'));
-    this.assIdTagEntries.set(entries('asserted-id-tags'));
-    this.assTagEntries.set(entries('assertion-tags'));
-    this.refTypeEntries.set(entries('doc-reference-types'));
-    this.refTagEntries.set(entries('doc-reference-tags'));
-    this.idFeatureEntries.set(entries('asserted-id-features'));
-  }
-
-  private updateForm(part?: LexWordSensesPart | null): void {
-    if (!part) {
-      this.form.reset();
-      return;
-    }
-    this.entries.setValue(part.senses || []);
-    this.form.markAsPristine();
-  }
-
-  protected override onDataSet(data?: EditedObject<LexWordSensesPart>): void {
-    // thesauri
-    if (data?.thesauri) {
-      this.updateThesauri(data.thesauri);
-    }
-    // settings
-    this._appRepository
-      ?.getSettingFor<LexWordSensesPartSettings>(
-        LEX_WORD_SENSES_PART_TYPEID,
-        this.identity()?.roleId || undefined,
-      )
-      .then((settings) => {
-        const options = settings?.lookupProviderOptions;
-        this.lookupProviderOptions.set(options || undefined);
-      });
-    // form
-    this.updateForm(data?.value);
+  constructor() {
+    super();
+    this.initSettings<LexWordSensesPartSettings>(LEX_WORD_SENSES_PART_TYPEID, (settings) =>
+      this.lookupProviderOptions.set(settings?.lookupProviderOptions || undefined),
+    );
   }
 
   protected getValue(): LexWordSensesPart {
-    let part = this.getEditedPart(LEX_WORD_SENSES_PART_TYPEID) as LexWordSensesPart;
-    part.senses = this.entries.value || [];
+    const part = this.getEditedPart(LEX_WORD_SENSES_PART_TYPEID) as LexWordSensesPart;
+    part.senses = copyFormValue(this._draft().entries);
     return part;
   }
 
@@ -169,6 +143,7 @@ export class LexWordSensesPartEditor
 
   public editSense(entry: WordSense, index: number): void {
     this.editedIndex.set(index);
+    // structuredClone also drops the form's Symbol tag
     this.edited.set(structuredClone(entry));
   }
 
@@ -177,16 +152,20 @@ export class LexWordSensesPartEditor
     this.edited.set(undefined);
   }
 
+  // these are user actions: they set the list and mark it as dirty
+  private setEntries(entries: WordSense[]): void {
+    this.form.entries().value.set(entries);
+    this.form.entries().markAsDirty();
+  }
+
   public saveSense(entry: WordSense): void {
-    const entries = [...this.entries.value];
+    const entries = [...this.form.entries().value()];
     if (this.editedIndex() === -1) {
       entries.push(entry);
     } else {
       entries.splice(this.editedIndex(), 1, entry);
     }
-    this.entries.setValue(entries);
-    this.entries.markAsDirty();
-    this.entries.updateValueAndValidity();
+    this.setEntries(entries);
     this.closeSense();
   }
 
@@ -202,11 +181,9 @@ export class LexWordSensesPartEditor
           } else if (edited > index) {
             this.editedIndex.set(edited - 1);
           }
-          const entries = [...this.entries.value];
+          const entries = [...this.form.entries().value()];
           entries.splice(index, 1);
-          this.entries.setValue(entries);
-          this.entries.markAsDirty();
-          this.entries.updateValueAndValidity();
+          this.setEntries(entries);
         }
       });
   }
@@ -215,27 +192,23 @@ export class LexWordSensesPartEditor
     if (index < 1) {
       return;
     }
-    const entry = this.entries.value[index];
-    const entries = [...this.entries.value];
+    const entries = [...this.form.entries().value()];
+    const entry = entries[index];
     entries.splice(index, 1);
     entries.splice(index - 1, 0, entry);
-    this.entries.setValue(entries);
-    this.entries.markAsDirty();
-    this.entries.updateValueAndValidity();
+    this.setEntries(entries);
     this.followMovedSense(index, index - 1);
   }
 
   public moveSenseDown(index: number): void {
-    if (index + 1 >= this.entries.value.length) {
+    const entries = [...this.form.entries().value()];
+    if (index + 1 >= entries.length) {
       return;
     }
-    const entry = this.entries.value[index];
-    const entries = [...this.entries.value];
+    const entry = entries[index];
     entries.splice(index, 1);
     entries.splice(index + 1, 0, entry);
-    this.entries.setValue(entries);
-    this.entries.markAsDirty();
-    this.entries.updateValueAndValidity();
+    this.setEntries(entries);
     this.followMovedSense(index, index + 1);
   }
 

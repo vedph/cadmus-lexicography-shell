@@ -221,6 +221,21 @@ describe('LexWordSensesPartEditor', () => {
       expect(screen.queryByRole('group', { name: 'definition' })).not.toBeInTheDocument();
     });
 
+    it('should save only the sense on Enter in its EID', async () => {
+      const { user, dataChange } = await setup({ part: createPart() });
+      await user.click(senseButton(1, 'Edit this Sense'));
+      await user.type(screen.getByRole('textbox', { name: 'EID' }), 'x{Enter}');
+      expect(screen.queryByRole('group', { name: 'definition' })).not.toBeInTheDocument();
+      expect(dataChange).not.toHaveBeenCalled();
+      expect(saveButton()).toBeEnabled();
+    });
+
+    it('should render no <form> element, also with a sense open', async () => {
+      const { user, container } = await setup({ part: createPart() });
+      await user.click(senseButton(1, 'Edit this Sense'));
+      expect(container.querySelector('form')).toBeNull();
+    });
+
     it('should edit a sense', async () => {
       const { user } = await setup({ part: createPart() });
       await user.click(senseButton(1, 'Edit this Sense'));
@@ -367,6 +382,13 @@ describe('LexWordSensesPartEditor', () => {
       const { user, editorClose } = await setup({ part: createPart() });
       await user.click(screen.getByRole('button', { name: 'close' }));
       expect(editorClose).toHaveBeenCalledOnce();
+    });
+
+    it('should be pristine after loading a part', async () => {
+      const { fixture, dirtyChange } = await setup({ part: createPart() });
+      await fixture.whenStable();
+      expect(dirtyChange).not.toHaveBeenCalledWith(true);
+      expect(fixture.componentInstance.isDirty()).toBe(false);
     });
 
     it('should emit dirtyChange when edited and saved', async () => {

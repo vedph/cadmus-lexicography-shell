@@ -193,22 +193,33 @@ describe('WordSenseExampleEditor', () => {
       expect(exampleChange).not.toHaveBeenCalled();
     });
 
+    it('should limit the length of text inputs while typing', async () => {
+      await setup({ example: EXAMPLE });
+      expect(screen.getByRole('textbox', { name: 'citation' })).toHaveAttribute('maxlength', '500');
+      expect(screen.getByRole('textbox', { name: 'note' })).toHaveAttribute('maxlength', '1000');
+    });
+
     it('should report too long values', async () => {
-      const { user } = await setup({ example: EXAMPLE });
+      // text inputs prevent typing them, but they can come from data
+      const { user } = await setup({
+        example: { ...EXAMPLE, citation: 'x'.repeat(501), note: 'x'.repeat(1001) },
+      });
+      for (const name of ['citation', 'note']) {
+        await user.click(screen.getByRole('textbox', { name }));
+        await user.tab();
+        expect(screen.getByText(`${name} too long`)).toBeInTheDocument();
+      }
+      // the Markdown editors have no length limit while typing
       const paste = async (input: HTMLElement, length: number) => {
         await user.clear(input);
         await user.click(input);
         await user.paste('x'.repeat(length));
         await user.tab();
       };
-      await paste(screen.getByRole('textbox', { name: 'citation' }), 501);
-      expect(screen.getByText('citation too long')).toBeInTheDocument();
       await paste(editorIn('text'), 1001);
       expect(screen.getByText('text too long')).toBeInTheDocument();
       await paste(editorIn('explanation'), 1001);
       expect(screen.getByText('explanation too long')).toBeInTheDocument();
-      await paste(screen.getByRole('textbox', { name: 'note' }), 1001);
-      expect(screen.getByText('note too long')).toBeInTheDocument();
       expect(acceptButton()).toBeDisabled();
     });
   });

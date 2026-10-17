@@ -1,12 +1,13 @@
-<!-- this form is nested in the sense's form: stop submit from saving the sense -->
-<form [formGroup]="form" (submit)="$event.stopPropagation(); save()">
+<!-- no <form> here: this editor is nested in the sense editor. Enter in a text
+     input saves it, as the accept button would. -->
+<div (keydown.enter)="onEnterKey($event)">
   <div class="form-row">
     <!-- tags -->
     @if (tagEntries()?.length) {
       <div>
         <cadmus-thesaurus-entries-picker
           [availableEntries]="tagEntries()!"
-          [entries]="tags.value"
+          [entries]="pickedTags()"
           [hierarchicLabels]="true"
           (entriesChange)="onTagEntriesChange($event)"
         />
@@ -16,8 +17,11 @@
     <!-- citation -->
     <mat-form-field>
       <mat-label>citation</mat-label>
-      <input matInput [formControl]="citation" />
-      @if ($any(citation).errors?.maxlength && (citation.dirty || citation.touched)) {
+      <input matInput [formField]="form.citation" />
+      @if (
+        form.citation().getError('maxLength') &&
+        (form.citation().dirty() || form.citation().touched())
+      ) {
         <mat-error>citation too long</mat-error>
       }
     </mat-form-field>
@@ -31,15 +35,17 @@
       </legend>
       <div class="editor">
         <ngx-monaco-editor
-          [formControl]="text"
+          [value]="form.text().value()"
+          (valueChange)="setFieldFromEditor(form.text, $event)"
+          (blur)="form.text().markAsTouched()"
           [language]="'markdown'"
           [options]="editorOptions"
           (editorInitialized)="onTextEditorInit($event)"
         />
-        @if (text.hasError('required') && (text.touched || text.dirty)) {
+        @if (form.text().getError('required') && (form.text().touched() || form.text().dirty())) {
           <mat-error>text required</mat-error>
         }
-        @if (text.hasError('maxlength') && (text.touched || text.dirty)) {
+        @if (form.text().getError('maxLength') && (form.text().touched() || form.text().dirty())) {
           <mat-error>text too long</mat-error>
         }
       </div>
@@ -63,12 +69,17 @@
       </legend>
       <div class="editor">
         <ngx-monaco-editor
-          [formControl]="explanation"
+          [value]="form.explanation().value()"
+          (valueChange)="setFieldFromEditor(form.explanation, $event)"
+          (blur)="form.explanation().markAsTouched()"
           [language]="'markdown'"
           [options]="editorOptions"
           (editorInitialized)="onExplanationEditorInit($event)"
         />
-        @if ($any(explanation).errors?.maxlength && (explanation.dirty || explanation.touched)) {
+        @if (
+          form.explanation().getError('maxLength') &&
+          (form.explanation().dirty() || form.explanation().touched())
+        ) {
           <mat-error>explanation too long</mat-error>
         }
       </div>
@@ -87,8 +98,8 @@
   <div class="mt">
     <mat-form-field class="long-text">
       <mat-label>note</mat-label>
-      <textarea matInput rows="3" [formControl]="note"></textarea>
-      @if ($any(note).errors?.maxlength && (note.dirty || note.touched)) {
+      <textarea matInput rows="3" [formField]="form.note"></textarea>
+      @if (form.note().getError('maxLength') && (form.note().dirty() || form.note().touched())) {
         <mat-error>note too long</mat-error>
       }
     </mat-form-field>
@@ -100,12 +111,13 @@
       <mat-icon class="mat-warn">clear</mat-icon>
     </button>
     <button
-      type="submit"
+      type="button"
       mat-icon-button
       matTooltip="Accept changes"
-      [disabled]="form.invalid || form.pristine"
+      [disabled]="form().invalid() || !form().dirty()"
+      (click)="save()"
     >
       <mat-icon class="mat-primary">check_circle</mat-icon>
     </button>
   </div>
-</form>
+</div>

@@ -1,122 +1,126 @@
-<form [formGroup]="form" (submit)="save()">
-  <mat-card>
-    <mat-card-header>
-      <div mat-card-avatar>
-        <mat-icon>picture_in_picture</mat-icon>
-      </div>
-      <mat-card-title>
-        {{ (modelName() | titlecase) || 'Word Senses Part' }}
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div>
-        <button type="button" mat-flat-button class="mat-primary" (click)="addSense()">
-          <mat-icon>add_circle</mat-icon> sense
-        </button>
-      </div>
-      @if (entries.value.length) {
-        <table>
-          <thead>
-            <tr>
-              <th></th>
-              <th>EID</th>
-              <th>tags</th>
-              <th>definition</th>
-              <th>examples</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (
-              entry of entries.value;
-              track entry;
-              let i = $index;
-              let first = $first;
-              let last = $last
-            ) {
-              <tr [class.selected]="i === editedIndex()">
-                <td class="fit-width">
-                  <button
-                    type="button"
-                    mat-icon-button
-                    matTooltip="Edit this Sense"
-                    (click)="editSense(entry, i)"
-                  >
-                    <mat-icon class="mat-primary">edit</mat-icon>
-                  </button>
-                  <button
-                    type="button"
-                    mat-icon-button
-                    matTooltip="Move this Sense up"
-                    [disabled]="first"
-                    (click)="moveSenseUp(i)"
-                  >
-                    <mat-icon>arrow_upward</mat-icon>
-                  </button>
-                  <button
-                    type="button"
-                    mat-icon-button
-                    matTooltip="Move this Sense down"
-                    [disabled]="last"
-                    (click)="moveSenseDown(i)"
-                  >
-                    <mat-icon>arrow_downward</mat-icon>
-                  </button>
-                  <button
-                    type="button"
-                    mat-icon-button
-                    matTooltip="Delete this Sense"
-                    (click)="deleteSense(i)"
-                  >
-                    <mat-icon class="mat-warn">remove_circle</mat-icon>
-                  </button>
-                </td>
-                <td>{{ entry.eid }}</td>
-                <td>
-                  @for (tag of entry.tags; track tag; let last = $last) {
-                    {{ tag | flatLookup: tagEntries() : 'id' : 'value' }}
-                    @if (!last) {
-                      <span>, </span>
-                    }
+<!-- no <form> here: the part is saved by the save button -->
+<mat-card>
+  <mat-card-header>
+    <div mat-card-avatar>
+      <mat-icon>picture_in_picture</mat-icon>
+    </div>
+    <mat-card-title>
+      {{ (modelName() | titlecase) || 'Word Senses Part' }}
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div>
+      <button type="button" mat-flat-button class="mat-primary" (click)="addSense()">
+        <mat-icon>add_circle</mat-icon> sense
+      </button>
+    </div>
+    @if (form.entries().value().length) {
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>EID</th>
+            <th>tags</th>
+            <th>definition</th>
+            <th>examples</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (
+            entry of form.entries().value();
+            track entry;
+            let i = $index;
+            let first = $first;
+            let last = $last
+          ) {
+            <tr [class.selected]="i === editedIndex()">
+              <td class="fit-width">
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Edit this Sense"
+                  (click)="editSense(entry, i)"
+                >
+                  <mat-icon class="mat-primary">edit</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Move this Sense up"
+                  [disabled]="first"
+                  (click)="moveSenseUp(i)"
+                >
+                  <mat-icon>arrow_upward</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Move this Sense down"
+                  [disabled]="last"
+                  (click)="moveSenseDown(i)"
+                >
+                  <mat-icon>arrow_downward</mat-icon>
+                </button>
+                <button
+                  type="button"
+                  mat-icon-button
+                  matTooltip="Delete this Sense"
+                  (click)="deleteSense(i)"
+                >
+                  <mat-icon class="mat-warn">remove_circle</mat-icon>
+                </button>
+              </td>
+              <td>{{ entry.eid }}</td>
+              <td>
+                @for (tag of entry.tags; track tag; let last = $last) {
+                  {{ tag | flatLookup: tagEntries() : 'id' : 'value' }}
+                  @if (!last) {
+                    <span>, </span>
                   }
-                </td>
-                <td>{{ entry.definition | ellipsis }}</td>
-                <td>{{ entry.examples?.length || 0 }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-      @if (edited()) {
-        <fieldset>
-          <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                @if (editedIndex() > -1) {
-                  Sense #{{ editedIndex() + 1 }}
-                } @else {
-                  New sense
                 }
-              </mat-panel-title>
-            </mat-expansion-panel-header>
-            <cadmus-word-sense-editor
-              [tagEntries]="tagEntries()"
-              [assIdScopeEntries]="assIdScopeEntries()"
-              [assIdTagEntries]="assIdTagEntries()"
-              [assTagEntries]="assTagEntries()"
-              [refTypeEntries]="refTypeEntries()"
-              [refTagEntries]="refTagEntries()"
-              [idFeatureEntries]="idFeatureEntries()"
-              [sense]="edited()"
-              [lookupProviderOptions]="lookupProviderOptions()"
-              (senseChange)="saveSense($event!)"
-              (cancelEdit)="closeSense()"
-            />
-          </mat-expansion-panel>
-        </fieldset>
-      }
-    </mat-card-content>
-    <mat-card-actions>
-      <cadmus-close-save-buttons [form]="form" [noSave]="userLevel < 2" (closeRequest)="close()" />
-    </mat-card-actions>
-  </mat-card>
-</form>
+              </td>
+              <td>{{ entry.definition | ellipsis }}</td>
+              <td>{{ entry.examples?.length || 0 }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+    @if (edited()) {
+      <fieldset>
+        <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              @if (editedIndex() > -1) {
+                Sense #{{ editedIndex() + 1 }}
+              } @else {
+                New sense
+              }
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <cadmus-word-sense-editor
+            [tagEntries]="tagEntries()"
+            [assIdScopeEntries]="assIdScopeEntries()"
+            [assIdTagEntries]="assIdTagEntries()"
+            [assTagEntries]="assTagEntries()"
+            [refTypeEntries]="refTypeEntries()"
+            [refTagEntries]="refTagEntries()"
+            [idFeatureEntries]="idFeatureEntries()"
+            [sense]="edited()"
+            [lookupProviderOptions]="lookupProviderOptions()"
+            (senseChange)="saveSense($event!)"
+            (cancelEdit)="closeSense()"
+          />
+        </mat-expansion-panel>
+      </fieldset>
+    }
+  </mat-card-content>
+  <mat-card-actions>
+    <cadmus-close-save-buttons
+      [form]="form"
+      [noSave]="userLevel < 2"
+      (closeRequest)="close()"
+      (saveRequest)="save()"
+    />
+  </mat-card-actions>
+</mat-card>

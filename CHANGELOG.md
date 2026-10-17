@@ -10,6 +10,10 @@
   - `WordFormEditor`: the form is now `editForm` (the `form` model is unchanged). Removed messages which could never appear (prefix and suffix required, note too long).
   - `LexLemmaPartEditor`: `lid`, `homograph` and `forms` are now `form.lid`, `form.homograph` and `form.forms`; the thesauri entries are computed signals.
 - `@myrmidon/cadmus-part-lexicography-word-forms`: `LexWordFormsPartEditor.forms` is now `form.forms`; the thesauri entries are computed signals.
+- `@myrmidon/cadmus-part-lexicography-word-senses`:
+  - `WordSenseEditor`, `WordSenseExampleEditor`: their fields are now fields of `form`; the Markdown previews are computed signals. `WordSenseEditor.editedEx` and `editedExIndex` are now linked signals, reset when the sense changes.
+  - `LexWordSensesPartEditor`: `entries` is now `form.entries`; the thesauri entries are computed signals; settings are loaded once per identity rather than on each data change.
+  - 🐛 the related IDs editor emitting a normalized copy of the IDs it received no longer makes the sense look changed.
 
 ### Infrastructure
 

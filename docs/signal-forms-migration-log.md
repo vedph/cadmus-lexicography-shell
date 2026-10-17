@@ -23,3 +23,14 @@ Components: `WordFormEditor` (manual save sub-editor), `WordFormSetEditor` (no f
 Components: `LexWordFormsPartEditor` (part editor, reusing `WordFormSetEditor` from lemma), `LexWordFormsPartFeature` (unchanged).
 
 - Same pattern as `LexLemmaPartEditor`. **Verified** (test run against the rebuilt lemma `dist`): Enter in the nested word form editor accepts only the word form, not the part; no `<form>` is rendered with a word form open; loading a part leaves the editor pristine.
+
+## @myrmidon/cadmus-part-lexicography-word-senses
+
+Components: `WordSenseExampleEditor` and `WordSenseEditor` (manual save sub-editors, with Monaco), `LexWordSensesPartEditor` (part editor), `LexWordSensesPartFeature` (unchanged).
+
+- **Enter in nested sub-editors (applies to all sub-editors, lemma's `WordFormEditor` included).** The template's `onEnterKey` returns without `preventDefault()` when the form is pristine or invalid, so the `keydown` bubbles to an enclosing sub-editor, whose own handler then saves it. **Verified** (test run with the template's handler in `WordSenseExampleEditor`): Enter in an unchanged example's citation then saves the enclosing changed sense ("should not save the sense on Enter in an unchanged example" fails). So sub-editors claim every implicit-submission Enter (`preventDefault()`), and save only when dirty (`save()` still refuses an invalid form and shows its errors). This restores the old innermost-form behavior.
+- `WordSenseEditor`: the example being edited (`editedEx`, `editedExIndex`) is now a `linkedSignal` over `sense`, reset when the sense changes; this replaces the former `closeExample()` call in `updateForm()`.
+- `WordSenseEditor.onRelatedIdsChange` uses `setFieldFromChild`. **Verified** (test run with set + `markAsDirty` instead): the spec echoing related IDs whose `tag: null` was dropped fails. An echo which differs only by `undefined` properties is instead neutralized also without `setFieldFromChild`, because the draft-sync effect compares JSON (which drops `undefined`) and resets the form; a first version of the spec used such an echo, and did not catch the mutation.
+- Monaco editors are bound with `[value]`/`(valueChange)`/`(blur)`, not `[formField]`, so they get no `maxlength`: their "too long" messages still appear while typing. The Markdown previews are `computed()` signals (formerly `valueChanges` debounced by 50 ms).
+- `LexWordSensesPartEditor`: settings are loaded with `initSettings()` (on identity), rather than on each data set. **Verified** (test run): the spec "should load the settings for the part role" passes.
+- `CADMUS_TEXT_ED_BINDINGS_TOKEN` (`@myrmidon/cadmus-text-ed`) is declared as `InjectionToken<CadmusTextEdServiceOptions>`, while it provides `CadmusTextEdBindings`; `@Inject()` hid this. The editors cast the injected value. Upstream typing bug, not fixed here.

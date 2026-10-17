@@ -1,5 +1,6 @@
-<!-- this form is nested in the part's form: stop submit from saving the part -->
-<form [formGroup]="form" (submit)="$event.stopPropagation(); save()">
+<!-- no <form> here: this editor is nested in the part editor. Enter in a text
+     input saves it, as the accept button would. -->
+<div (keydown.enter)="onEnterKey($event)">
   <mat-tab-group>
     <!-- DEFINITION -->
     <mat-tab label="definition">
@@ -7,8 +8,8 @@
       <div>
         <mat-form-field>
           <mat-label>EID</mat-label>
-          <input matInput [formControl]="eid" />
-          @if ($any(eid).errors?.maxlength && (eid.dirty || eid.touched)) {
+          <input matInput [formField]="form.eid" />
+          @if (form.eid().getError('maxLength') && (form.eid().dirty() || form.eid().touched())) {
             <mat-error>EID too long</mat-error>
           }
         </mat-form-field>
@@ -19,7 +20,7 @@
           <div>
             <cadmus-thesaurus-entries-picker
               [availableEntries]="tagEntries()!"
-              [entries]="tags.value"
+              [entries]="pickedTags()"
               [hierarchicLabels]="true"
               (entriesChange)="onTagEntriesChange($event)"
             />
@@ -32,16 +33,24 @@
         <div id="def" role="group" aria-label="definition">
           <div id="editor">
             <ngx-monaco-editor
-              [formControl]="definition"
+              [value]="form.definition().value()"
+              (valueChange)="setFieldFromEditor(form.definition, $event)"
+              (blur)="form.definition().markAsTouched()"
               [language]="'markdown'"
               [options]="editorOptions"
               (editorInitialized)="onEditorInit($event)"
             />
           </div>
-          @if (definition.hasError('required') && (definition.touched || definition.dirty)) {
+          @if (
+            form.definition().getError('required') &&
+            (form.definition().touched() || form.definition().dirty())
+          ) {
             <mat-error>text required</mat-error>
           }
-          @if (definition.hasError('maxlength') && (definition.touched || definition.dirty)) {
+          @if (
+            form.definition().getError('maxLength') &&
+            (form.definition().touched() || form.definition().dirty())
+          ) {
             <mat-error>text too long</mat-error>
           }
         </div>
@@ -57,8 +66,8 @@
       <div class="mt">
         <mat-form-field class="long-text">
           <mat-label>note</mat-label>
-          <textarea matInput rows="3" [formControl]="note"></textarea>
-          @if ($any(note).errors?.maxlength && (note.dirty || note.touched)) {
+          <textarea matInput rows="3" [formField]="form.note"></textarea>
+          @if (form.note().getError('maxLength') && (form.note().dirty() || form.note().touched())) {
             <mat-error>note too long</mat-error>
           }
         </mat-form-field>
@@ -72,7 +81,7 @@
           <mat-icon>add_circle</mat-icon> example
         </button>
       </div>
-      @if (examples.value.length) {
+      @if (form.examples().value().length) {
         <table>
           <thead>
             <tr>
@@ -83,7 +92,7 @@
           </thead>
           <tbody>
             @for (
-              entry of examples.value;
+              entry of form.examples().value();
               track entry;
               let i = $index;
               let first = $first;
@@ -173,7 +182,7 @@
         [refTagEntries]="refTagEntries()"
         [featureEntries]="idFeatureEntries()"
         [lookupProviderOptions]="lookupProviderOptions()"
-        [ids]="relatedIds.value"
+        [ids]="form.relatedIds().value()"
         (idsChange)="onRelatedIdsChange($event)"
       />
     </mat-tab>
@@ -185,12 +194,13 @@
       <mat-icon class="mat-warn">clear</mat-icon>
     </button>
     <button
-      type="submit"
+      type="button"
       mat-icon-button
       matTooltip="Accept changes"
-      [disabled]="form.invalid || form.pristine"
+      [disabled]="form().invalid() || !form().dirty()"
+      (click)="save()"
     >
       <mat-icon class="mat-primary">check_circle</mat-icon>
     </button>
   </div>
-</form>
+</div>

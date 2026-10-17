@@ -189,21 +189,48 @@ describe('WordSenseEditor', () => {
       expect(senseChange).not.toHaveBeenCalled();
     });
 
+    it('should limit the length of text inputs while typing', async () => {
+      await setup({ sense: createSense() });
+      expect(screen.getByRole('textbox', { name: 'EID' })).toHaveAttribute('maxlength', '50');
+      expect(screen.getByRole('textbox', { name: 'note' })).toHaveAttribute('maxlength', '1000');
+    });
+
     it('should report too long values', async () => {
-      const { user } = await setup({ sense: createSense() });
-      const paste = async (input: HTMLElement, length: number) => {
-        await user.clear(input);
-        await user.click(input);
-        await user.paste('x'.repeat(length));
+      // text inputs prevent typing them, but they can come from data
+      const { user } = await setup({
+        sense: { ...createSense(), eid: 'x'.repeat(51), note: 'x'.repeat(1001) },
+      });
+      for (const name of ['EID', 'note']) {
+        await user.click(screen.getByRole('textbox', { name }));
         await user.tab();
-      };
-      await paste(screen.getByRole('textbox', { name: 'EID' }), 51);
-      expect(screen.getByText('EID too long')).toBeInTheDocument();
-      await paste(definitionEditor(), 5001);
+        expect(screen.getByText(`${name} too long`)).toBeInTheDocument();
+      }
+      // the definition editor has no length limit while typing
+      await user.clear(definitionEditor());
+      await user.click(definitionEditor());
+      await user.paste('x'.repeat(5001));
+      await user.tab();
       expect(screen.getByText('text too long')).toBeInTheDocument();
-      await paste(screen.getByRole('textbox', { name: 'note' }), 1001);
-      expect(screen.getByText('note too long')).toBeInTheDocument();
       expect(acceptButton()).toBeDisabled();
+    });
+
+    it('should save on Enter in a text input once changed', async () => {
+      const { user, senseChange } = await setup({ sense: createSense() });
+      await user.type(screen.getByRole('textbox', { name: 'EID' }), '2{Enter}');
+      expect(senseChange).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ eid: 's12' }),
+      );
+    });
+
+    it('should keep the typed text when its own save comes back normalized', async () => {
+      const { user, senseChange } = await setup({ sense: createSense() });
+      const eid = screen.getByRole('textbox', { name: 'EID' });
+      await user.type(eid, ' ');
+      await user.click(acceptButton());
+      expect(senseChange).toHaveBeenCalledWith(expect.objectContaining({ eid: 's1' }));
+      expect(eid).toHaveValue('s1 ');
+      await user.type(eid, 'x');
+      expect(eid).toHaveValue('s1 x');
     });
 
     it('should emit cancelEdit on discard', async () => {
@@ -344,6 +371,34 @@ describe('WordSenseEditor', () => {
       expect(listedExamples().map((r) => r[1])).toEqual(['beta', 'GAMMA']);
     });
 
+    it('should not save the sense on Enter in an unchanged example', async () => {
+      const { user, senseChange } = await setup({ sense: createSense() });
+      // the sense is changed, so Enter would save it
+      await user.type(screen.getByRole('textbox', { name: 'EID' }), 'x');
+      await openTab(user, 'examples');
+      await user.click(exampleButton(1, 'Edit this example'));
+      await user.type(screen.getByRole('textbox', { name: 'citation' }), '{Enter}');
+      expect(senseChange).not.toHaveBeenCalled();
+      expect(screen.getByRole('group', { name: 'text' })).toBeInTheDocument();
+    });
+
+    it('should save only the example on Enter in a changed example', async () => {
+      const { user, senseChange } = await setup({ sense: createSense() });
+      await openTab(user, 'examples');
+      await user.click(exampleButton(1, 'Edit this example'));
+      await user.type(screen.getByRole('textbox', { name: 'citation' }), 'c{Enter}');
+      expect(screen.queryByRole('group', { name: 'text' })).not.toBeInTheDocument();
+      expect(senseChange).not.toHaveBeenCalled();
+      expect(acceptButton()).toBeEnabled();
+    });
+
+    it('should render no <form> element, also with an example open', async () => {
+      const { user, container } = await setup({ sense: createSense() });
+      await openTab(user, 'examples');
+      await user.click(exampleButton(1, 'Edit this example'));
+      expect(container.querySelector('form')).toBeNull();
+    });
+
     it('should close the example editor when the sense changes', async () => {
       const { user, fixture } = await setup({ sense: createSense() });
       await openTab(user, 'examples');
@@ -373,6 +428,19 @@ describe('WordSenseEditor', () => {
           ],
         }),
       );
+    });
+
+    it('should stay pristine when the related IDs editor echoes its IDs', async () => {
+      // data often has nulls, which child editors drop when they emit
+      const { fixture } = await setup({
+        sense: {
+          ...createSense(),
+          relatedIds: [{ target: { gid: 'x', label: 'related x' }, tag: null as any }],
+        },
+      });
+      fixture.componentInstance.onRelatedIdsChange([{ target: { gid: 'x', label: 'related x' } }]);
+      await fixture.whenStable();
+      expect(acceptButton()).toBeDisabled();
     });
 
     it('should pass the thesauri to the related IDs editor', async () => {
