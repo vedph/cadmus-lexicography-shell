@@ -1,0 +1,3 @@
+// global setup for all the Vitest unit tests (see the test targets in
+// angular.json): adds the DOM matchers like toBeInTheDocument, toHaveValue...
+import '@testing-library/jest-dom/vitest';

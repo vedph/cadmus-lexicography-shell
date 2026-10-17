@@ -13,3 +13,4 @@ minimumReleaseAgeExclude:
 overrides:
   rollup: npm:@rollup/wasm-node
   "@jridgewell/sourcemap-codec": ^1.6.0
+extendNodePath: false
