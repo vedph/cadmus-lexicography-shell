@@ -27,3 +27,16 @@ Added tests for all the components. Fixes:
 
 - `LexWordFormsPartEditor`: a part could be saved without forms, while its schema requires at least one (the editor just showed an error icon). Forms are now required.
 - the fixes to the word form editors of `@myrmidon/cadmus-part-lexicography-lemma`, which this part reuses, also apply here: in particular, accepting a word form no longer saves the whole part.
+
+### @myrmidon/cadmus-part-lexicography-word-senses
+
+Added tests for all the components. Fixes:
+
+- `WordSenseEditor`, `WordSenseExampleEditor`: accepting a sense also saved the whole part, and accepting an example also accepted its sense (and so possibly saved the part too), because their nested forms let the `submit` event bubble up to the enclosing forms. The nested forms now stop its propagation.
+- `LexWordSensesPartEditor`: the related IDs editor never got the thesauri for ID scopes and tags, assertion tags, and document reference types and tags, because the part editor did not pass them to the sense editor, even if they were loaded. Also, the feature did not request the `assertion-tags` thesaurus. All these thesauri are now requested and passed down.
+- `WordSenseExampleEditor`: the citation field was shown only when the example tags thesaurus was present, as it was wrongly placed in the tags block. It is now always shown.
+- `LexWordSensesPartEditor`, `WordSenseEditor`: deleting a sense/example before the edited one, or moving the edited sense/example (or its neighbor), left the edited index stale, so that saving replaced the wrong sense/example. The index now follows the list changes. New senses/examples were titled `#0`, they are now titled `New sense`/`New example`.
+- `WordSenseEditor`: an example being edited stayed open when the edited sense changed, so that saving it would have added it to the wrong sense. The example editor is now closed when the sense changes.
+- `WordSenseEditor`, `WordSenseExampleEditor`: "too long" errors were never shown, because templates checked for a `maxLength` error key while Angular's validator uses `maxlength`.
+- `WordSenseEditor`, `WordSenseExampleEditor`: their preview subscriptions to form value changes were never unsubscribed; they are now bound to the component lifetime. Also replaced an import from the `rxjs/internal` path with the public `rxjs` one.
+- `WordSenseEditor`, `WordSenseExampleEditor`: the Markdown editor groups (definition, text, explanation) had only an icon as their legend, so they had no accessible name: added labels.

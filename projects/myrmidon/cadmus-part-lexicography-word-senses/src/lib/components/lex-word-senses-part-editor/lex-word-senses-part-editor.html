@@ -90,10 +90,21 @@
         <fieldset>
           <mat-expansion-panel [expanded]="edited()" [disabled]="!edited()">
             <mat-expansion-panel-header>
-              <mat-panel-title>Sense #{{ editedIndex() + 1 }}</mat-panel-title>
+              <mat-panel-title>
+                @if (editedIndex() > -1) {
+                  Sense #{{ editedIndex() + 1 }}
+                } @else {
+                  New sense
+                }
+              </mat-panel-title>
             </mat-expansion-panel-header>
             <cadmus-word-sense-editor
               [tagEntries]="tagEntries()"
+              [assIdScopeEntries]="assIdScopeEntries()"
+              [assIdTagEntries]="assIdTagEntries()"
+              [assTagEntries]="assTagEntries()"
+              [refTypeEntries]="refTypeEntries()"
+              [refTagEntries]="refTagEntries()"
               [idFeatureEntries]="idFeatureEntries()"
               [sense]="edited()"
               [lookupProviderOptions]="lookupProviderOptions()"

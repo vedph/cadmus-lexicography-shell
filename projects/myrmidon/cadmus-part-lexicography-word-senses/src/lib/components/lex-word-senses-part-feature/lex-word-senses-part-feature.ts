@@ -33,6 +33,7 @@ export class LexWordSensesPartFeature extends EditPartFeatureBase implements OnI
       'lex-word-sense-tags',
       'asserted-id-scopes',
       'asserted-id-tags',
+      'assertion-tags',
       'doc-reference-types',
       'doc-reference-tags',
       'asserted-id-features',

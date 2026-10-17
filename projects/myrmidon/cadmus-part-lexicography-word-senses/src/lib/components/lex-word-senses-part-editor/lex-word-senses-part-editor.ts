@@ -38,7 +38,7 @@ interface LexWordSensesPartSettings {
 /**
  * Word senses part editor component.
  * Thesauri: lex-word-sense-tags, asserted-id-scopes, asserted-id-tags,
- * doc-reference-types, doc-reference-tags, asserted-id-features.
+ * assertion-tags, doc-reference-types, doc-reference-tags, asserted-id-features.
  */
 @Component({
   selector: 'cadmus-lex-word-senses-part-editor',
@@ -72,6 +72,16 @@ export class LexWordSensesPartEditor
 
   // lex-word-sense-tags
   public readonly tagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  // asserted-id-scopes
+  public readonly assIdScopeEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  // asserted-id-tags
+  public readonly assIdTagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  // assertion-tags
+  public readonly assTagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  // doc-reference-types
+  public readonly refTypeEntries = signal<ThesaurusEntry[] | undefined>(undefined);
+  // doc-reference-tags
+  public readonly refTagEntries = signal<ThesaurusEntry[] | undefined>(undefined);
   // asserted-id-features
   public readonly idFeatureEntries = signal<ThesaurusEntry[] | undefined>(undefined);
 
@@ -105,18 +115,15 @@ export class LexWordSensesPartEditor
   }
 
   private updateThesauri(thesauri: ThesauriSet): void {
-    let key = 'lex-word-sense-tags';
-    if (this.hasThesaurus(key)) {
-      this.tagEntries.set(thesauri[key].entries);
-    } else {
-      this.tagEntries.set(undefined);
-    }
-    key = 'asserted-id-features';
-    if (this.hasThesaurus(key)) {
-      this.idFeatureEntries.set(thesauri[key].entries);
-    } else {
-      this.idFeatureEntries.set(undefined);
-    }
+    const entries = (key: string) =>
+      this.hasThesaurus(key) ? thesauri[key].entries : undefined;
+    this.tagEntries.set(entries('lex-word-sense-tags'));
+    this.assIdScopeEntries.set(entries('asserted-id-scopes'));
+    this.assIdTagEntries.set(entries('asserted-id-tags'));
+    this.assTagEntries.set(entries('assertion-tags'));
+    this.refTypeEntries.set(entries('doc-reference-types'));
+    this.refTagEntries.set(entries('doc-reference-tags'));
+    this.idFeatureEntries.set(entries('asserted-id-features'));
   }
 
   private updateForm(part?: LexWordSensesPart | null): void {
@@ -188,8 +195,12 @@ export class LexWordSensesPartEditor
       .confirm('Confirmation', 'Delete sense?')
       .subscribe((yes: boolean | undefined) => {
         if (yes) {
-          if (this.editedIndex() === index) {
+          // keep the edited sense index in sync with the list
+          const edited = this.editedIndex();
+          if (edited === index) {
             this.closeSense();
+          } else if (edited > index) {
+            this.editedIndex.set(edited - 1);
           }
           const entries = [...this.entries.value];
           entries.splice(index, 1);
@@ -211,6 +222,7 @@ export class LexWordSensesPartEditor
     this.entries.setValue(entries);
     this.entries.markAsDirty();
     this.entries.updateValueAndValidity();
+    this.followMovedSense(index, index - 1);
   }
 
   public moveSenseDown(index: number): void {
@@ -224,5 +236,18 @@ export class LexWordSensesPartEditor
     this.entries.setValue(entries);
     this.entries.markAsDirty();
     this.entries.updateValueAndValidity();
+    this.followMovedSense(index, index + 1);
+  }
+
+  /**
+   * Keep the edited sense index in sync with the list after the sense
+   * at index from has been swapped with the one at index to.
+   */
+  private followMovedSense(from: number, to: number): void {
+    if (this.editedIndex() === from) {
+      this.editedIndex.set(to);
+    } else if (this.editedIndex() === to) {
+      this.editedIndex.set(from);
+    }
   }
 }

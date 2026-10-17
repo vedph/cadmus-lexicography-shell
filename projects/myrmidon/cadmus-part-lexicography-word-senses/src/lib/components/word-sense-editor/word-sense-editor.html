@@ -1,4 +1,5 @@
-<form [formGroup]="form" (submit)="save()">
+<!-- this form is nested in the part's form: stop submit from saving the part -->
+<form [formGroup]="form" (submit)="$event.stopPropagation(); save()">
   <mat-tab-group>
     <!-- DEFINITION -->
     <mat-tab label="definition">
@@ -7,7 +8,7 @@
         <mat-form-field>
           <mat-label>EID</mat-label>
           <input matInput [formControl]="eid" />
-          @if ($any(eid).errors?.maxLength && (eid.dirty || eid.touched)) {
+          @if ($any(eid).errors?.maxlength && (eid.dirty || eid.touched)) {
             <mat-error>EID too long</mat-error>
           }
         </mat-form-field>
@@ -28,7 +29,7 @@
 
       <!-- definition -->
       <div id="def-container">
-        <div id="def">
+        <div id="def" role="group" aria-label="definition">
           <div id="editor">
             <ngx-monaco-editor
               [formControl]="definition"
@@ -40,7 +41,7 @@
           @if (definition.hasError('required') && (definition.touched || definition.dirty)) {
             <mat-error>text required</mat-error>
           }
-          @if (definition.hasError('maxLength') && (definition.touched || definition.dirty)) {
+          @if (definition.hasError('maxlength') && (definition.touched || definition.dirty)) {
             <mat-error>text too long</mat-error>
           }
         </div>
@@ -57,7 +58,7 @@
         <mat-form-field class="long-text">
           <mat-label>note</mat-label>
           <textarea matInput rows="3" [formControl]="note"></textarea>
-          @if ($any(note).errors?.maxLength && (note.dirty || note.touched)) {
+          @if ($any(note).errors?.maxlength && (note.dirty || note.touched)) {
             <mat-error>note too long</mat-error>
           }
         </mat-form-field>
@@ -143,7 +144,13 @@
         <fieldset>
           <mat-expansion-panel [expanded]="editedEx()" [disabled]="!editedEx()">
             <mat-expansion-panel-header>
-              <mat-panel-title>Example #{{ editedExIndex() + 1 }}</mat-panel-title>
+              <mat-panel-title>
+                @if (editedExIndex() > -1) {
+                  Example #{{ editedExIndex() + 1 }}
+                } @else {
+                  New example
+                }
+              </mat-panel-title>
             </mat-expansion-panel-header>
             <cadmus-word-sense-example-editor
               [tagEntries]="tagEntries()"

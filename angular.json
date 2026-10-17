@@ -96,7 +96,8 @@
             "runner": "vitest",
             "setupFiles": [
               "test-setup.ts"
-            ]
+            ],
+            "providersFile": "test-providers.ts"
           }
         }
       }
@@ -133,7 +134,8 @@
             ],
             "coverageInclude": [
               "projects/myrmidon/cadmus-part-lexicography-lemma/src/**/*.ts"
-            ]
+            ],
+            "providersFile": "test-providers.ts"
           }
         }
       }
@@ -170,7 +172,8 @@
             ],
             "coverageInclude": [
               "projects/myrmidon/cadmus-part-lexicography-pg/src/**/*.ts"
-            ]
+            ],
+            "providersFile": "test-providers.ts"
           }
         }
       }
@@ -207,7 +210,8 @@
             ],
             "coverageInclude": [
               "projects/myrmidon/cadmus-part-lexicography-word-forms/src/**/*.ts"
-            ]
+            ],
+            "providersFile": "test-providers.ts"
           }
         }
       }
@@ -244,7 +248,8 @@
             ],
             "coverageInclude": [
               "projects/myrmidon/cadmus-part-lexicography-word-senses/src/**/*.ts"
-            ]
+            ],
+            "providersFile": "test-providers.ts"
           }
         }
       }
@@ -281,7 +286,8 @@
             ],
             "coverageInclude": [
               "projects/myrmidon/cadmus-part-lexicography-word-collocations/src/**/*.ts"
-            ]
+            ],
+            "providersFile": "test-providers.ts"
           }
         }
       }

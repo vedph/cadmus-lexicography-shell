@@ -1,4 +1,5 @@
-<form [formGroup]="form" (submit)="save()">
+<!-- this form is nested in the sense's form: stop submit from saving the sense -->
+<form [formGroup]="form" (submit)="$event.stopPropagation(); save()">
   <div class="form-row">
     <!-- tags -->
     @if (tagEntries()?.length) {
@@ -10,21 +11,21 @@
           (entriesChange)="onTagEntriesChange($event)"
         />
       </div>
-
-      <!-- citation -->
-      <mat-form-field>
-        <mat-label>citation</mat-label>
-        <input matInput [formControl]="citation" />
-        @if ($any(citation).errors?.maxLength && (citation.dirty || citation.touched)) {
-          <mat-error>citation too long</mat-error>
-        }
-      </mat-form-field>
     }
+
+    <!-- citation -->
+    <mat-form-field>
+      <mat-label>citation</mat-label>
+      <input matInput [formControl]="citation" />
+      @if ($any(citation).errors?.maxlength && (citation.dirty || citation.touched)) {
+        <mat-error>citation too long</mat-error>
+      }
+    </mat-form-field>
   </div>
 
   <!-- text-->
   <div id="txt-container" class="mt">
-    <fieldset>
+    <fieldset aria-label="text">
       <legend>
         <mat-icon>text_snippet</mat-icon>
       </legend>
@@ -38,7 +39,7 @@
         @if (text.hasError('required') && (text.touched || text.dirty)) {
           <mat-error>text required</mat-error>
         }
-        @if (text.hasError('maxLength') && (text.touched || text.dirty)) {
+        @if (text.hasError('maxlength') && (text.touched || text.dirty)) {
           <mat-error>text too long</mat-error>
         }
       </div>
@@ -56,7 +57,7 @@
 
   <!-- explanation -->
   <div id="exp-container" class="mt">
-    <fieldset>
+    <fieldset aria-label="explanation">
       <legend>
         <mat-icon>info</mat-icon>
       </legend>
@@ -67,7 +68,7 @@
           [options]="editorOptions"
           (editorInitialized)="onExplanationEditorInit($event)"
         />
-        @if ($any(explanation).errors?.maxLength && (explanation.dirty || explanation.touched)) {
+        @if ($any(explanation).errors?.maxlength && (explanation.dirty || explanation.touched)) {
           <mat-error>explanation too long</mat-error>
         }
       </div>
@@ -87,7 +88,7 @@
     <mat-form-field class="long-text">
       <mat-label>note</mat-label>
       <textarea matInput rows="3" [formControl]="note"></textarea>
-      @if ($any(note).errors?.maxLength && (note.dirty || note.touched)) {
+      @if ($any(note).errors?.maxlength && (note.dirty || note.touched)) {
         <mat-error>note too long</mat-error>
       }
     </mat-form-field>

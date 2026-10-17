@@ -18,6 +18,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -132,10 +133,10 @@ export class WordSenseExampleEditor {
       this.updateForm(data);
     });
 
-    this.text.valueChanges.pipe(debounceTime(50)).subscribe(() => {
+    this.text.valueChanges.pipe(debounceTime(50), takeUntilDestroyed()).subscribe(() => {
       this.updateTextPreview();
     });
-    this.explanation.valueChanges.pipe(debounceTime(50)).subscribe(() => {
+    this.explanation.valueChanges.pipe(debounceTime(50), takeUntilDestroyed()).subscribe(() => {
       this.updateExplanationPreview();
     });
   }

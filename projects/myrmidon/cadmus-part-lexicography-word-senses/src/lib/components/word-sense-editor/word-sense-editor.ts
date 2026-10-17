@@ -18,6 +18,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -55,7 +56,7 @@ import { LookupProviderOptions } from '@myrmidon/cadmus-refs-lookup';
 
 import { WordSense, WordSenseExample } from '../../lex-word-senses-part';
 import { WordSenseExampleEditor } from '../word-sense-example-editor/word-sense-example-editor';
-import { debounceTime } from 'rxjs/internal/operators/debounceTime';
+import { debounceTime } from 'rxjs';
 
 @Component({
   selector: 'cadmus-word-sense-editor',
@@ -168,7 +169,7 @@ export class WordSenseEditor {
       this.updateForm(data);
     });
 
-    this.definition.valueChanges.pipe(debounceTime(50)).subscribe(() => {
+    this.definition.valueChanges.pipe(debounceTime(50), takeUntilDestroyed()).subscribe(() => {
       this.updatePreview();
     });
   }
@@ -225,6 +226,8 @@ export class WordSenseEditor {
   }
 
   private updateForm(sense: WordSense | undefined | null): void {
+    // an example being edited belongs to the previous sense
+    this.closeExample();
     if (!sense) {
       this.form.reset();
     } else {
@@ -297,8 +300,12 @@ export class WordSenseEditor {
       .confirm('Confirmation', `Delete example #${index + 1}?`)
       .subscribe((yes: boolean | undefined) => {
         if (yes) {
-          if (this.editedExIndex() === index) {
+          // keep the edited example index in sync with the list
+          const edited = this.editedExIndex();
+          if (edited === index) {
             this.closeExample();
+          } else if (edited > index) {
+            this.editedExIndex.set(edited - 1);
           }
           const entries = [...this.examples.value];
           entries.splice(index, 1);
@@ -320,6 +327,7 @@ export class WordSenseEditor {
     this.examples.setValue(entries);
     this.examples.markAsDirty();
     this.examples.updateValueAndValidity();
+    this.followMovedExample(index, index - 1);
   }
 
   public moveExampleDown(index: number): void {
@@ -333,6 +341,19 @@ export class WordSenseEditor {
     this.examples.setValue(entries);
     this.examples.markAsDirty();
     this.examples.updateValueAndValidity();
+    this.followMovedExample(index, index + 1);
+  }
+
+  /**
+   * Keep the edited example index in sync with the list after the example
+   * at index from has been swapped with the one at index to.
+   */
+  private followMovedExample(from: number, to: number): void {
+    if (this.editedExIndex() === from) {
+      this.editedExIndex.set(to);
+    } else if (this.editedExIndex() === to) {
+      this.editedExIndex.set(from);
+    }
   }
 
   public cancel(): void {
