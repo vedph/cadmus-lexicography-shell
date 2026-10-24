@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 2026-10-24: reset password page fix.
+
 ### Signal forms
 
 - 2026-10-17: ⚠️ Updated the `@myrmidon/cadmus-*` core packages to v20, and migrated all the editors from reactive forms to Angular signal forms (`@angular/forms/signals`). Inputs, models and outputs are unchanged. Breaking for code that reached into the components' internals: the former public `FormControl`/`FormGroup` fields are now fields of a signal form. No editor renders a `<form>` element any more: part editors save only through their save button. Enter in a text input of a sub-editor saves it when changed (or shows its errors when invalid), and never reaches the editors enclosing it. Since inputs now get a native `maxlength`, text cannot be typed past its limit. Text values are trimmed on save. See `docs/signal-forms-migration-log.md` for details.
